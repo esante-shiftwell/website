@@ -2,658 +2,639 @@
 
 import Link from 'next/link';
 import { useEffect, useMemo, useState } from 'react';
-import type { Dictionary, Locale } from '@/i18n';
-import type { AnalysisDraft, ContributionConsent, RawSegment } from '../core/model';
-import { calculateScores, CONSENT_NOTICE_VERSION } from '../core/scoring';
-import { downloadJson } from '../lib/export';
-import { submitContribution } from '../lib/collector';
 
-type Props = {
-  locale: Locale;
-  dict: Dictionary;
+import CalendarEditorStep from '@/components/analyze/CalendarEditorStep';
+import { TEXT, isLocale } from '@/components/analyze/copy';
+import DerivedMetricsList from '@/components/analyze/DerivedMetricsList';
+import { Field, FooterActions, RangeInput } from '@/components/analyze/FormBits';
+import ResultsExplanations from '@/components/analyze/ResultsExplanations';
+import ScoreCard from '@/components/analyze/ScoreCard';
+import StepProgress from '@/components/analyze/StepProgress';
+import type {
+  CollectorState,
+  Locale,
+  ParticipantProfile,
+  SegmentDraft,
+  WeekSegment,
+} from '@/components/analyze/types';
+import {
+  clamp,
+  computeDerivedMetrics,
+  computeScores,
+  getOrCreateAnonymousId,
+  getProfileCompletion,
+  getSegmentsCompletion,
+} from '@/components/analyze/utils';
+import LocaleNav from './LocaleNav';
+
+type AnalyzeClientProps = {
+  locale: string;
+  dict?: unknown;
 };
 
-const STORAGE_KEY = 'shiftwell:analysis-draft:v0.1';
+export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
+  const l: Locale = isLocale(locale) ? locale : 'en';
+  const t = TEXT[l];
 
-function makeId() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) {
-    return crypto.randomUUID();
-  }
-  return Math.random().toString(36).slice(2);
-}
+  const [stepIndex, setStepIndex] = useState(0);
 
-function defaultDraft(locale: Locale, dict: Dictionary): AnalysisDraft {
-  return {
-    participantCode: makeId(),
+  const [profile, setProfile] = useState<ParticipantProfile>({
     mode: 'short',
-    profile: {
-      professionCategory: dict.analyze.professionOptions[0],
-      ageBand: dict.analyze.ageBands[1],
-      sex: dict.analyze.sexOptions[2],
-      locale,
-      timezone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'Europe/Paris',
-    },
-    segments: [],
-    longAnswers: {
-      fatigue: 5,
-      sleepQuality: 5,
-      lateCaffeine: false,
-    },
-    updatedAt: new Date().toISOString(),
-  };
-}
+    profession: '',
+    ageBand: '',
+    sex: '',
+    chronotype: '',
+    fatigue: 3,
+    schedulePredictability: 3,
+    commuteMinutes: 0,
+    napsPerWeek: 0,
+    caffeineCups: 2,
+  });
 
-function createEmptySegment(dayIndex: number, kind: 'work' | 'sleep'): RawSegment {
-  return {
-    id: makeId(),
-    dayIndex,
-    kind,
-    start: kind === 'work' ? '08:00' : '23:00',
-    end: kind === 'work' ? '16:00' : '07:00',
-  };
-}
+  const [workSegments, setWorkSegments] = useState<WeekSegment[]>([]);
+  const [sleepSegments, setSleepSegments] = useState<WeekSegment[]>([]);
 
-function scoreBadgeClass(score: number) {
-  if (score >= 75) return 'badge danger';
-  if (score >= 50) return 'badge warn';
-  if (score >= 25) return 'badge secondary';
-  return 'badge primary';
-}
+  const [workDraft, setWorkDraft] = useState<SegmentDraft>({
+    day: 0,
+    startMin: 8 * 60,
+    endMin: 16 * 60,
+    overnight: false,
+  });
 
-function inverseScoreBadgeClass(score: number) {
-  // for positive scores like adaptability / sleep
-  if (score >= 75) return 'badge secondary';
-  if (score >= 50) return 'badge primary';
-  if (score >= 25) return 'badge warn';
-  return 'badge danger';
-}
+  const [sleepDraft, setSleepDraft] = useState<SegmentDraft>({
+    day: 0,
+    startMin: 22 * 60,
+    endMin: 6 * 60,
+    overnight: true,
+  });
 
-export default function AnalyzeClient({ locale, dict }: Props) {
-  const [draft, setDraft] = useState<AnalysisDraft>(() => defaultDraft(locale, dict));
-  const [hydrated, setHydrated] = useState(false);
+  const [editingWorkId, setEditingWorkId] = useState<string | null>(null);
+  const [editingSleepId, setEditingSleepId] = useState<string | null>(null);
 
-  const [explicitConsent, setExplicitConsent] = useState(false);
-  const [recontactConsent, setRecontactConsent] = useState(false);
+  const [collector, setCollector] = useState<CollectorState>({
+    endpoint: '',
+    consent: false,
+    includeAnonymousId: true,
+  });
 
-  const [sending, setSending] = useState(false);
-  const [sendStatus, setSendStatus] = useState<string | null>(null);
-  const [sendError, setSendError] = useState<string | null>(null);
+  const [sendStatus, setSendStatus] = useState<{
+    state: 'idle' | 'sending' | 'success' | 'error';
+    message?: string;
+  }>({ state: 'idle' });
+
+  const draftStorageKey = `shiftwell:draft:v2:${l}`;
 
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        const parsed = JSON.parse(raw) as AnalysisDraft;
-        setDraft((prev) => ({
-          ...prev,
-          ...parsed,
-          profile: {
-            ...prev.profile,
-            ...parsed.profile,
-            locale, // enforce current route locale for UI
-          },
-        }));
+      const raw = localStorage.getItem(draftStorageKey);
+      if (!raw) return;
+
+      const parsed = JSON.parse(raw) as Partial<{
+        profile: ParticipantProfile;
+        workSegments: WeekSegment[];
+        sleepSegments: WeekSegment[];
+        collector: CollectorState;
+        stepIndex: number;
+      }>;
+
+      if (parsed.profile) setProfile(parsed.profile);
+      if (parsed.workSegments) setWorkSegments(parsed.workSegments);
+      if (parsed.sleepSegments) setSleepSegments(parsed.sleepSegments);
+      if (parsed.collector) setCollector(parsed.collector);
+      if (typeof parsed.stepIndex === 'number') {
+        setStepIndex(clamp(parsed.stepIndex, 0, 3));
       }
     } catch {
-      // no-op
-    } finally {
-      setHydrated(true);
+      // ignore
     }
-  }, [locale]);
+  }, [draftStorageKey]);
 
   useEffect(() => {
-    if (!hydrated) return;
     try {
       localStorage.setItem(
-        STORAGE_KEY,
+        draftStorageKey,
         JSON.stringify({
-          ...draft,
-          updatedAt: new Date().toISOString(),
-        })
+          profile,
+          workSegments,
+          sleepSegments,
+          collector,
+          stepIndex,
+        }),
       );
     } catch {
-      // no-op
+      // ignore
     }
-  }, [draft, hydrated]);
+  }, [collector, draftStorageKey, profile, sleepSegments, stepIndex, workSegments]);
 
-  const scores = useMemo(() => calculateScores(draft), [draft]);
+  const derived = useMemo(
+    () => computeDerivedMetrics(workSegments, sleepSegments),
+    [workSegments, sleepSegments],
+  );
 
-  const daySegments = useMemo(() => {
-    return Array.from({ length: 7 }, (_, dayIndex) => ({
-      dayIndex,
-      work: draft.segments.filter((s) => s.dayIndex === dayIndex && s.kind === 'work'),
-      sleep: draft.segments.filter((s) => s.dayIndex === dayIndex && s.kind === 'sleep'),
-    }));
-  }, [draft.segments]);
+  const scores = useMemo(() => computeScores(derived, profile), [derived, profile]);
 
-  function updateProfile<K extends keyof AnalysisDraft['profile']>(
-    key: K,
-    value: AnalysisDraft['profile'][K]
-  ) {
-    setDraft((prev) => ({
-      ...prev,
-      profile: { ...prev.profile, [key]: value },
-      updatedAt: new Date().toISOString(),
-    }));
-  }
+  const profilePct = getProfileCompletion(profile);
+  const workPct = getSegmentsCompletion(workSegments);
+  const sleepPct = getSegmentsCompletion(sleepSegments);
+  const resultsPct = stepIndex >= 3 ? 100 : 0;
+  const overallPct = Math.round((profilePct + workPct + sleepPct + resultsPct) / 4);
 
-  function updateLongAnswer<K extends keyof AnalysisDraft['longAnswers']>(
-    key: K,
-    value: AnalysisDraft['longAnswers'][K]
-  ) {
-    setDraft((prev) => ({
-      ...prev,
-      longAnswers: { ...prev.longAnswers, [key]: value },
-      updatedAt: new Date().toISOString(),
-    }));
-  }
+  const canGoStep1 = profilePct >= 60;
+  const canGoStep2 = workSegments.length > 0;
+  const canGoStep3 = sleepSegments.length > 0;
 
-  function addSegment(dayIndex: number, kind: 'work' | 'sleep') {
-    setDraft((prev) => ({
-      ...prev,
-      segments: [...prev.segments, createEmptySegment(dayIndex, kind)],
-      updatedAt: new Date().toISOString(),
-    }));
-  }
+  const payload = useMemo(() => {
+    const anonymousId = collector.includeAnonymousId ? getOrCreateAnonymousId() : null;
 
-  function patchSegment(id: string, patch: Partial<RawSegment>) {
-    setDraft((prev) => ({
-      ...prev,
-      segments: prev.segments.map((s) => (s.id === id ? { ...s, ...patch } : s)),
-      updatedAt: new Date().toISOString(),
-    }));
-  }
-
-  function removeSegment(id: string) {
-    setDraft((prev) => ({
-      ...prev,
-      segments: prev.segments.filter((s) => s.id !== id),
-      updatedAt: new Date().toISOString(),
-    }));
-  }
-
-  function exportReport() {
-    const payload = {
-      app: 'Shiftwell',
-      generatedAt: new Date().toISOString(),
-      locale,
-      scoringVersion: scores.scoringVersion,
-      consentNoticeVersion: CONSENT_NOTICE_VERSION,
-      data: draft,
-      result: scores,
-      disclaimer:
-        'Research / pre-analysis tool. Does not replace medical advice.',
+    return {
+      project: 'shiftwell',
+      scoringVersion: 'proxy-v0.1',
+      locale: l,
+      createdAt: new Date().toISOString(),
+      anonymousId,
+      profile,
+      workSegments,
+      sleepSegments,
+      derived,
+      scores,
     };
+  }, [collector.includeAnonymousId, derived, l, profile, scores, sleepSegments, workSegments]);
 
-    downloadJson(`shiftwell-report-${draft.participantCode}.json`, payload);
-  }
+  async function handleSend() {
+    if (!collector.consent) {
+      setSendStatus({ state: 'error', message: t.consentCheck });
+      return;
+    }
+    if (!collector.endpoint.trim()) {
+      setSendStatus({ state: 'error', message: 'Endpoint requis pour envoyer.' });
+      return;
+    }
 
-  async function onSendContribution() {
-    setSendStatus(null);
-    setSendError(null);
-
-    if (!explicitConsent) return;
-
-    const consent: ContributionConsent = {
-      explicitStudyConsent: explicitConsent,
-      recontactConsent,
-      consentNoticeVersion: CONSENT_NOTICE_VERSION,
-      consentAt: new Date().toISOString(),
-    };
-
-    const payload = {
-      app: 'Shiftwell',
-      schemaVersion: 'shiftwell-collector-v0.1',
-      submittedAt: new Date().toISOString(),
-      participantCode: draft.participantCode,
-      profile: {
-        professionCategory: draft.profile.professionCategory,
-        ageBand: draft.profile.ageBand,
-        sex: draft.profile.sex,
-        locale: draft.profile.locale,
-        timezone: draft.profile.timezone,
-      },
-      mode: draft.mode,
-      segments: draft.segments,
-      longAnswers: draft.mode === 'long' ? draft.longAnswers : {},
-      result: scores,
-      consent,
-    };
-
-    setSending(true);
     try {
-      await submitContribution(payload);
-      setSendStatus(dict.analyze.contributionOk);
+      setSendStatus({ state: 'sending' });
+
+      const res = await fetch(collector.endpoint.trim(), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+
+      setSendStatus({ state: 'success', message: t.sentOk });
     } catch (e) {
-      const msg = e instanceof Error ? e.message : 'UNKNOWN_ERROR';
-      if (msg.includes('MISSING_COLLECTOR_ENDPOINT')) {
-        setSendError(dict.analyze.collectorMissing);
-      } else {
-        setSendError(dict.analyze.contributionError);
-      }
-    } finally {
-      setSending(false);
+      const msg = e instanceof Error ? e.message : 'Unknown error';
+      setSendStatus({ state: 'error', message: `${t.sentError}: ${msg}` });
+    }
+  }
+
+  async function handleCopyJson() {
+    try {
+      await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
+      setSendStatus({ state: 'success', message: 'JSON copié' });
+    } catch {
+      setSendStatus({ state: 'error', message: 'Impossible de copier le JSON' });
+    }
+  }
+
+  function handleDownloadJson() {
+    const blob = new Blob([JSON.stringify(payload, null, 2)], {
+      type: 'application/json',
+    });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `shiftwell-${l}-${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  }
+
+  function resetAll() {
+    setProfile({
+      mode: 'short',
+      profession: '',
+      ageBand: '',
+      sex: '',
+      chronotype: '',
+      fatigue: 3,
+      schedulePredictability: 3,
+      commuteMinutes: 0,
+      napsPerWeek: 0,
+      caffeineCups: 2,
+    });
+    setWorkSegments([]);
+    setSleepSegments([]);
+    setEditingWorkId(null);
+    setEditingSleepId(null);
+    setWorkDraft({ day: 0, startMin: 8 * 60, endMin: 16 * 60, overnight: false });
+    setSleepDraft({ day: 0, startMin: 22 * 60, endMin: 6 * 60, overnight: true });
+    setCollector({ endpoint: '', consent: false, includeAnonymousId: true });
+    setSendStatus({ state: 'idle' });
+    setStepIndex(0);
+    try {
+      localStorage.removeItem(draftStorageKey);
+    } catch {
+      // ignore
     }
   }
 
   return (
-    <>
-      <div className="topbar">
-        <div className="brand">
-          <span className="brand-mark" />
+    <div>
+ <LocaleNav locale={l}></LocaleNav>
+
+      <section className="card" style={{ padding: 16, marginBottom: 16 }}>
+        <div className="row" style={{ justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <div className="brand-name">Shiftwell</div>
-            <div className="small muted">{dict.tagline}</div>
+            <div className="badge primary">{t.analyze}</div>
+            <h1 className="section-title" style={{ marginTop: 8, marginBottom: 4 }}>
+              {t.steps[stepIndex]}
+            </h1>
+            <p className="small muted" style={{ margin: 0 }}>
+              {t.helper}
+            </p>
           </div>
-        </div>
-
-        <div className="row">
-          <Link className="btn ghost" href={`/${locale}/`}>
-            {dict.common.home}
-          </Link>
-          <Link className="btn ghost" href="/fr/analyze/">
-            FR
-          </Link>
-          <Link className="btn ghost" href="/en/analyze/">
-            EN
-          </Link>
-          <Link className="btn ghost" href="/de/analyze/">
-            DE
-          </Link>
-        </div>
-      </div>
-
-      <section className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <h1 className="section-title">{dict.analyze.title}</h1>
-        <p className="section-subtitle">{dict.analyze.subtitle}</p>
-        <div className="notice" style={{ marginTop: 12 }}>
-          <div className="small">{dict.analyze.scientificNote}</div>
-        </div>
-      </section>
-
-      <div className="grid grid-2">
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {dict.analyze.profileTitle}
-          </h2>
-
-          <div className="grid" style={{ gap: 12 }}>
-            <div>
-              <label className="label">{dict.analyze.modeLabel}</label>
-              <div className="row">
-                <button
-                  className={`btn ${draft.mode === 'short' ? 'primary' : ''}`}
-                  onClick={() => setDraft((p) => ({ ...p, mode: 'short' }))}
-                  type="button"
-                >
-                  {dict.common.shortMode}
-                </button>
-                <button
-                  className={`btn ${draft.mode === 'long' ? 'primary' : ''}`}
-                  onClick={() => setDraft((p) => ({ ...p, mode: 'long' }))}
-                  type="button"
-                >
-                  {dict.common.longMode}
-                </button>
-              </div>
-            </div>
-
-            <div>
-              <label className="label">{dict.analyze.profession}</label>
-              <select
-                className="select"
-                value={draft.profile.professionCategory}
-                onChange={(e) => updateProfile('professionCategory', e.target.value)}
-              >
-                {dict.analyze.professionOptions.map((opt) => (
-                  <option key={opt}>{opt}</option>
-                ))}
-              </select>
-            </div>
-
-            <div className="grid grid-2">
-              <div>
-                <label className="label">{dict.analyze.ageBand}</label>
-                <select
-                  className="select"
-                  value={draft.profile.ageBand}
-                  onChange={(e) => updateProfile('ageBand', e.target.value)}
-                >
-                  {dict.analyze.ageBands.map((opt) => (
-                    <option key={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="label">{dict.analyze.sex}</label>
-                <select
-                  className="select"
-                  value={draft.profile.sex}
-                  onChange={(e) => updateProfile('sex', e.target.value)}
-                >
-                  {dict.analyze.sexOptions.map((opt) => (
-                    <option key={opt}>{opt}</option>
-                  ))}
-                </select>
-              </div>
-            </div>
-
-            <div className="grid grid-2">
-              <div>
-                <label className="label">{dict.analyze.locale}</label>
-                <input className="input" value={draft.profile.locale} readOnly />
-              </div>
-              <div>
-                <label className="label">{dict.analyze.timezone}</label>
-                <input
-                  className="input"
-                  value={draft.profile.timezone}
-                  onChange={(e) => updateProfile('timezone', e.target.value)}
-                />
-              </div>
-            </div>
-
-            {draft.mode === 'long' && (
-              <div className="card soft" style={{ padding: 12 }}>
-                <div className="small" style={{ fontWeight: 700, marginBottom: 10 }}>
-                  {dict.analyze.longQuestions.title}
-                </div>
-
-                <div className="grid grid-2">
-                  <div>
-                    <label className="label">{dict.analyze.longQuestions.fatigue}</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={10}
-                      className="input"
-                      value={draft.longAnswers.fatigue ?? 5}
-                      onChange={(e) => updateLongAnswer('fatigue', Number(e.target.value))}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="label">{dict.analyze.longQuestions.sleepQuality}</label>
-                    <input
-                      type="number"
-                      min={0}
-                      max={10}
-                      className="input"
-                      value={draft.longAnswers.sleepQuality ?? 5}
-                      onChange={(e) => updateLongAnswer('sleepQuality', Number(e.target.value))}
-                    />
-                  </div>
-                </div>
-
-                <div style={{ marginTop: 10 }}>
-                  <label className="row small">
-                    <input
-                      type="checkbox"
-                      checked={!!draft.longAnswers.lateCaffeine}
-                      onChange={(e) => updateLongAnswer('lateCaffeine', e.target.checked)}
-                    />
-                    {dict.analyze.longQuestions.lateCaffeine}
-                  </label>
-                </div>
-              </div>
-            )}
-
-            <div className="small muted">
-              {hydrated ? dict.analyze.localDraftSaved : '...'}
-            </div>
-          </div>
-        </section>
-
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {dict.analyze.resultsTitle}
-          </h2>
-
-          <div className="grid grid-3" style={{ marginTop: 8 }}>
-            <div className="card soft score-card">
-              <div className="small muted">{dict.analyze.scores.adaptability}</div>
-              <div className="score-value">{scores.adaptabilityScore}</div>
-              <div className={inverseScoreBadgeClass(scores.adaptabilityScore)} style={{ marginTop: 8 }}>
-                {scores.adaptabilityScore >= 75
-                  ? 'High'
-                  : scores.adaptabilityScore >= 50
-                  ? 'Moderate'
-                  : scores.adaptabilityScore >= 25
-                  ? 'Low'
-                  : 'Very low'}
-              </div>
-            </div>
-
-            <div className="card soft score-card">
-              <div className="small muted">{dict.analyze.scores.risk}</div>
-              <div className="score-value">{scores.riskScore}</div>
-              <div className={scoreBadgeClass(scores.riskScore)} style={{ marginTop: 8 }}>
-                SLI raw: {scores.sliRaw}/16
-              </div>
-            </div>
-
-            <div className="card soft score-card">
-              <div className="small muted">{dict.analyze.scores.sleep}</div>
-              <div className="score-value">{scores.sleepScore}</div>
-              <div className={inverseScoreBadgeClass(scores.sleepScore)} style={{ marginTop: 8 }}>
-                {scores.derived.avgSleepHours}h avg
-              </div>
-            </div>
-          </div>
-
-          <div className="divider" />
 
           <div className="small muted">
-            {dict.analyze.scoreVersionLabel}: <strong>{scores.scoringVersion}</strong>
+            {t.saveVersion}: <strong>proxy-v0.1</strong>
           </div>
+        </div>
 
-          <div style={{ marginTop: 10 }}>
-            {scores.referenceDelta ? (
-              <div className="small">
-                <strong>{dict.analyze.referenceDelta}:</strong>{' '}
-                ΔRisk {scores.referenceDelta.riskScore ?? '—'} · ΔSleep{' '}
-                {scores.referenceDelta.sleepScore ?? '—'} · ΔAdapt{' '}
-                {scores.referenceDelta.adaptabilityScore ?? '—'}
-              </div>
-            ) : (
-              <div className="small muted">{dict.analyze.noReferenceConfigured}</div>
-            )}
+        <div style={{ marginTop: 14 }}>
+          <StepProgress
+            labels={t.steps}
+            current={stepIndex}
+            percent={overallPct}
+            progressLabel={t.progress}
+          />
+        </div>
+
+        <div className="notice" style={{ marginTop: 12 }}>
+          <div className="small">
+            <strong>{overallPct}%</strong> — {t.progress}
           </div>
-
-          <div className="row" style={{ marginTop: 14 }}>
-            <button type="button" className="btn primary" onClick={exportReport}>
-              {dict.common.exportReport}
-            </button>
-          </div>
-        </section>
-      </div>
-
-      <section className="card" style={{ padding: 16, marginTop: 16 }}>
-        <h2 className="section-title" style={{ fontSize: 18 }}>
-          {dict.analyze.scheduleTitle}
-        </h2>
-        <p className="small muted">{dict.analyze.scheduleHelp}</p>
-
-        <div className="grid" style={{ gap: 12 }}>
-          {daySegments.map((day) => (
-            <div className="day-card" key={day.dayIndex}>
-              <div className="row" style={{ justifyContent: 'space-between' }}>
-                <strong>{dict.days[day.dayIndex]}</strong>
-                <div className="row">
-                  <button
-                    type="button"
-                    className="btn secondary"
-                    onClick={() => addSegment(day.dayIndex, 'work')}
-                  >
-                    + {dict.analyze.workSegments}
-                  </button>
-                  <button
-                    type="button"
-                    className="btn"
-                    onClick={() => addSegment(day.dayIndex, 'sleep')}
-                  >
-                    + {dict.analyze.sleepSegments}
-                  </button>
-                </div>
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <div className="small" style={{ fontWeight: 700 }}>
-                  {dict.analyze.workSegments}
-                </div>
-                {!day.work.length && <div className="small muted">—</div>}
-                {day.work.map((seg) => (
-                  <div className="segment-row" key={seg.id}>
-                    <input
-                      type="time"
-                      className="input"
-                      value={seg.start}
-                      onChange={(e) => patchSegment(seg.id, { start: e.target.value })}
-                      aria-label={`${dict.analyze.segmentStart} ${dict.analyze.workSegments}`}
-                    />
-                    <input
-                      type="time"
-                      className="input"
-                      value={seg.end}
-                      onChange={(e) => patchSegment(seg.id, { end: e.target.value })}
-                      aria-label={`${dict.analyze.segmentEnd} ${dict.analyze.workSegments}`}
-                    />
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => removeSegment(seg.id)}
-                      title={dict.analyze.delete}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <div className="small" style={{ fontWeight: 700 }}>
-                  {dict.analyze.sleepSegments}
-                </div>
-                {!day.sleep.length && <div className="small muted">—</div>}
-                {day.sleep.map((seg) => (
-                  <div className="segment-row" key={seg.id}>
-                    <input
-                      type="time"
-                      className="input"
-                      value={seg.start}
-                      onChange={(e) => patchSegment(seg.id, { start: e.target.value })}
-                      aria-label={`${dict.analyze.segmentStart} ${dict.analyze.sleepSegments}`}
-                    />
-                    <input
-                      type="time"
-                      className="input"
-                      value={seg.end}
-                      onChange={(e) => patchSegment(seg.id, { end: e.target.value })}
-                      aria-label={`${dict.analyze.segmentEnd} ${dict.analyze.sleepSegments}`}
-                    />
-                    <button
-                      type="button"
-                      className="btn"
-                      onClick={() => removeSegment(seg.id)}
-                      title={dict.analyze.delete}
-                    >
-                      ×
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
       </section>
 
-      <div className="grid grid-2" style={{ marginTop: 16 }}>
+      {stepIndex === 0 && (
         <section className="card" style={{ padding: 16 }}>
           <h2 className="section-title" style={{ fontSize: 18 }}>
-            {dict.analyze.metricsTitle}
+            {t.profileTitle}
           </h2>
+          <p className="section-subtitle">{t.profileSubtitle}</p>
 
-          <div className="grid grid-2">
-            <Metric label="Work hours" value={`${scores.derived.totalWorkHours}h`} />
-            <Metric label="Long shifts" value={scores.derived.longShiftCount} />
-            <Metric label="Longest recovery" value={`${scores.derived.longestRecoveryHours}h`} />
-            <Metric label="Short breaks" value={scores.derived.shortBreaksCount} />
-            <Metric label="Fully rested days" value={scores.derived.fullyRestedDaysCount} />
-            <Metric label="Night shifts" value={scores.derived.nightShiftCount} />
-            <Metric label="Biological hours lost" value={`${scores.derived.biologicalHoursLost}h`} />
-            <Metric label="Social hours lost" value={`${scores.derived.socialHoursLost}h`} />
-            <Metric label="Avg sleep" value={`${scores.derived.avgSleepHours}h`} />
-            <Metric label="Sleep regularity" value={`${scores.derived.sleepRegularityProxy}/100`} />
-          </div>
-        </section>
-
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {dict.analyze.explanationsTitle}
-          </h2>
-
-          <ul style={{ margin: 0, paddingLeft: 20 }}>
-            {scores.explanations.map((exp) => (
-              <li key={exp} className="small" style={{ marginBottom: 8 }}>
-                {exp}
-              </li>
-            ))}
-          </ul>
-
-          <div className="divider" />
-
-          <h3 style={{ marginTop: 0 }}>{dict.analyze.consentTitle}</h3>
-          <p className="small muted">{dict.analyze.consentBody}</p>
-
-          <label className="row small" style={{ alignItems: 'flex-start', marginTop: 8 }}>
-            <input
-              type="checkbox"
-              checked={explicitConsent}
-              onChange={(e) => setExplicitConsent(e.target.checked)}
-              style={{ marginTop: 2 }}
-            />
-            <span>{dict.analyze.explicitConsent}</span>
-          </label>
-
-          <label className="row small" style={{ alignItems: 'flex-start', marginTop: 8 }}>
-            <input
-              type="checkbox"
-              checked={recontactConsent}
-              onChange={(e) => setRecontactConsent(e.target.checked)}
-              style={{ marginTop: 2 }}
-            />
-            <span>{dict.analyze.recontactConsent}</span>
-          </label>
-
-          <div className="small muted" style={{ marginTop: 8 }}>
-            {dict.analyze.consentNoticeVersion}: {CONSENT_NOTICE_VERSION}
-          </div>
-
-          <div className="row" style={{ marginTop: 12 }}>
+          <div className="row" style={{ marginBottom: 12 }}>
             <button
               type="button"
-              className="btn primary"
-              onClick={onSendContribution}
-              disabled={!explicitConsent || sending}
+              className={`btn ${profile.mode === 'short' ? 'primary' : ''}`}
+              onClick={() => setProfile((p) => ({ ...p, mode: 'short' }))}
             >
-              {sending ? dict.common.loading : dict.analyze.sendContribution}
+              {t.modeShort}
+            </button>
+            <button
+              type="button"
+              className={`btn ${profile.mode === 'long' ? 'primary' : ''}`}
+              onClick={() => setProfile((p) => ({ ...p, mode: 'long' }))}
+            >
+              {t.modeLong}
             </button>
           </div>
 
-          {sendStatus && <div className="success small" style={{ marginTop: 8 }}>{sendStatus}</div>}
-          {sendError && <div className="error small" style={{ marginTop: 8 }}>{sendError}</div>}
-        </section>
-      </div>
-    </>
-  );
-}
+          <div className="notice" style={{ marginBottom: 12 }}>
+            <div className="small">
+              {profile.mode === 'short' ? t.shortModeBlock : t.longModeBlock}
+            </div>
+          </div>
 
-function Metric({ label, value }: { label: string; value: string | number }) {
-  return (
-    <div className="card soft" style={{ padding: 10 }}>
-      <div className="small muted">{label}</div>
-      <div style={{ fontWeight: 700, marginTop: 4 }}>{value}</div>
+          <div className="grid grid-2">
+            <Field label={t.profession} required>
+              <input
+                className="input"
+                value={profile.profession}
+                placeholder={t.professionPlaceholder}
+                onChange={(e) => setProfile((p) => ({ ...p, profession: e.target.value }))}
+              />
+            </Field>
+
+            <Field label={t.ageBand} required>
+              <select
+                className="input"
+                value={profile.ageBand}
+                onChange={(e) => setProfile((p) => ({ ...p, ageBand: e.target.value }))}
+              >
+                <option value="">{t.select}</option>
+                {t.ages.map((a) => (
+                  <option key={a} value={a}>
+                    {a}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label={t.sex}>
+              <select
+                className="input"
+                value={profile.sex}
+                onChange={(e) =>
+                  setProfile((p) => ({ ...p, sex: e.target.value as ParticipantProfile['sex'] }))
+                }
+              >
+                <option value="">{t.select}</option>
+                {t.sexes.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+
+            <Field label={t.chronotype}>
+              <select
+                className="input"
+                value={profile.chronotype}
+                onChange={(e) =>
+                  setProfile((p) => ({
+                    ...p,
+                    chronotype: e.target.value as ParticipantProfile['chronotype'],
+                  }))
+                }
+              >
+                <option value="">{t.select}</option>
+                {t.chronotypes.map(([value, label]) => (
+                  <option key={value} value={value}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </Field>
+          </div>
+
+          {profile.mode === 'long' && (
+            <div className="grid grid-2" style={{ marginTop: 12 }}>
+              <Field label={t.fatigue}>
+                <RangeInput
+                  min={1}
+                  max={5}
+                  value={profile.fatigue}
+                  onChange={(v) => setProfile((p) => ({ ...p, fatigue: v }))}
+                />
+              </Field>
+
+              <Field label={t.predictability}>
+                <RangeInput
+                  min={1}
+                  max={5}
+                  value={profile.schedulePredictability}
+                  onChange={(v) =>
+                    setProfile((p) => ({ ...p, schedulePredictability: v }))
+                  }
+                />
+              </Field>
+
+              <Field label={t.commute}>
+                <input
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={240}
+                  value={profile.commuteMinutes}
+                  onChange={(e) =>
+                    setProfile((p) => ({
+                      ...p,
+                      commuteMinutes: clamp(Number(e.target.value || 0), 0, 240),
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field label={t.naps}>
+                <input
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={21}
+                  value={profile.napsPerWeek}
+                  onChange={(e) =>
+                    setProfile((p) => ({
+                      ...p,
+                      napsPerWeek: clamp(Number(e.target.value || 0), 0, 21),
+                    }))
+                  }
+                />
+              </Field>
+
+              <Field label={t.caffeine}>
+                <input
+                  className="input"
+                  type="number"
+                  min={0}
+                  max={20}
+                  value={profile.caffeineCups}
+                  onChange={(e) =>
+                    setProfile((p) => ({
+                      ...p,
+                      caffeineCups: clamp(Number(e.target.value || 0), 0, 20),
+                    }))
+                  }
+                />
+              </Field>
+            </div>
+          )}
+
+          <FooterActions
+            onPrev={stepIndex > 0 ? () => setStepIndex((s) => s - 1) : undefined}
+            onNext={() => setStepIndex(1)}
+            prevLabel={t.previous}
+            nextLabel={t.next}
+            canNext={canGoStep1}
+            requiredText={!canGoStep1 ? t.required : undefined}
+          />
+        </section>
+      )}
+
+      {stepIndex === 1 && (
+        <CalendarEditorStep
+          locale={l}
+          title={t.workTitle}
+          subtitle={t.calendarSubtitle}
+          legend={t.workLegend}
+          kind="work"
+          segments={workSegments}
+          setSegments={setWorkSegments}
+          draft={workDraft}
+          setDraft={setWorkDraft}
+          editingId={editingWorkId}
+          setEditingId={setEditingWorkId}
+          labels={t}
+          onPrev={() => setStepIndex(0)}
+          onNext={() => setStepIndex(2)}
+          canNext={canGoStep2}
+        />
+      )}
+
+      {stepIndex === 2 && (
+        <CalendarEditorStep
+          locale={l}
+          title={t.sleepTitle}
+          subtitle={t.calendarSubtitle}
+          legend={t.sleepLegend}
+          kind="sleep"
+          segments={sleepSegments}
+          setSegments={setSleepSegments}
+          draft={sleepDraft}
+          setDraft={setSleepDraft}
+          editingId={editingSleepId}
+          setEditingId={setEditingSleepId}
+          labels={t}
+          onPrev={() => setStepIndex(1)}
+          onNext={() => setStepIndex(3)}
+          canNext={canGoStep3}
+          tips={t.quickTips}
+        />
+      )}
+
+      {stepIndex === 3 && (
+        <section className="card" style={{ padding: 16 }}>
+          <h2 className="section-title" style={{ fontSize: 18 }}>
+            {t.resultsTitle}
+          </h2>
+          <p className="section-subtitle">{t.resultsSubtitle}</p>
+
+          <div className="grid grid-3">
+            <ScoreCard
+              label={t.scoreRisk}
+              value={scores.risk}
+              hint={t.riskHint}
+              inverse={false}
+              lowLabel={t.scoreScaleLow}
+              highLabel={t.scoreScaleHigh}
+            />
+            <ScoreCard
+              label={t.scoreSleep}
+              value={scores.sleep}
+              hint={t.sleepHint}
+              inverse
+              lowLabel={t.scoreScaleLow}
+              highLabel={t.scoreScaleHigh}
+            />
+            <ScoreCard
+              label={t.scoreAdapt}
+              value={scores.adaptability}
+              hint={t.adaptHint}
+              inverse
+              lowLabel={t.scoreScaleLow}
+              highLabel={t.scoreScaleHigh}
+              highlight
+            />
+          </div>
+
+          <div className="grid grid-2" style={{ marginTop: 16 }}>
+            <section className="card soft" style={{ padding: 14 }}>
+              <h3 style={{ marginTop: 0 }}>{t.derived}</h3>
+              <DerivedMetricsList metrics={derived} locale={l} />
+            </section>
+
+            <section className="card soft" style={{ padding: 14 }}>
+              <h3 style={{ marginTop: 0 }}>{t.explanations}</h3>
+              <ResultsExplanations metrics={derived} scores={scores} locale={l} />
+              <div className="notice" style={{ marginTop: 12 }}>
+                <div className="small">
+                  <strong>Note.</strong> {t.notMedical}
+                </div>
+              </div>
+            </section>
+          </div>
+
+          <section className="card" style={{ padding: 14, marginTop: 16 }}>
+            <h3 style={{ marginTop: 0 }}>{t.contribution}</h3>
+
+            <div className="grid grid-2">
+              <Field label={t.endpoint}>
+                <input
+                  className="input"
+                  placeholder={t.endpointPlaceholder}
+                  value={collector.endpoint}
+                  onChange={(e) => setCollector((c) => ({ ...c, endpoint: e.target.value }))}
+                />
+              </Field>
+
+              <div
+                style={{
+                  display: 'grid',
+                  gap: 8,
+                  alignContent: 'start',
+                  marginTop: 22,
+                }}
+              >
+                <label className="small" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={collector.consent}
+                    onChange={(e) => setCollector((c) => ({ ...c, consent: e.target.checked }))}
+                  />
+                  {t.consentCheck}
+                </label>
+
+                <label className="small" style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
+                  <input
+                    type="checkbox"
+                    checked={collector.includeAnonymousId}
+                    onChange={(e) =>
+                      setCollector((c) => ({ ...c, includeAnonymousId: e.target.checked }))
+                    }
+                  />
+                  {t.anonId}
+                </label>
+              </div>
+            </div>
+
+            <div className="row" style={{ marginTop: 12 }}>
+              <button
+                type="button"
+                className="btn primary"
+                onClick={handleSend}
+                disabled={sendStatus.state === 'sending'}
+              >
+                {sendStatus.state === 'sending' ? '…' : t.sendData}
+              </button>
+              <button type="button" className="btn" onClick={handleCopyJson}>
+                {t.copyJson}
+              </button>
+              <button type="button" className="btn" onClick={handleDownloadJson}>
+                {t.exportJson}
+              </button>
+            </div>
+
+            {sendStatus.state !== 'idle' && (
+              <div className="notice" style={{ marginTop: 10 }}>
+                <div className="small">
+                  <strong>
+                    {sendStatus.state === 'success'
+                      ? t.sentOk
+                      : sendStatus.state === 'error'
+                      ? t.sentError
+                      : '…'}
+                  </strong>
+                  {sendStatus.message ? ` — ${sendStatus.message}` : null}
+                </div>
+              </div>
+            )}
+          </section>
+
+          <FooterActions
+            onPrev={() => setStepIndex(2)}
+            onNext={() => {}}
+            prevLabel={t.previous}
+            nextLabel={t.finish}
+            canNext
+            hideNext
+            extra={
+              <button type="button" className="btn ghost" onClick={resetAll}>
+                {t.resetAll}
+              </button>
+            }
+          />
+        </section>
+      )}
     </div>
   );
 }
