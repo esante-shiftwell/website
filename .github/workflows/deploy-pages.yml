@@ -12,6 +12,13 @@ concurrency:
 
 jobs:
   deploy:
+    if: >
+      github.event_name == 'workflow_dispatch' ||
+      (
+        !contains(github.event.head_commit.message || '', '[skip ci]') &&
+        !startsWith(github.event.head_commit.message || '', 'chore(release):')
+      )
+
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
@@ -35,7 +42,6 @@ jobs:
       - name: Build static export
         run: npm run build
 
-      # Optionnel mais pratique pour debug CI
       - name: Check output folder
         run: |
           test -d out

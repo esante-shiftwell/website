@@ -11,6 +11,13 @@ on:
 
 jobs:
   validate:
+    if: >
+      github.event_name == 'pull_request' ||
+      (
+        !contains(github.event.head_commit.message || '', '[skip ci]') &&
+        !startsWith(github.event.head_commit.message || '', 'chore(release):')
+      )
+
     runs-on: ubuntu-latest
     timeout-minutes: 15
 
@@ -30,7 +37,5 @@ jobs:
       - name: Lint
         run: npm run lint
 
-      # create-next-app n'a pas toujours un script typecheck
-      # next build fait déjà un typecheck TS en pratique
       - name: Build static export
         run: npm run build
