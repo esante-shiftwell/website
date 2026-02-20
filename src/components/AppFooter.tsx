@@ -12,11 +12,6 @@ function detectLocale(pathname: string): FooterLocale | null {
   return LOCALES.includes(first as FooterLocale) ? (first as FooterLocale) : null;
 }
 
-function isActivePath(pathname: string, locale: FooterLocale, section: 'legal' | 'consent' | 'method' | 'study' | 'about' | 'analyze') {
-  const target = `/${locale}/${section}`;
-  return pathname === target || pathname === `${target}/` || pathname.startsWith(`${target}/`);
-}
-
 const footerCopy = {
   fr: {
     legal: 'Légal',
@@ -59,6 +54,30 @@ const footerCopy = {
   },
 } as const;
 
+function buildLocaleHref(pathname: string, targetLocale: FooterLocale): string {
+  const hasTrailingSlash = pathname.endsWith('/');
+  const segments = pathname.split('/').filter(Boolean);
+
+  if (segments.length === 0) {
+    return `/${targetLocale}/`;
+  }
+
+  const first = segments[0];
+  if (LOCALES.includes(first as FooterLocale)) {
+    segments[0] = targetLocale;
+
+    // cas "/fr" => on force "/en/"
+    if (segments.length === 1) {
+      return `/${targetLocale}/`;
+    }
+
+    return `/${segments.join('/')}${hasTrailingSlash ? '/' : ''}`;
+  }
+
+  // fallback si on est sur une route non localisée
+  return `/${targetLocale}/`;
+}
+
 export default function AppFooter({
   paperUrl = 'https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2025.1679296/full',
   scoringVersion = 'proxy-v0.1',
@@ -69,8 +88,6 @@ export default function AppFooter({
   const pathname = usePathname() ?? '/';
   const locale = detectLocale(pathname);
   const c = locale ? footerCopy[locale] : footerCopy.en;
-
-  const [msg, setMsg] = useState('');
 
   return (
     <footer
@@ -130,7 +147,6 @@ export default function AppFooter({
               {c.paper}
             </a>
 
-            {msg ? <span className="small muted">{msg}</span> : null}
           </div>
 
           {/* Right: secondary links + locale switch */}
@@ -138,7 +154,7 @@ export default function AppFooter({
             {LOCALES.map((lng) => (
               <Link key={lng} 
                     className={`btn ${lng === locale ? 'primary' : 'ghost'}`}
-                                  href={`/${lng}/`}>
+                                  href={buildLocaleHref(pathname, lng)}>
                 {lng.toUpperCase()}
               </Link>
             ))}
