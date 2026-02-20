@@ -331,7 +331,6 @@ export default function CalendarEditorStep({
         nextLabel={labels.next}
         canNext={canNext}
         requiredText={!canNext ? labels.required : undefined}
-        rightMeta={labels.draftSaved}
       />
     </section>
   );
