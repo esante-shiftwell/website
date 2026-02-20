@@ -25,6 +25,9 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Show tag being deployed
+        run: echo "Deploying tag ${{ github.ref_name }}"
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
