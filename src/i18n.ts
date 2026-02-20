@@ -329,7 +329,7 @@ export const dictionaries = {
   },
 } as const;
 
-export type Dictionary = (typeof dictionaries)['fr'];
+export type Dictionary = (typeof dictionaries)[Locale];
 
 export function getDictionary(locale: Locale): Dictionary {
   return dictionaries[locale] ?? dictionaries.fr;
