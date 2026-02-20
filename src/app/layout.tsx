@@ -1,9 +1,15 @@
 import './globals.css';
 import type { Metadata } from 'next';
+import AppFooter from '@/components/AppFooter';
 
 export const metadata: Metadata = {
   title: 'Shiftwell',
   description: 'Shiftwell - analyse travail / sommeil (chronobiologie)',
+  icons: {
+    icon: '/shiftwell-icon.png',
+    shortcut: '/shiftwell-icon.png',
+    apple: '/shiftwell-icon.png',
+  },
 };
 
 export default function RootLayout({
@@ -13,7 +19,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        {children}
+        <AppFooter />
+      </body>
     </html>
   );
 }
