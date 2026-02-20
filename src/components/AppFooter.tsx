@@ -28,7 +28,6 @@ const footerCopy = {
     note: 'Recherche · pas un avis médical',
     localFirst: 'Local',
     optIn: 'Opt-in',
-    scoringVersion: 'Score',
     paper: 'Paper',
     lang: 'Langue',
   },
@@ -42,7 +41,6 @@ const footerCopy = {
     note: 'Research · not medical advice',
     localFirst: 'Local',
     optIn: 'Opt-in',
-    scoringVersion: 'Score',
     paper: 'Paper',
     lang: 'Language',
   },
@@ -56,7 +54,6 @@ const footerCopy = {
     note: 'Forschung · keine medizinische Beratung',
     localFirst: 'Lokal',
     optIn: 'Opt-in',
-    scoringVersion: 'Score',
     paper: 'Paper',
     lang: 'Sprache',
   },
@@ -121,7 +118,7 @@ export default function AppFooter({
           {/* Center: useful actions */}
           <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
             <span className="badge">
-              {c.scoringVersion}: <strong>{scoringVersion}</strong>
+              <strong>{scoringVersion}</strong>
             </span>
 
             <a

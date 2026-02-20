@@ -1,6 +1,7 @@
 import './globals.css';
 import type { Metadata } from 'next';
 import AppFooter from '@/components/AppFooter';
+import { getAppVersion } from '@/lib/appVersion';
 
 export const metadata: Metadata = {
   title: 'Shiftwell',
@@ -12,16 +13,19 @@ export const metadata: Metadata = {
   },
 };
 
+
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
+  const appVersion = getAppVersion();
+  
   return (
     <html lang="en">
       <body>
         {children}
-        <AppFooter />
+        <AppFooter scoringVersion={appVersion} />
       </body>
     </html>
   );
