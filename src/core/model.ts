@@ -1,4 +1,4 @@
-import type { Locale } from '../app/i18n';
+import type { Locale } from '@/i18n';
 
 export type QuestionnaireMode = 'short' | 'long';
 export type SegmentKind = 'work' | 'sleep';
