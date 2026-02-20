@@ -146,7 +146,7 @@ export default async function LegalPage({
 
   return (
     <main>
-      <LocaleNav locale={locale} subtitle="Legal · Privacy · MVP framework" />
+      <LocaleNav locale={locale}/>
 
       <section className="card" style={{ padding: 20, marginBottom: 16 }}>
         <span className="badge primary">Legal</span>

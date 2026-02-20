@@ -142,7 +142,7 @@ export default async function MethodPage({
 
   return (
     <main>
-      <LocaleNav locale={locale} subtitle="Methodology · Scoring · Research basis" />
+      <LocaleNav locale={locale}/>
 
       <section className="card" style={{ padding: 20, marginBottom: 16 }}>
         <span className="badge primary">Method</span>

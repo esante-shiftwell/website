@@ -217,7 +217,7 @@ export default async function LocaleHomePage({
 
   return (
     <main>
-      <LocaleNav locale={locale} subtitle={d.tagline} />
+      <LocaleNav locale={locale}/>
 
       {/* HERO */}
       <section

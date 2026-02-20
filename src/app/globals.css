@@ -12,9 +12,9 @@
   --border: rgba(21, 34, 56, 0.1);
   --border-strong: rgba(21, 34, 56, 0.16);
 
-  --primary: #2a9d8f;    /* teal */
+  --primary: #2a9d8f; /* teal */
   --primary-2: #23867a;
-  --secondary: #f4a261;  /* dawn orange */
+  --secondary: #f4a261; /* dawn orange */
   --secondary-2: #ea8c43;
   --warn: #f59e0b;
   --danger: #ef4444;
@@ -45,9 +45,10 @@
     Roboto,
     Helvetica,
     Arial,
-    "Apple Color Emoji",
-    "Segoe UI Emoji";
+    'Apple Color Emoji',
+    'Segoe UI Emoji';
 
+  /* fixed footer dock reservation */
   --footer-dock-h: 86px;
   --footer-dock-h-mobile: 132px;
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -181,6 +182,91 @@ main {
   font-weight: 800;
   letter-spacing: -0.02em;
   color: var(--ink-2);
+}
+
+/* ---------- Topbar compact nav (locale pages) ---------- */
+
+.topbar.topbar-stack {
+  display: block;
+  padding: 0;
+  overflow: hidden;
+}
+
+.topbar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 10px 12px 8px;
+}
+
+.topbar-mini-badge {
+  min-height: 18px;
+  padding: 0 7px;
+  font-size: 10px;
+}
+
+.topbar-subtitle {
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 760px;
+}
+
+.topbar-tabs {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 10px 10px;
+  border-top: 1px solid rgba(21, 34, 56, 0.06);
+  overflow-x: auto;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+}
+
+.topbar-tabs::-webkit-scrollbar {
+  height: 8px;
+}
+
+.topbar-tabs::-webkit-scrollbar-thumb {
+  background: rgba(21, 34, 56, 0.12);
+  border-radius: 999px;
+}
+
+.topbar-tab {
+  height: 32px;
+  padding: 0 10px;
+  border-radius: 9px;
+  border: 1px solid rgba(21, 34, 56, 0.08);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--ink-2);
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  transition:
+    transform 120ms ease,
+    box-shadow 120ms ease,
+    border-color 120ms ease,
+    background 120ms ease;
+}
+
+.topbar-tab:hover {
+  border-color: rgba(21, 34, 56, 0.16);
+  background: rgba(255, 255, 255, 0.92);
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(17, 24, 39, 0.08);
+}
+
+.topbar-tab.is-active {
+  color: white;
+  border-color: rgba(42, 157, 143, 0.22);
+  background: linear-gradient(180deg, rgba(42, 157, 143, 0.95), rgba(35, 134, 122, 0.95));
+  box-shadow: 0 8px 16px rgba(42, 157, 143, 0.16);
 }
 
 /* -------------------------------- Cards ---------------------------------- */
@@ -372,12 +458,10 @@ textarea.input {
   color: #94a3b8;
 }
 
-/* Range */
 input[type='range'] {
   accent-color: var(--primary);
 }
 
-/* Checkbox tuning */
 input[type='checkbox'] {
   width: 15px;
   height: 15px;
@@ -441,7 +525,6 @@ td {
 }
 
 /* ------------------------- Calendar visual helpers ------------------------- */
-/* Pas obligatoire, mais utile si tu sors l’inline style plus tard */
 
 .calendar-shell {
   border: 1px solid var(--border);
@@ -531,6 +614,36 @@ footer .card {
 
   .card {
     border-radius: 14px;
+  }
+
+  /* compact topbar (locale pages) */
+  .topbar.topbar-stack {
+    border-radius: 14px;
+  }
+
+  .topbar-head {
+    padding: 10px 10px 8px;
+  }
+
+  .topbar-subtitle {
+    white-space: normal;
+    max-width: none;
+    line-height: 1.25;
+  }
+
+  .topbar-tabs {
+    padding: 8px 8px 10px;
+    gap: 6px;
+  }
+
+  .topbar-tab {
+    height: 31px;
+    padding: 0 9px;
+    font-size: 12px;
+  }
+
+  .topbar-badge-desktop {
+    display: none;
   }
 }
 

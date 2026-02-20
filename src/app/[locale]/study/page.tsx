@@ -130,7 +130,7 @@ export default async function StudyPage({
 
   return (
     <main>
-      <LocaleNav locale={locale} subtitle="Study · Participation · Data collection" />
+      <LocaleNav locale={locale}/>
 
       <section className="card" style={{ padding: 20, marginBottom: 16 }}>
         <span className="badge secondary">Study</span>

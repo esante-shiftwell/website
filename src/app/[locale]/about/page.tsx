@@ -90,7 +90,7 @@ export default async function AboutPage({
 
   return (
     <main>
-      <LocaleNav locale={locale} subtitle="About · Product vision · Stack" />
+      <LocaleNav locale={locale}/>
 
       <section className="card" style={{ padding: 20, marginBottom: 16 }}>
         <span className="badge primary">About</span>
