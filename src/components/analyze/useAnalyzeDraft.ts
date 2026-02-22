@@ -5,124 +5,188 @@ import type { CollectorState, Locale, ParticipantProfile } from '@/components/an
 import type { DayPartSegment } from '@/components/analyze/calendar/scheduleUtils';
 import { clamp } from '@/components/analyze/utils';
 
-const DRAFT_KEY_BASE = 'shiftwell:draft:v3';
+const STORAGE_KEY_SHARED = 'shiftwell:draft:v3:shared';
+const storageKeyPerLocale = (locale: Locale) => `shiftwell:draft:v3:${locale}`;
 
-const DEFAULT_PROFILE: ParticipantProfile = {
-  mode: 'short',
-  profession: '',
-  ageBand: '',
-  sex: '',
-  chronotype: '',
-  fatigue: 3,
-  schedulePredictability: 3,
-  commuteMinutes: 0,
-  napsPerWeek: 0,
-  caffeineCups: 2,
-};
+// -------------------- defaults --------------------
 
-const DEFAULT_COLLECTOR: CollectorState = {
-  endpoint: '',
-  consent: false,
-  includeAnonymousId: true,
-};
+function defaultProfile(): ParticipantProfile {
+  return {
+    mode: 'short',
+    profession: '',
+    ageBand: '',
+    sex: '',
+    chronotype: '',
+    fatigue: 3,
+    schedulePredictability: 3,
+    commuteMinutes: 0,
+    napsPerWeek: 0,
+    caffeineCups: 2,
+  };
+}
 
-type DraftShape = Partial<{
+function defaultCollector(): CollectorState {
+  return {
+    endpoint: '',
+    consent: false,
+    includeAnonymousId: true,
+  };
+}
+
+type Draft = {
+  stepIndex: number;
   profile: ParticipantProfile;
   workSegments: DayPartSegment[];
   sleepSegments: DayPartSegment[];
   collector: CollectorState;
-  stepIndex: number;
-}>;
+  lastLocale?: Locale;
+};
+
+function defaultDraft(locale: Locale): Draft {
+  return {
+    stepIndex: 0,
+    profile: defaultProfile(),
+    workSegments: [],
+    sleepSegments: [],
+    collector: defaultCollector(),
+    lastLocale: locale,
+  };
+}
+
+function safeParseDraft(raw: string | null, locale: Locale): Draft | null {
+  if (!raw) return null;
+  try {
+    const d = JSON.parse(raw) as Partial<Draft>;
+    if (!d || typeof d !== 'object') return null;
+
+    return {
+      stepIndex: typeof d.stepIndex === 'number' ? clamp(d.stepIndex, 0, 2) : 0,
+      profile: (d.profile as ParticipantProfile) ?? defaultProfile(),
+      workSegments: Array.isArray(d.workSegments) ? (d.workSegments as DayPartSegment[]) : [],
+      sleepSegments: Array.isArray(d.sleepSegments) ? (d.sleepSegments as DayPartSegment[]) : [],
+      collector: (d.collector as CollectorState) ?? defaultCollector(),
+      lastLocale: d.lastLocale ?? locale,
+    };
+  } catch {
+    return null;
+  }
+}
+
+// -------------------- hook --------------------
 
 export function useAnalyzeDraft(locale: Locale) {
-  const draftKey = useMemo(() => `${DRAFT_KEY_BASE}:${locale}`, [locale]);
-
   const [hydrated, setHydrated] = useState(false);
+  const [draft, setDraft] = useState<Draft>(() => defaultDraft(locale));
 
-  const [stepIndex, setStepIndex] = useState(0);
-  const [profile, setProfileState] = useState<ParticipantProfile>(DEFAULT_PROFILE);
-  const [workSegments, setWorkSegments] = useState<DayPartSegment[]>([]);
-  const [sleepSegments, setSleepSegments] = useState<DayPartSegment[]>([]);
-  const [collector, setCollectorState] = useState<CollectorState>(DEFAULT_COLLECTOR);
+  // ✅ setter helpers (stables)
+  const setStepIndex = useMemo(() => {
+    return (next: number | ((prev: number) => number)) => {
+      setDraft((prev) => ({
+        ...prev,
+        stepIndex: typeof next === 'function' ? (next as (p: number) => number)(prev.stepIndex) : next,
+      }));
+    };
+  }, []);
 
-  // LOAD (modern only)
+  const setProfile = useMemo(() => {
+    return (next: ParticipantProfile | ((prev: ParticipantProfile) => ParticipantProfile)) => {
+      setDraft((prev) => ({
+        ...prev,
+        profile: typeof next === 'function' ? (next as (p: ParticipantProfile) => ParticipantProfile)(prev.profile) : next,
+      }));
+    };
+  }, []);
+
+  const setWorkSegments = useMemo(() => {
+    return (next: DayPartSegment[] | ((prev: DayPartSegment[]) => DayPartSegment[])) => {
+      setDraft((prev) => ({
+        ...prev,
+        workSegments: typeof next === 'function' ? (next as (p: DayPartSegment[]) => DayPartSegment[])(prev.workSegments) : next,
+      }));
+    };
+  }, []);
+
+  const setSleepSegments = useMemo(() => {
+    return (next: DayPartSegment[] | ((prev: DayPartSegment[]) => DayPartSegment[])) => {
+      setDraft((prev) => ({
+        ...prev,
+        sleepSegments: typeof next === 'function' ? (next as (p: DayPartSegment[]) => DayPartSegment[])(prev.sleepSegments) : next,
+      }));
+    };
+  }, []);
+
+  // ✅ IMPORTANT: signature "updater-only" (comme tu utilises partout)
+  const setCollector = useMemo(() => {
+    return (updater: (c: CollectorState) => CollectorState) => {
+      setDraft((prev) => ({ ...prev, collector: updater(prev.collector) }));
+    };
+  }, []);
+
+  // Load (shared), sinon migration depuis la clé locale v3
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem(draftKey);
-      if (!raw) return;
+    if (typeof window === 'undefined') return;
 
-      const parsed = JSON.parse(raw) as DraftShape;
+    // ⚠️ ESLint: pas de setState "synchrone" dans l'effect → on décale en microtask
+    queueMicrotask(() => {
+      const shared = safeParseDraft(localStorage.getItem(STORAGE_KEY_SHARED), locale);
+      if (shared) {
+        setDraft(shared);
+        setHydrated(true);
+        return;
+      }
 
-      if (parsed.profile) setProfileState(parsed.profile);
-      if (Array.isArray(parsed.workSegments)) setWorkSegments(parsed.workSegments);
-      if (Array.isArray(parsed.sleepSegments)) setSleepSegments(parsed.sleepSegments);
-      if (parsed.collector) setCollectorState(parsed.collector);
-      if (typeof parsed.stepIndex === 'number') setStepIndex(clamp(parsed.stepIndex, 0, 2));
-    } catch {
-      // ignore
-    } finally {
+      const legacy = safeParseDraft(localStorage.getItem(storageKeyPerLocale(locale)), locale);
+      if (legacy) {
+        setDraft(legacy);
+        try {
+          localStorage.setItem(STORAGE_KEY_SHARED, JSON.stringify({ ...legacy, lastLocale: locale }));
+          localStorage.removeItem(storageKeyPerLocale(locale));
+        } catch {
+          // ignore
+        }
+      }
+
       setHydrated(true);
-    }
-  }, [draftKey]);
+    });
+  }, [locale]);
 
-  // SAVE (only after hydration)
+  // Save (shared)
   useEffect(() => {
     if (!hydrated) return;
+    if (typeof window === 'undefined') return;
+
+    const toSave: Draft = { ...draft, lastLocale: locale };
+
     try {
-      localStorage.setItem(
-        draftKey,
-        JSON.stringify({
-          profile,
-          workSegments,
-          sleepSegments,
-          collector,
-          stepIndex,
-        }),
-      );
+      localStorage.setItem(STORAGE_KEY_SHARED, JSON.stringify(toSave));
     } catch {
       // ignore
     }
-  }, [collector, draftKey, hydrated, profile, sleepSegments, stepIndex, workSegments]);
-
-  // helpers with “updater function” signature (nice for components)
-  const setProfile = (updater: (p: ParticipantProfile) => ParticipantProfile) => {
-    setProfileState((p) => updater(p));
-  };
-
-  const setCollector = (updater: (c: CollectorState) => CollectorState) => {
-    setCollectorState((c) => updater(c));
-  };
+  }, [draft, hydrated, locale]);
 
   function resetAll() {
-    setProfileState(DEFAULT_PROFILE);
-    setWorkSegments([]);
-    setSleepSegments([]);
-    setCollectorState(DEFAULT_COLLECTOR);
-    setStepIndex(0);
-
+    setDraft(defaultDraft(locale));
     try {
-      localStorage.removeItem(draftKey);
+      localStorage.removeItem(STORAGE_KEY_SHARED);
     } catch {
       // ignore
     }
   }
 
   return {
-    hydrated,
-
-    stepIndex,
+    stepIndex: draft.stepIndex,
     setStepIndex,
 
-    profile,
+    profile: draft.profile,
     setProfile,
 
-    workSegments,
+    workSegments: draft.workSegments,
     setWorkSegments,
 
-    sleepSegments,
+    sleepSegments: draft.sleepSegments,
     setSleepSegments,
 
-    collector,
+    collector: draft.collector,
     setCollector,
 
     resetAll,
