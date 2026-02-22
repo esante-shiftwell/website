@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DayPartSegment, Kind } from './scheduleUtils';
 import {
   buildSegmentsFromSelection,
@@ -45,6 +45,8 @@ function codeFromLabel(label: string | undefined, fallback: string) {
   return (first || fallback).toUpperCase();
 }
 
+type UndoState = null | { kind: Kind; seg: DayPartSegment };
+
 export default function DayMixedEditor({
   ui,
   day,
@@ -65,9 +67,19 @@ export default function DayMixedEditor({
   const [activeKind, setActiveKind] = useState<Kind>('work');
   const [selection, setSelection] = useState<Selection>(null);
 
-  const [undo, setUndo] = useState<null | { kind: Kind; seg: DayPartSegment; expiresAt: number }>(
-    null,
-  );
+  const [undo, setUndo] = useState<UndoState>(null);
+
+  // timer undo (no Date.now, no expiresAt)
+  const undoTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current != null) {
+        window.clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const workDay = useMemo(() => sortDaySegments(workSegments, day), [workSegments, day]);
   const sleepDay = useMemo(() => sortDaySegments(sleepSegments, day), [sleepSegments, day]);
@@ -138,6 +150,17 @@ export default function DayMixedEditor({
     setSelection((s) => (s ? { ...s, currentMin: m, valid: ok } : null));
   }
 
+  function scheduleUndoClear() {
+    if (undoTimerRef.current != null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    undoTimerRef.current = window.setTimeout(() => {
+      setUndo(null);
+      undoTimerRef.current = null;
+    }, 6000);
+  }
+
   function remove(kind: Kind, id: string) {
     const seg = listFor(kind).find((s) => s.id === id);
     if (!seg) return;
@@ -147,19 +170,26 @@ export default function DayMixedEditor({
       listFor(kind).filter((s) => s.id !== id),
     );
 
-    const expiresAt = Date.now() + 6000;
-    setUndo({ kind, seg, expiresAt });
-    window.setTimeout(() => {
-      setUndo((u) => (u && u.expiresAt <= Date.now() ? null : u));
-    }, 6020);
+    // show undo, auto-clear after 6s
+    setUndo({ kind, seg });
+    scheduleUndoClear();
   }
 
   function applyUndo() {
     setUndo((u) => {
       if (!u) return null;
+
       const current = listFor(u.kind);
       if (current.some((s) => s.id === u.seg.id)) return null;
+
       setListFor(u.kind, [...current, u.seg]);
+
+      // clear pending timer once applied
+      if (undoTimerRef.current != null) {
+        window.clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+
       return null;
     });
   }
@@ -316,7 +346,11 @@ function GridLines() {
         </div>
       ))}
       {Array.from({ length: 24 }, (_, i) => (
-        <div key={`h30-${i}`} className="sw-line sw-line--half" style={{ top: i * HOUR_HEIGHT + HOUR_HEIGHT / 2 }} />
+        <div
+          key={`h30-${i}`}
+          className="sw-line sw-line--half"
+          style={{ top: i * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
+        />
       ))}
     </div>
   );
