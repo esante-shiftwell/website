@@ -2,7 +2,6 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
 
 const LOCALES = ['fr', 'en', 'de'] as const;
 type FooterLocale = (typeof LOCALES)[number];
@@ -14,12 +13,6 @@ function detectLocale(pathname: string): FooterLocale | null {
 
 const footerCopy = {
   fr: {
-    legal: 'Légal',
-    consent: 'Consentement',
-    method: 'Méthode',
-    study: 'Étude',
-    about: 'À propos',
-    analyze: 'Analyse',
     note: 'Recherche · pas un avis médical',
     localFirst: 'Local',
     optIn: 'Opt-in',
@@ -27,12 +20,6 @@ const footerCopy = {
     lang: 'Langue',
   },
   en: {
-    legal: 'Legal',
-    consent: 'Consent',
-    method: 'Method',
-    study: 'Study',
-    about: 'About',
-    analyze: 'Analyze',
     note: 'Research · not medical advice',
     localFirst: 'Local',
     optIn: 'Opt-in',
@@ -40,12 +27,6 @@ const footerCopy = {
     lang: 'Language',
   },
   de: {
-    legal: 'Rechtliches',
-    consent: 'Einwilligung',
-    method: 'Methodik',
-    study: 'Studie',
-    about: 'Über',
-    analyze: 'Analyse',
     note: 'Forschung · keine medizinische Beratung',
     localFirst: 'Lokal',
     optIn: 'Opt-in',
@@ -54,27 +35,29 @@ const footerCopy = {
   },
 } as const;
 
+function withTrailingSlash(path: string) {
+  if (path === '/') return '/';
+  return path.endsWith('/') ? path : `${path}/`;
+}
+
 function buildLocaleHref(pathname: string, targetLocale: FooterLocale): string {
-  const hasTrailingSlash = pathname.endsWith('/');
   const segments = pathname.split('/').filter(Boolean);
 
-  if (segments.length === 0) {
-    return `/${targetLocale}/`;
-  }
+  // root
+  if (segments.length === 0) return `/${targetLocale}/`;
 
+  // already localized: replace first segment
   const first = segments[0];
   if (LOCALES.includes(first as FooterLocale)) {
     segments[0] = targetLocale;
 
-    // cas "/fr" => on force "/en/"
-    if (segments.length === 1) {
-      return `/${targetLocale}/`;
-    }
+    // "/fr" -> "/en/"
+    if (segments.length === 1) return `/${targetLocale}/`;
 
-    return `/${segments.join('/')}${hasTrailingSlash ? '/' : ''}`;
+    return withTrailingSlash(`/${segments.join('/')}`);
   }
 
-  // fallback si on est sur une route non localisée
+  // not localized -> fallback
   return `/${targetLocale}/`;
 }
 
@@ -120,7 +103,6 @@ export default function AppFooter({
             flexWrap: 'wrap',
           }}
         >
-          {/* Left: identity + trust */}
           <div className="row" style={{ gap: 8, minWidth: 0 }}>
             <div className="brand-name" style={{ fontSize: 13 }}>
               Shiftwell
@@ -132,29 +114,31 @@ export default function AppFooter({
             </div>
           </div>
 
-          {/* Center: useful actions */}
           <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
             <span className="badge">
               <strong>{scoringVersion}</strong>
             </span>
-
-            <a
-              className="btn ghost"
-              href={paperUrl}
-              target="_blank"
-              rel="noreferrer"
-            >
+            <a className="btn ghost" href={paperUrl} target="_blank" rel="noreferrer">
               {c.paper}
             </a>
-
           </div>
 
-          {/* Right: secondary links + locale switch */}
           <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
             {LOCALES.map((lng) => (
-              <Link key={lng} 
-                    className={`btn ${lng === locale ? 'primary' : 'ghost'}`}
-                                  href={buildLocaleHref(pathname, lng)}>
+              <Link
+                key={lng}
+                className={`btn ${lng === locale ? 'primary' : 'ghost'}`}
+                href={buildLocaleHref(pathname, lng)}
+                prefetch={false}
+                onClick={() => {
+                  try {
+                    localStorage.setItem('shiftwell:locale', lng);
+                  } catch {
+                    // ignore
+                  }
+                }}
+                aria-label={`${c.lang}: ${lng.toUpperCase()}`}
+              >
                 {lng.toUpperCase()}
               </Link>
             ))}
