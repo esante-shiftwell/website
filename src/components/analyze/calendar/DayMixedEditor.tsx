@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import type { DayPartSegment, Kind } from './scheduleUtils';
 import {
   buildSegmentsFromSelection,
@@ -68,15 +68,6 @@ export default function DayMixedEditor({
   const [undo, setUndo] = useState<null | { kind: Kind; seg: DayPartSegment }>(null);
   const undoTimerRef = useRef<number | null>(null);
 
-  useEffect(() => {
-    return () => {
-      if (undoTimerRef.current != null) {
-        window.clearTimeout(undoTimerRef.current);
-        undoTimerRef.current = null;
-      }
-    };
-  }, []);
-
   const workDay = useMemo(() => sortDaySegments(workSegments, day), [workSegments, day]);
   const sleepDay = useMemo(() => sortDaySegments(sleepSegments, day), [sleepSegments, day]);
 
@@ -92,11 +83,7 @@ export default function DayMixedEditor({
     return kind === 'work' ? sleepSegments : workSegments;
   }
   function setListFor(kind: Kind, next: DayPartSegment[]) {
-    if (kind === 'work') {
-      setWorkSegments(next);
-    } else {
-      setSleepSegments(next);
-    }
+    kind === 'work' ? setWorkSegments(next) : setSleepSegments(next);
   }
 
   function canPlace(kind: Kind, parts: Array<Omit<DayPartSegment, 'id'>>) {
@@ -154,31 +141,23 @@ export default function DayMixedEditor({
     const seg = listFor(kind).find((s) => s.id === id);
     if (!seg) return;
 
-    setListFor(kind, listFor(kind).filter((s) => s.id !== id));
+    setListFor(
+      kind,
+      listFor(kind).filter((s) => s.id !== id),
+    );
 
     setUndo({ kind, seg });
 
-    if (undoTimerRef.current != null) window.clearTimeout(undoTimerRef.current);
-    undoTimerRef.current = window.setTimeout(() => {
-      setUndo(null);
-      undoTimerRef.current = null;
-    }, 6000);
+    if (undoTimerRef.current) window.clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = window.setTimeout(() => setUndo(null), 6000);
   }
 
   function applyUndo() {
     setUndo((u) => {
       if (!u) return null;
-
       const current = listFor(u.kind);
       if (current.some((s) => s.id === u.seg.id)) return null;
-
       setListFor(u.kind, [...current, u.seg]);
-
-      if (undoTimerRef.current != null) {
-        window.clearTimeout(undoTimerRef.current);
-        undoTimerRef.current = null;
-      }
-
       return null;
     });
   }

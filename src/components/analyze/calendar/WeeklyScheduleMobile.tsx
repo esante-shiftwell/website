@@ -10,7 +10,7 @@ type Block = DayPartSegment & { kind: Kind };
 
 type Group = {
   kind: Kind;
-  groupId: string;
+  groupId: string; // prefix before ":" (or full id if no ":")
   parts: DayPartSegment[];
   startAbs: number;
   endAbs: number;
@@ -45,24 +45,6 @@ function groupIdOf(id: string) {
   return id.includes(':') ? id.split(':')[0] : id;
 }
 
-function inferLocaleFromDayLabels(dayLabels: readonly string[]): Locale | null {
-  const a = (dayLabels[0] ?? '').toLowerCase();
-  const b = (dayLabels[1] ?? '').toLowerCase();
-
-  // ultra robuste : on check le 1er / 2e jour
-  if (a.startsWith('lun') || b.startsWith('mar')) return 'fr';
-  if (a === 'mon' || b === 'tue') return 'en';
-  if (a === 'mo' || b === 'di') return 'de';
-
-  // fallback
-  const joined = dayLabels.join('|').toLowerCase();
-  if (joined.includes('lun|') || joined.includes('|lun')) return 'fr';
-  if (joined.includes('mon|') || joined.includes('|mon')) return 'en';
-  if (joined.includes('mo|') || joined.includes('|mo')) return 'de';
-
-  return null;
-}
-
 /** Split an absolute-range into day parts. Requires endAbs > startAbs. */
 function buildPartsFromAbsRange(startAbs: number, endAbs: number, maxSpanMin: number) {
   let a = startAbs;
@@ -85,6 +67,7 @@ function buildPartsFromAbsRange(startAbs: number, endAbs: number, maxSpanMin: nu
     const segEnd = segEndAbs - dayStartAbs;
 
     if (segEnd > segStart) parts.push({ day, startMin: segStart, endMin: segEnd });
+
     a = segEndAbs;
   }
 
@@ -108,6 +91,7 @@ function percentWidth(startMin: number, endMin: number) {
 function mobileUi(locale: Locale) {
   if (locale === 'fr') {
     return {
+      edit: 'Modifier',
       add: 'Ajouter un segment',
       kind: 'Type',
       work: 'Travail',
@@ -128,6 +112,7 @@ function mobileUi(locale: Locale) {
   }
   if (locale === 'de') {
     return {
+      edit: 'Bearbeiten',
       add: 'Segment hinzufügen',
       kind: 'Typ',
       work: 'Arbeit',
@@ -147,6 +132,7 @@ function mobileUi(locale: Locale) {
     };
   }
   return {
+    edit: 'Edit',
     add: 'Add segment',
     kind: 'Kind',
     work: 'Work',
@@ -176,7 +162,7 @@ function timeOptions(step = 15) {
 }
 
 export default function WeeklyScheduleMobile({
-  locale,
+  locale, // ✅ ajouté
   ui,
   dayLabels,
   selectedDay,
@@ -186,7 +172,7 @@ export default function WeeklyScheduleMobile({
   sleepSegments,
   setSleepSegments,
 }: {
-  locale?: Locale; // ✅ optionnel
+  locale: Locale; // ✅ ajouté
   ui: ScheduleUi;
   dayLabels: readonly string[];
   selectedDay: number;
@@ -197,8 +183,8 @@ export default function WeeklyScheduleMobile({
   sleepSegments: DayPartSegment[];
   setSleepSegments: (next: DayPartSegment[]) => void;
 }) {
-  const effectiveLocale: Locale = locale ?? inferLocaleFromDayLabels(dayLabels) ?? 'en';
-  const m = useMemo(() => mobileUi(effectiveLocale), [effectiveLocale]);
+  // ✅ FIX : on passe locale à mobileUi
+  const m = useMemo(() => mobileUi(locale), [locale]);
   const times = useMemo(() => timeOptions(15), []);
 
   const [sheetDay, setSheetDay] = useState<number | null>(null);
@@ -442,9 +428,11 @@ export default function WeeklyScheduleMobile({
                 </div>
               </div>
 
-              <button type="button" className="btn ghost" onClick={() => setSheetDay(null)}>
-                {m.cancel}
-              </button>
+              <div className="row" style={{ gap: 8 }}>
+                <button type="button" className="btn ghost" onClick={() => setSheetDay(null)}>
+                  {m.cancel}
+                </button>
+              </div>
             </div>
 
             <div className="divider" />

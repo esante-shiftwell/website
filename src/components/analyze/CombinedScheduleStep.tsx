@@ -6,6 +6,7 @@ import DayMixedEditor from './calendar/DayMixedEditor';
 import WeeklyScheduleInline from './calendar/WeeklyScheduleInline';
 
 export type ScheduleUi = {
+
   title: string;
   subtitle: string;
   viewWeek: string;
