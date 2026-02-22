@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import type { DayPartSegment, Kind } from './scheduleUtils';
 import { clamp, minutesToTime, overlaps, snap } from './scheduleUtils';
 import type { ScheduleUi } from '../CombinedScheduleStep';
@@ -37,9 +37,12 @@ function codeFromLabel(label: string | undefined, fallback: string) {
   const first = (label ?? '').trim().slice(0, 1);
   return (first || fallback).toUpperCase();
 }
+
+// ✅ UID deterministic (avoid Math.random/Date.now for strict purity linters)
+let __uidSeq = 0;
 function uid() {
-  if (typeof crypto !== 'undefined' && 'randomUUID' in crypto) return crypto.randomUUID();
-  return `seg_${Math.random().toString(36).slice(2, 10)}`;
+  __uidSeq += 1;
+  return `seg_${__uidSeq}`;
 }
 
 function dayMinToAbs(day: number, min: number) {
@@ -89,6 +92,8 @@ type Selection =
       valid: boolean;
     };
 
+type UndoState = null | { kind: Kind; segs: DayPartSegment[] };
+
 export default function WeeklyScheduleInline({
   ui,
   dayLabels,
@@ -112,9 +117,17 @@ export default function WeeklyScheduleInline({
   const [activeKind, setActiveKind] = useState<Kind>('work');
   const [selection, setSelection] = useState<Selection>(null);
 
-  const [undo, setUndo] = useState<null | { kind: Kind; segs: DayPartSegment[]; expiresAt: number }>(
-    null,
-  );
+  const [undo, setUndo] = useState<UndoState>(null);
+  const undoTimerRef = useRef<number | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (undoTimerRef.current != null) {
+        window.clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+    };
+  }, []);
 
   const workCode = codeFromLabel(ui.badgeWork, 'W');
   const sleepCode = codeFromLabel(ui.badgeSleep, 'S');
@@ -176,6 +189,17 @@ export default function WeeklyScheduleInline({
     setListFor(kind, [...listFor(kind), ...created]);
   }
 
+  function scheduleUndoClear() {
+    if (undoTimerRef.current != null) {
+      window.clearTimeout(undoTimerRef.current);
+      undoTimerRef.current = null;
+    }
+    undoTimerRef.current = window.setTimeout(() => {
+      setUndo(null);
+      undoTimerRef.current = null;
+    }, 6000);
+  }
+
   function removeGroup(kind: Kind, id: string) {
     const group = id.includes(':') ? id.split(':')[0] : id;
     const current = listFor(kind);
@@ -187,11 +211,8 @@ export default function WeeklyScheduleInline({
       current.filter((s) => !(s.id === id || s.id.startsWith(`${group}:`))),
     );
 
-    const expiresAt = Date.now() + 6000;
-    setUndo({ kind, segs: removed, expiresAt });
-    window.setTimeout(() => {
-      setUndo((u) => (u && u.expiresAt <= Date.now() ? null : u));
-    }, 6020);
+    setUndo({ kind, segs: removed });
+    scheduleUndoClear();
   }
 
   function applyUndo() {
@@ -200,7 +221,14 @@ export default function WeeklyScheduleInline({
       const current = listFor(u.kind);
       const restored = u.segs.filter((s) => !current.some((c) => c.id === s.id));
       if (restored.length === 0) return null;
+
       setListFor(u.kind, [...current, ...restored]);
+
+      if (undoTimerRef.current != null) {
+        window.clearTimeout(undoTimerRef.current);
+        undoTimerRef.current = null;
+      }
+
       return null;
     });
   }
@@ -282,7 +310,7 @@ export default function WeeklyScheduleInline({
   const previewParts = useMemo(() => {
     if (!selection || selection.kind !== activeKind) return [];
     return buildPartsFromAbsRange(selection.startAbs, selection.currentAbs, maxSpanFor(activeKind));
-  }, [activeKind, selection]);
+  }, [activeKind, selection, workSegments, sleepSegments]);
 
   return (
     <section className="card soft" style={{ padding: 12 }}>
