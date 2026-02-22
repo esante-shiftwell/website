@@ -1,11 +1,29 @@
 'use client';
 
 import type { CollectorState, Locale } from '@/components/analyze/types';
-import type { ParticipantProfile, WeekSegment } from '@/components/analyze/types';
 import ScoreCard from '@/components/analyze/ScoreCard';
 import { FooterActions } from '@/components/analyze/FormBits';
 import { useExplainability } from '@/components/analyze/explainability/ExplainabilityContext';
 import ContributionBox from '@/components/analyze/contribution/ContributionBox';
+
+type ResultsText = {
+  resultsTitle: string;
+
+  scoreAdapt: string;
+  scoreSleep: string;
+  scoreRisk: string;
+
+  adaptHint: string;
+  sleepHint: string;
+  riskHint: string;
+
+  scoreScaleLow: string;
+  scoreScaleHigh: string;
+
+  previous: string;
+  finish: string;
+  resetAll: string;
+};
 
 function copy(locale: Locale) {
   if (locale === 'fr') {
@@ -74,11 +92,7 @@ function metricLabel(locale: Locale, key: string) {
 export default function ResultsStep({
   t,
   locale,
-  profile,
-  workSegments,
-  sleepSegments,
   scores,
-  derived,
   payload,
 
   collector,
@@ -90,20 +104,14 @@ export default function ResultsStep({
   onPrev,
   onResetAll,
 }: {
-  t: any;
+  t: ResultsText;
   locale: Locale;
 
-  profile: ParticipantProfile;
-  workSegments: WeekSegment[];
-  sleepSegments: WeekSegment[];
-
   scores: { risk: number; sleep: number; adaptability: number };
-  derived: any;
-
   payload: unknown;
 
   collector: CollectorState;
-setCollector: (updater: (c: CollectorState) => CollectorState) => void;
+  setCollector: (updater: (c: CollectorState) => CollectorState) => void;
 
   onCopyJson: () => void;
   onDownloadJson: () => void;
@@ -173,7 +181,9 @@ setCollector: (updater: (c: CollectorState) => CollectorState) => void;
       <div style={{ marginTop: 12 }} />
 
       <div
-        onClick={() => ex.openWithFocus({ kind: 'score', key: 'score.adaptability', label: t.scoreAdapt })}
+        onClick={() =>
+          ex.openWithFocus({ kind: 'score', key: 'score.adaptability', label: t.scoreAdapt })
+        }
         style={{ cursor: 'pointer' }}
       >
         <ScoreCard
@@ -257,7 +267,7 @@ setCollector: (updater: (c: CollectorState) => CollectorState) => void;
         setCollector={setCollector}
         onCopyJson={onCopyJson}
         onDownloadJson={onDownloadJson}
-        studyEmail={ "etude@etude.org"}
+        studyEmail="etude@etude.org"
       />
 
       <FooterActions

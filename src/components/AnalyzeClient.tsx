@@ -20,8 +20,9 @@ import ResultsStep from '@/components/analyze/ResultsStep';
 import type { DayPartSegment } from '@/components/analyze/calendar/scheduleUtils';
 import { useAnalyzeDraft } from '@/components/analyze/useAnalyzeDraft';
 import { useScheduleUi } from '@/components/analyze/useScheduleUi';
-import { ExplainabilityProvider } from './analyze/explainability/ExplainabilityContext';
-import ExplainabilityPanel from './analyze/explainability/ExplainabilityPanel';
+
+import { ExplainabilityProvider } from '@/components/analyze/explainability/ExplainabilityContext';
+import ExplainabilityPanel from '@/components/analyze/explainability/ExplainabilityPanel';
 
 type AnalyzeClientProps = {
   locale: string;
@@ -36,6 +37,18 @@ function dayPartsToWeekSegments(segs: DayPartSegment[]): WeekSegment[] {
     endMin: s.endMin,
     overnight: false,
   }));
+}
+
+function copiedAlert(locale: Locale) {
+  if (locale === 'fr') return 'JSON copié';
+  if (locale === 'de') return 'JSON kopiert';
+  return 'JSON copied';
+}
+
+function copyFailedAlert(locale: Locale) {
+  if (locale === 'fr') return 'Copie impossible';
+  if (locale === 'de') return 'Kopieren fehlgeschlagen';
+  return 'Copy failed';
 }
 
 export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
@@ -66,6 +79,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
   const workWeekSegments = useMemo(() => dayPartsToWeekSegments(workSegments), [workSegments]);
   const sleepWeekSegments = useMemo(() => dayPartsToWeekSegments(sleepSegments), [sleepSegments]);
 
+  // IMPORTANT: on garde DerivedMetrics (pas de cast qui pète computeScores)
   const derived = useMemo(
     () => computeDerivedMetrics(workWeekSegments, sleepWeekSegments),
     [workWeekSegments, sleepWeekSegments],
@@ -85,6 +99,9 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
 
   const canGoProfileNext = profilePct >= 60;
 
+  // stable createdAt (avoid recompute)
+  const [createdAt] = useState(() => new Date().toISOString());
+
   const payload = useMemo(() => {
     const anonymousId = collector.includeAnonymousId ? getOrCreateAnonymousId() : null;
 
@@ -92,7 +109,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
       project: 'shiftwell',
       scoringVersion: 'proxy-v0.1',
       locale: l,
-      createdAt: new Date().toISOString(),
+      createdAt,
       anonymousId,
       profile,
       workSegments: workWeekSegments,
@@ -100,46 +117,14 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
       derived,
       scores,
     };
-  }, [collector.includeAnonymousId, derived, l, profile, scores, sleepWeekSegments, workWeekSegments]);
-
-  const [sendStatus, setSendStatus] = useState<{
-    state: 'idle' | 'sending' | 'success' | 'error';
-    message?: string;
-  }>({ state: 'idle' });
-
-  async function handleSend() {
-    if (!collector.consent) {
-      setSendStatus({ state: 'error', message: t.consentCheck });
-      return;
-    }
-    if (!collector.endpoint.trim()) {
-      setSendStatus({ state: 'error', message: l === 'fr' ? 'Endpoint requis.' : 'Endpoint required.' });
-      return;
-    }
-
-    try {
-      setSendStatus({ state: 'sending' });
-
-      const res = await fetch(collector.endpoint.trim(), {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload),
-      });
-
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      setSendStatus({ state: 'success', message: t.sentOk });
-    } catch (e) {
-      const msg = e instanceof Error ? e.message : 'Unknown error';
-      setSendStatus({ state: 'error', message: `${t.sentError}: ${msg}` });
-    }
-  }
+  }, [collector.includeAnonymousId, createdAt, derived, l, profile, scores, sleepWeekSegments, workWeekSegments]);
 
   async function handleCopyJson() {
     try {
       await navigator.clipboard.writeText(JSON.stringify(payload, null, 2));
-      setSendStatus({ state: 'success', message: l === 'fr' ? 'JSON copié' : 'JSON copied' });
+      window.alert(copiedAlert(l));
     } catch {
-      setSendStatus({ state: 'error', message: l === 'fr' ? 'Copie impossible' : 'Copy failed' });
+      window.alert(copyFailedAlert(l));
     }
   }
 
@@ -191,6 +176,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
           onNext={() => setStepIndex(2)}
         />
       )}
+
       {stepIndex === 2 && (
         <ExplainabilityProvider
           locale={l}
@@ -205,22 +191,18 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
             scores,
           }}
         >
-        <ResultsStep
-  t={t}
-  locale={l}
-  profile={profile}
-  workSegments={workWeekSegments}
-  sleepSegments={sleepWeekSegments}
-  scores={scores}
-  derived={derived}
-  payload={payload}
-  collector={collector}
-  setCollector={setCollector}
-  onCopyJson={handleCopyJson}
-  onDownloadJson={handleDownloadJson}
-  onPrev={() => setStepIndex(1)}
-  onResetAll={resetAll}
-/>
+          <ResultsStep
+            t={t}
+            locale={l}
+            scores={scores}
+            payload={payload}
+            collector={collector}
+            setCollector={setCollector}
+            onCopyJson={handleCopyJson}
+            onDownloadJson={handleDownloadJson}
+            onPrev={() => setStepIndex(1)}
+            onResetAll={resetAll}
+          />
           <ExplainabilityPanel />
         </ExplainabilityProvider>
       )}

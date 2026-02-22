@@ -157,7 +157,11 @@ export default function WeeklyScheduleInline({
     return kind === 'work' ? sleepSegments : workSegments;
   }
   function setListFor(kind: Kind, next: DayPartSegment[]) {
-    kind === 'work' ? setWorkSegments(next) : setSleepSegments(next);
+    if (kind === 'work') {
+      setWorkSegments(next);
+    } else {
+      setSleepSegments(next);
+    }
   }
   function maxSpanFor(kind: Kind) {
     return kind === 'work' ? MAX_SPAN_WORK_MIN : MAX_SPAN_SLEEP_MIN;
@@ -310,7 +314,7 @@ export default function WeeklyScheduleInline({
   const previewParts = useMemo(() => {
     if (!selection || selection.kind !== activeKind) return [];
     return buildPartsFromAbsRange(selection.startAbs, selection.currentAbs, maxSpanFor(activeKind));
-  }, [activeKind, selection, workSegments, sleepSegments]);
+  }, [activeKind, selection]);
 
   return (
     <section className="card soft" style={{ padding: 12 }}>

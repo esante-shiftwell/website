@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { CollectorState, Locale, ParticipantProfile } from '@/components/analyze/types';
 import type { DayPartSegment } from '@/components/analyze/calendar/scheduleUtils';
 import { clamp } from '@/components/analyze/utils';
 
-const DRAFT_KEY = 'shiftwell:draft:v3';
+const DRAFT_KEY_BASE = 'shiftwell:draft:v3';
 
 const DEFAULT_PROFILE: ParticipantProfile = {
   mode: 'short',
@@ -34,7 +34,9 @@ type DraftShape = Partial<{
   stepIndex: number;
 }>;
 
-export function useAnalyzeDraft(_locale: Locale) {
+export function useAnalyzeDraft(locale: Locale) {
+  const draftKey = useMemo(() => `${DRAFT_KEY_BASE}:${locale}`, [locale]);
+
   const [hydrated, setHydrated] = useState(false);
 
   const [stepIndex, setStepIndex] = useState(0);
@@ -46,7 +48,7 @@ export function useAnalyzeDraft(_locale: Locale) {
   // LOAD (modern only)
   useEffect(() => {
     try {
-      const raw = localStorage.getItem(DRAFT_KEY);
+      const raw = localStorage.getItem(draftKey);
       if (!raw) return;
 
       const parsed = JSON.parse(raw) as DraftShape;
@@ -61,14 +63,14 @@ export function useAnalyzeDraft(_locale: Locale) {
     } finally {
       setHydrated(true);
     }
-  }, []);
+  }, [draftKey]);
 
   // SAVE (only after hydration)
   useEffect(() => {
     if (!hydrated) return;
     try {
       localStorage.setItem(
-        DRAFT_KEY,
+        draftKey,
         JSON.stringify({
           profile,
           workSegments,
@@ -80,7 +82,7 @@ export function useAnalyzeDraft(_locale: Locale) {
     } catch {
       // ignore
     }
-  }, [collector, hydrated, profile, sleepSegments, stepIndex, workSegments]);
+  }, [collector, draftKey, hydrated, profile, sleepSegments, stepIndex, workSegments]);
 
   // helpers with “updater function” signature (nice for components)
   const setProfile = (updater: (p: ParticipantProfile) => ParticipantProfile) => {
@@ -99,7 +101,7 @@ export function useAnalyzeDraft(_locale: Locale) {
     setStepIndex(0);
 
     try {
-      localStorage.removeItem(DRAFT_KEY);
+      localStorage.removeItem(draftKey);
     } catch {
       // ignore
     }

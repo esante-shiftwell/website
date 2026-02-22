@@ -4,6 +4,41 @@ import type { ParticipantProfile } from '@/components/analyze/types';
 import { clamp } from '@/components/analyze/utils';
 import { Field, FooterActions, RangeInput } from '@/components/analyze/FormBits';
 
+type ProfileStepCopy = {
+  profileTitle: string;
+  profileSubtitle: string;
+
+  modeShort: string;
+  modeLong: string;
+  shortModeBlock: string;
+  longModeBlock: string;
+
+  profession: string;
+  professionPlaceholder: string;
+
+  ageBand: string;
+  select: string;
+  ages: ReadonlyArray<string>;
+
+  sex: string;
+  sexes: ReadonlyArray<readonly [value: ParticipantProfile['sex'] | string, label: string]>;
+
+  chronotype: string;
+  chronotypes: ReadonlyArray<
+    readonly [value: ParticipantProfile['chronotype'] | string, label: string]
+  >;
+
+  fatigue: string;
+  predictability: string;
+  commute: string;
+  naps: string;
+  caffeine: string;
+
+  previous: string;
+  next: string;
+  required: string;
+};
+
 export default function ProfileStep({
   t,
   profile,
@@ -11,7 +46,7 @@ export default function ProfileStep({
   onNext,
   canNext,
 }: {
-  t: any;
+  t: ProfileStepCopy;
   profile: ParticipantProfile;
   setProfile: (updater: (p: ParticipantProfile) => ParticipantProfile) => void;
   onNext: () => void;
@@ -62,7 +97,7 @@ export default function ProfileStep({
             onChange={(e) => setProfile((p) => ({ ...p, ageBand: e.target.value }))}
           >
             <option value="">{t.select}</option>
-            {t.ages.map((a: string) => (
+            {t.ages.map((a) => (
               <option key={a} value={a}>
                 {a}
               </option>
@@ -79,8 +114,8 @@ export default function ProfileStep({
             }
           >
             <option value="">{t.select}</option>
-            {t.sexes.map(([value, label]: [string, string]) => (
-              <option key={value} value={value}>
+            {t.sexes.map(([value, label]) => (
+              <option key={String(value)} value={String(value)}>
                 {label}
               </option>
             ))}
@@ -99,8 +134,8 @@ export default function ProfileStep({
             }
           >
             <option value="">{t.select}</option>
-            {t.chronotypes.map(([value, label]: [string, string]) => (
-              <option key={value} value={value}>
+            {t.chronotypes.map(([value, label]) => (
+              <option key={String(value)} value={String(value)}>
                 {label}
               </option>
             ))}

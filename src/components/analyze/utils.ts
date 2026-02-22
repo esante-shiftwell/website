@@ -67,7 +67,7 @@ export function validateSegment(
   if (duration <= 0) return { ok: false, message: 'Durée invalide.' };
 
   const minDuration = 15;
-  const maxDuration = kind === 'work' ? 16 * 60 : 16 * 60;
+  const maxDuration = kind === 'work' ? 16 * 60 : 16 * 60; // même limite volontaire (à ajuster si besoin)
 
   if (duration < minDuration) {
     return { ok: false, message: `Segment trop court (< ${minDuration} min).` };
@@ -111,8 +111,7 @@ function overlapMinutes(aStart: number, aEnd: number, bStart: number, bEnd: numb
 function regularityFromStdDev(values: number[]): number {
   if (values.length <= 1) return 50;
   const mean = values.reduce((a, b) => a + b, 0) / values.length;
-  const variance =
-    values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / values.length;
+  const variance = values.reduce((acc, v) => acc + (v - mean) ** 2, 0) / values.length;
   const std = Math.sqrt(variance);
   return clamp(100 - (std / 180) * 100, 0, 100);
 }
@@ -148,12 +147,9 @@ export function computeDerivedMetrics(
     return start >= 12 * 60 ? start : start + 24 * 60;
   });
 
-  const sleepRegularity =
-    sleepStarts.length >= 2 ? regularityFromStdDev(sleepStarts) : 50;
+  const sleepRegularity = sleepStarts.length >= 2 ? regularityFromStdDev(sleepStarts) : 50;
 
-  const workAbs = workSegments
-    .flatMap(segmentToAbsoluteIntervals)
-    .sort((a, b) => a.start - b.start);
+  const workAbs = workSegments.flatMap(segmentToAbsoluteIntervals).sort((a, b) => a.start - b.start);
 
   let minRecovery = Number.POSITIVE_INFINITY;
   for (let i = 1; i < workAbs.length; i += 1) {
@@ -161,14 +157,12 @@ export function computeDerivedMetrics(
     if (gap >= 0) minRecovery = Math.min(minRecovery, gap);
   }
 
-  const minRecoveryHours =
-    Number.isFinite(minRecovery) ? round1(minRecovery / 60) : 24;
+  const minRecoveryHours = Number.isFinite(minRecovery) ? round1(minRecovery / 60) : 24;
 
   return {
     totalWorkHours: round1(totalWorkMin / 60),
     totalSleepHours: round1(totalSleepMin / 60),
-    avgSleepHours:
-      sleepSegments.length > 0 ? round1(totalSleepMin / 60 / sleepSegments.length) : 0,
+    avgSleepHours: sleepSegments.length > 0 ? round1(totalSleepMin / 60 / sleepSegments.length) : 0,
     sleepRegularity: Math.round(sleepRegularity),
     nightWorkHours: round1(nightWorkMin / 60),
     longShiftCount,
@@ -177,10 +171,7 @@ export function computeDerivedMetrics(
   };
 }
 
-export function computeScores(
-  metrics: DerivedMetrics,
-  profile: ParticipantProfile,
-): Scores {
+export function computeScores(metrics: DerivedMetrics, profile: ParticipantProfile): Scores {
   const totalWorkPenalty = clamp((metrics.totalWorkHours - 35) * 1.2, 0, 25);
   const nightPenalty = clamp(metrics.nightWorkHours * 3.5, 0, 30);
   const longShiftPenalty = clamp(metrics.longShiftCount * 7, 0, 20);
@@ -267,26 +258,26 @@ export function getDerivedRows(metrics: DerivedMetrics, locale: Locale) {
           weekendWorkHours: 'Heures travail weekend',
         }
       : locale === 'de'
-      ? {
-          totalWorkHours: 'Arbeitsstunden (Woche)',
-          totalSleepHours: 'Schlafstunden (Woche)',
-          avgSleepHours: 'Ø Schlaf pro Segment',
-          sleepRegularity: 'Schlafregelmäßigkeit (Proxy)',
-          nightWorkHours: 'Nachtarbeitsstunden',
-          longShiftCount: 'Lange Schichten (≥10h)',
-          minRecoveryHours: 'Min. Erholung zw. Schichten',
-          weekendWorkHours: 'Wochenendarbeitsstunden',
-        }
-      : {
-          totalWorkHours: 'Work hours (weekly total)',
-          totalSleepHours: 'Sleep hours (weekly total)',
-          avgSleepHours: 'Average sleep per segment',
-          sleepRegularity: 'Sleep regularity (proxy)',
-          nightWorkHours: 'Night work hours',
-          longShiftCount: 'Long shifts (≥10h)',
-          minRecoveryHours: 'Minimum recovery gap',
-          weekendWorkHours: 'Weekend work hours',
-        };
+        ? {
+            totalWorkHours: 'Arbeitsstunden (Woche)',
+            totalSleepHours: 'Schlafstunden (Woche)',
+            avgSleepHours: 'Ø Schlaf pro Segment',
+            sleepRegularity: 'Schlafregelmäßigkeit (Proxy)',
+            nightWorkHours: 'Nachtarbeitsstunden',
+            longShiftCount: 'Lange Schichten (≥10h)',
+            minRecoveryHours: 'Min. Erholung zw. Schichten',
+            weekendWorkHours: 'Wochenendarbeitsstunden',
+          }
+        : {
+            totalWorkHours: 'Work hours (weekly total)',
+            totalSleepHours: 'Sleep hours (weekly total)',
+            avgSleepHours: 'Average sleep per segment',
+            sleepRegularity: 'Sleep regularity (proxy)',
+            nightWorkHours: 'Night work hours',
+            longShiftCount: 'Long shifts (≥10h)',
+            minRecoveryHours: 'Minimum recovery gap',
+            weekendWorkHours: 'Weekend work hours',
+          };
 
   return [
     { label: labels.totalWorkHours, value: `${metrics.totalWorkHours} h` },
@@ -300,27 +291,25 @@ export function getDerivedRows(metrics: DerivedMetrics, locale: Locale) {
   ];
 }
 
-export function getExplanations(
-  metrics: DerivedMetrics,
-  scores: Scores,
-  locale: Locale,
-): string[] {
+export function getExplanations(metrics: DerivedMetrics, scores: Scores, locale: Locale): string[] {
   const fr: string[] = [];
   const en: string[] = [];
   const de: string[] = [];
 
   if (scores.risk >= 70) {
-    fr.push("Le score de risque est élevé (travail de nuit, shifts longs ou récupérations courtes).");
+    fr.push(
+      "Le score de risque est élevé (travail de nuit, shifts longs ou récupérations courtes).",
+    );
     en.push('Risk score is high (night work, long shifts or short recovery gaps).');
     de.push('Der Risikoscore ist hoch (Nachtarbeit, lange Schichten oder kurze Erholung).');
   } else if (scores.risk <= 35) {
-    fr.push("Le score de risque est plutôt bas sur la semaine saisie.");
+    fr.push('Le score de risque est plutôt bas sur la semaine saisie.');
     en.push('Risk score is relatively low for the entered week.');
     de.push('Der Risikoscore ist für die eingegebene Woche eher niedrig.');
   }
 
   if (metrics.avgSleepHours < 6.5) {
-    fr.push("La durée moyenne de sommeil est basse (proxy), ce qui dégrade le score sommeil.");
+    fr.push('La durée moyenne de sommeil est basse (proxy), ce qui dégrade le score sommeil.');
     en.push('Average sleep duration is low (proxy), which lowers the sleep score.');
     de.push('Die durchschnittliche Schlafdauer ist niedrig (Proxy), was den Schlafscore senkt.');
   } else if (metrics.avgSleepHours >= 7 && metrics.sleepRegularity >= 65) {
@@ -330,7 +319,9 @@ export function getExplanations(
   }
 
   if (metrics.nightWorkHours > 0) {
-    fr.push(`Le travail de nuit détecté (${metrics.nightWorkHours}h) pèse sur le score de risque.`);
+    fr.push(
+      `Le travail de nuit détecté (${metrics.nightWorkHours}h) pèse sur le score de risque.`,
+    );
     en.push(`Detected night work (${metrics.nightWorkHours}h) weighs on the risk score.`);
     de.push(`Erkannte Nachtarbeit (${metrics.nightWorkHours}h) belastet den Risikoscore.`);
   }

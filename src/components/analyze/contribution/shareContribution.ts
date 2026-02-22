@@ -5,6 +5,17 @@ type ShareResult =
   | { ok: true; mode: 'mailto'; fileName: string; truncated: boolean }
   | { ok: false; reason: string };
 
+// Narrowing helper for Web Share API with files
+type NavigatorWithFileShare = Navigator & {
+  share: (data: ShareData) => Promise<void>;
+  canShare: (data: ShareData) => boolean;
+};
+
+function hasFileShare(nav: Navigator): nav is NavigatorWithFileShare {
+  return typeof (nav as NavigatorWithFileShare).share === 'function'
+    && typeof (nav as NavigatorWithFileShare).canShare === 'function';
+}
+
 function safeFileName(s: string) {
   return s.replace(/[^a-zA-Z0-9._-]+/g, '-').slice(0, 80);
 }
@@ -30,11 +41,11 @@ function downloadJsonFile(json: string, fileName: string) {
 }
 
 function canWebShareFile(file: File) {
-  const navAny = navigator as any;
-  if (!navAny?.share) return false;
-  if (typeof navAny?.canShare !== 'function') return false;
+  if (typeof navigator === 'undefined') return false;
+  if (!hasFileShare(navigator)) return false;
+
   try {
-    return !!navAny.canShare({ files: [file] });
+    return navigator.canShare({ files: [file] });
   } catch {
     return false;
   }
@@ -94,14 +105,15 @@ export async function shareOrEmailContribution(args: {
   // 1) Best UX: Web Share with file (mobile)
   try {
     const file = new File([json], fileName, { type: 'application/json' });
-    if (typeof navigator !== 'undefined' && canWebShareFile(file)) {
+
+    if (typeof navigator !== 'undefined' && hasFileShare(navigator) && canWebShareFile(file)) {
       const mail = buildContributionEmail({
         locale: args.locale,
         scoringVersion: args.scoringVersion,
         noticeVersion: args.noticeVersion,
       });
 
-      await (navigator as any).share({
+      await navigator.share({
         title: mail.subject,
         text: mail.intro + mail.attachHint + mail.footer,
         files: [file],

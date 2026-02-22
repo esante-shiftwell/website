@@ -32,14 +32,17 @@ function simulateByTweak(
 ): Impact['simulatedDelta'] | null {
   const before = state.scores;
 
-  // clone shallow
-  const nextProfile = { ...state.profile } as any;
-  const nextDerived = { ...(state.derived ?? {}) } as any;
+  // clones typés + accès dynamique safe
+  const nextProfile: ExplainabilityState['profile'] = { ...state.profile };
+  const nextDerived: ExplainabilityState['derived'] = { ...(state.derived ?? {}) };
+
+  const profileRec = nextProfile as unknown as Record<string, unknown>;
+  const derivedRec = nextDerived as Record<string, unknown>;
 
   // heuristiques simples (tu changes plus tard)
   if (focus.kind === 'score') {
     // simulate "more sleep" when focusing a score
-    nextDerived.totalSleepHours = (Number(nextDerived.totalSleepHours) || 0) + 1;
+    derivedRec.totalSleepHours = (Number(derivedRec.totalSleepHours) || 0) + 1;
     const after = computeScores(nextDerived, nextProfile);
     return {
       title: '+1h sleep (simulated)',
@@ -52,11 +55,11 @@ function simulateByTweak(
 
   if (focus.kind === 'field' && focus.key.startsWith('profile.')) {
     const k = focus.key.replace('profile.', '');
-    const v = nextProfile[k];
+    const v = profileRec[k];
 
     if (typeof v === 'number') {
       const bump = k.includes('Minutes') ? 10 : 1;
-      nextProfile[k] = clamp(v + bump, 0, 9999);
+      profileRec[k] = clamp(v + bump, 0, 9999);
       const after = computeScores(nextDerived, nextProfile);
       return {
         title: `${focus.key} + ${bump} (simulated)`,
@@ -71,9 +74,9 @@ function simulateByTweak(
 
   if (focus.kind === 'metric' || (focus.kind === 'field' && focus.key.startsWith('derived.'))) {
     const dk = focus.key.replace('derived.', '');
-    const v = Number(nextDerived[dk]);
+    const v = Number(derivedRec[dk]);
     if (Number.isFinite(v)) {
-      nextDerived[dk] = v + 1;
+      derivedRec[dk] = v + 1;
       const after = computeScores(nextDerived, nextProfile);
       return {
         title: `${focus.key} + 1 (simulated)`,
@@ -86,7 +89,7 @@ function simulateByTweak(
   }
 
   if (focus.kind === 'schedule') {
-    nextDerived.totalSleepHours = (Number(nextDerived.totalSleepHours) || 0) + 1;
+    derivedRec.totalSleepHours = (Number(derivedRec.totalSleepHours) || 0) + 1;
     const after = computeScores(nextDerived, nextProfile);
     return {
       title: '+1h sleep (simulated)',
@@ -113,10 +116,7 @@ export function computeImpactForFocus(
   if (!focus) return { scores: [], metrics: [] };
 
   // mapping minimal (tu modifies ici plus tard)
-  const map: Record<
-    string,
-    { scores: Array<'risk' | 'sleep' | 'adaptability'>; metrics: string[] }
-  > = {
+  const map: Record<string, { scores: Array<'risk' | 'sleep' | 'adaptability'>; metrics: string[] }> = {
     // Scores
     'score.adaptability': {
       scores: ['adaptability'],
@@ -133,14 +133,20 @@ export function computeImpactForFocus(
 
     // Profile fields (examples)
     'profile.fatigue': { scores: ['risk', 'adaptability'], metrics: ['profile.fatigue'] },
-    'profile.schedulePredictability': { scores: ['risk', 'adaptability'], metrics: ['profile.schedulePredictability'] },
+    'profile.schedulePredictability': {
+      scores: ['risk', 'adaptability'],
+      metrics: ['profile.schedulePredictability'],
+    },
     'profile.commuteMinutes': { scores: ['risk'], metrics: ['profile.commuteMinutes'] },
 
     // Derived
     'derived.totalSleepHours': { scores: ['sleep', 'adaptability'], metrics: ['derived.totalSleepHours'] },
     'derived.nightWorkHours': { scores: ['risk', 'adaptability'], metrics: ['derived.nightWorkHours'] },
     'derived.sleepDays': { scores: ['sleep', 'adaptability'], metrics: ['derived.sleepDays'] },
-    'derived.maxSleepGapHours': { scores: ['risk', 'sleep', 'adaptability'], metrics: ['derived.maxSleepGapHours'] },
+    'derived.maxSleepGapHours': {
+      scores: ['risk', 'sleep', 'adaptability'],
+      metrics: ['derived.maxSleepGapHours'],
+    },
 
     // Schedule (global)
     schedule: {

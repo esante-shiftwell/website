@@ -1,8 +1,8 @@
 'use client';
 
 import { useMemo } from 'react';
-import type { Locale } from '@/components/analyze/types';
-import type { ParticipantProfile, WeekSegment } from '@/components/analyze/types';
+import type { Locale, ParticipantProfile, WeekSegment } from '@/components/analyze/types';
+import type { DerivedMetrics } from './types';
 import type { FormulaMap } from './formulaMap';
 import { getNode, getUsedBy } from './formulaMap';
 
@@ -11,7 +11,7 @@ type ExplainState = {
   profile: ParticipantProfile;
   workSegments: WeekSegment[];
   sleepSegments: WeekSegment[];
-  derived: any;
+  derived: DerivedMetrics;
   scores: { risk: number; sleep: number; adaptability: number };
 };
 
@@ -61,7 +61,8 @@ function formatValue(key: string, state: ExplainState): string {
 
   if (key.startsWith('derived.')) {
     const dk = key.replace('derived.', '');
-    const v = state.derived?.[dk];
+    const derivedRec = state.derived as unknown as Record<string, unknown>;
+    const v = derivedRec[dk];
     if (typeof v !== 'number' || !Number.isFinite(v)) return '—';
 
     const low = dk.toLowerCase();
@@ -75,7 +76,8 @@ function formatValue(key: string, state: ExplainState): string {
 
   if (key.startsWith('profile.')) {
     const pk = key.replace('profile.', '');
-    const v = (state.profile as any)?.[pk];
+    const rec = state.profile as unknown as Record<string, unknown>;
+    const v = rec[pk];
     if (v == null || v === '') return '—';
     return String(v);
   }

@@ -45,8 +45,6 @@ function codeFromLabel(label: string | undefined, fallback: string) {
   return (first || fallback).toUpperCase();
 }
 
-type UndoState = null | { kind: Kind; seg: DayPartSegment };
-
 export default function DayMixedEditor({
   ui,
   day,
@@ -67,9 +65,7 @@ export default function DayMixedEditor({
   const [activeKind, setActiveKind] = useState<Kind>('work');
   const [selection, setSelection] = useState<Selection>(null);
 
-  const [undo, setUndo] = useState<UndoState>(null);
-
-  // timer undo (no Date.now, no expiresAt)
+  const [undo, setUndo] = useState<null | { kind: Kind; seg: DayPartSegment }>(null);
   const undoTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -96,7 +92,11 @@ export default function DayMixedEditor({
     return kind === 'work' ? sleepSegments : workSegments;
   }
   function setListFor(kind: Kind, next: DayPartSegment[]) {
-    kind === 'work' ? setWorkSegments(next) : setSleepSegments(next);
+    if (kind === 'work') {
+      setWorkSegments(next);
+    } else {
+      setSleepSegments(next);
+    }
   }
 
   function canPlace(kind: Kind, parts: Array<Omit<DayPartSegment, 'id'>>) {
@@ -150,29 +150,19 @@ export default function DayMixedEditor({
     setSelection((s) => (s ? { ...s, currentMin: m, valid: ok } : null));
   }
 
-  function scheduleUndoClear() {
-    if (undoTimerRef.current != null) {
-      window.clearTimeout(undoTimerRef.current);
-      undoTimerRef.current = null;
-    }
-    undoTimerRef.current = window.setTimeout(() => {
-      setUndo(null);
-      undoTimerRef.current = null;
-    }, 6000);
-  }
-
   function remove(kind: Kind, id: string) {
     const seg = listFor(kind).find((s) => s.id === id);
     if (!seg) return;
 
-    setListFor(
-      kind,
-      listFor(kind).filter((s) => s.id !== id),
-    );
+    setListFor(kind, listFor(kind).filter((s) => s.id !== id));
 
-    // show undo, auto-clear after 6s
     setUndo({ kind, seg });
-    scheduleUndoClear();
+
+    if (undoTimerRef.current != null) window.clearTimeout(undoTimerRef.current);
+    undoTimerRef.current = window.setTimeout(() => {
+      setUndo(null);
+      undoTimerRef.current = null;
+    }, 6000);
   }
 
   function applyUndo() {
@@ -184,7 +174,6 @@ export default function DayMixedEditor({
 
       setListFor(u.kind, [...current, u.seg]);
 
-      // clear pending timer once applied
       if (undoTimerRef.current != null) {
         window.clearTimeout(undoTimerRef.current);
         undoTimerRef.current = null;
@@ -346,11 +335,7 @@ function GridLines() {
         </div>
       ))}
       {Array.from({ length: 24 }, (_, i) => (
-        <div
-          key={`h30-${i}`}
-          className="sw-line sw-line--half"
-          style={{ top: i * HOUR_HEIGHT + HOUR_HEIGHT / 2 }}
-        />
+        <div key={`h30-${i}`} className="sw-line sw-line--half" style={{ top: i * HOUR_HEIGHT + HOUR_HEIGHT / 2 }} />
       ))}
     </div>
   );

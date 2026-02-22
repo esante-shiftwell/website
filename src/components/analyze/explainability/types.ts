@@ -1,6 +1,14 @@
-import type { Locale, ParticipantProfile, WeekSegment } from '@/components/analyze/types';
+import type {
+  Locale,
+  ParticipantProfile,
+  WeekSegment,
+  DerivedMetrics as AnalyzeDerivedMetrics,
+} from '@/components/analyze/types';
 
 export type Scores = { risk: number; sleep: number; adaptability: number };
+
+// On réutilise le DerivedMetrics "source of truth" (celui de analyze/types)
+export type DerivedMetrics = AnalyzeDerivedMetrics;
 
 // Focus key convention:
 // - score.*         ex: score.adaptability
@@ -21,8 +29,8 @@ export type ExplainabilityState = {
   workSegments: WeekSegment[];
   sleepSegments: WeekSegment[];
 
-  derived: any;
+  derived: DerivedMetrics;
   scores: Scores;
 };
 
-export type ComputeScoresFn = (derived: any, profile: ParticipantProfile) => Scores;
+export type ComputeScoresFn = (derived: DerivedMetrics, profile: ParticipantProfile) => Scores;
