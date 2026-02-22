@@ -3,7 +3,7 @@
 import { useMemo, useState } from 'react';
 
 import { TEXT, isLocale } from '@/components/analyze/copy';
-import type { Locale, ParticipantProfile, WeekSegment } from '@/components/analyze/types';
+import type { Locale, WeekSegment } from '@/components/analyze/types';
 import {
   computeDerivedMetrics,
   computeScores,
@@ -20,6 +20,8 @@ import ResultsStep from '@/components/analyze/ResultsStep';
 import type { DayPartSegment } from '@/components/analyze/calendar/scheduleUtils';
 import { useAnalyzeDraft } from '@/components/analyze/useAnalyzeDraft';
 import { useScheduleUi } from '@/components/analyze/useScheduleUi';
+import { ExplainabilityProvider } from './analyze/explainability/ExplainabilityContext';
+import ExplainabilityPanel from './analyze/explainability/ExplainabilityPanel';
 
 type AnalyzeClientProps = {
   locale: string;
@@ -111,10 +113,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
       return;
     }
     if (!collector.endpoint.trim()) {
-      setSendStatus({
-        state: 'error',
-        message: l === 'fr' ? 'Endpoint requis.' : 'Endpoint required.',
-      });
+      setSendStatus({ state: 'error', message: l === 'fr' ? 'Endpoint requis.' : 'Endpoint required.' });
       return;
     }
 
@@ -192,22 +191,38 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
           onNext={() => setStepIndex(2)}
         />
       )}
-
       {stepIndex === 2 && (
-        <ResultsStep
-          t={t}
+        <ExplainabilityProvider
           locale={l}
-          scores={scores}
-          derived={derived}
-          collector={collector}
-          setCollector={setCollector}
-          sendStatus={sendStatus}
-          onSend={handleSend}
-          onCopyJson={handleCopyJson}
-          onDownloadJson={handleDownloadJson}
-          onPrev={() => setStepIndex(1)}
-          onResetAll={resetAll}
-        />
+          computeScores={computeScores}
+          state={{
+            locale: l,
+            scoringVersion: 'proxy-v0.1',
+            profile,
+            workSegments: workWeekSegments,
+            sleepSegments: sleepWeekSegments,
+            derived,
+            scores,
+          }}
+        >
+        <ResultsStep
+  t={t}
+  locale={l}
+  profile={profile}
+  workSegments={workWeekSegments}
+  sleepSegments={sleepWeekSegments}
+  scores={scores}
+  derived={derived}
+  payload={payload}
+  collector={collector}
+  setCollector={setCollector}
+  onCopyJson={handleCopyJson}
+  onDownloadJson={handleDownloadJson}
+  onPrev={() => setStepIndex(1)}
+  onResetAll={resetAll}
+/>
+          <ExplainabilityPanel />
+        </ExplainabilityProvider>
       )}
     </div>
   );
