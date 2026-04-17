@@ -222,7 +222,11 @@ export default function WeeklyScheduleMobile({
     return kind === 'work' ? sleepSegments : workSegments;
   }
   function setListFor(kind: Kind, next: DayPartSegment[]) {
-    kind === 'work' ? setWorkSegments(next) : setSleepSegments(next);
+    if (kind === 'work') {
+      setWorkSegments(next);
+    } else {
+      setSleepSegments(next);
+    }
   }
   function maxSpanFor(kind: Kind) {
     return kind === 'work' ? MAX_SPAN_WORK_MIN : MAX_SPAN_SLEEP_MIN;

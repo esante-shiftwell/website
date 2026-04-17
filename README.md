@@ -30,8 +30,35 @@ The project is useful for:
 | Audience | People with atypical schedules and research collaborators |
 | Languages | French, English, German |
 | Scoring | Proxy model in production |
-| Research basis | Workbook + PDFs + article references in `docs/` |
+| Research basis | workbook and third-party reference materials documented in `docs/` |
 | Contribution model | Optional, explicit-consent, opt-in |
+
+## 🧾 Provenance And Attribution
+
+Shiftwell distinguishes between:
+
+- project-authored documentation and code
+- locally stored working copies or extraction artifacts
+- third-party external reference materials
+
+Important rule:
+
+- external scientific and technical materials remain third-party works
+- storing a local copy, extracted text, or mapping note in this repository does not make Shiftwell the author or owner of that source
+- Shiftwell documentation describes how the project interprets and uses those materials, not how it claims them
+
+The repository should therefore avoid phrasing such as:
+
+- "our PDFs"
+- "our scientific sources"
+- "project documentation" when referring to third-party works
+
+Safer wording is:
+
+- external reference material
+- third-party source
+- local working copy
+- extracted text for review and traceability
 
 ## 🧪 Medical and Research Positioning
 
@@ -40,7 +67,7 @@ The project is useful for:
 | Clinical use | Not for diagnosis or treatment |
 | Scientific ambition | Make the scoring model explainable and reviewable |
 | Data collection | Minimal MVP, participant-entered schedule data |
-| Transparency | Formula and source documents are stored in the repo |
+| Transparency | Formula notes, source mapping, and provenance notes are stored in the repo |
 | Current limitation | Runtime scoring still uses proxy logic in several places |
 
 ## 📚 Documentation
@@ -66,17 +93,17 @@ Key documents:
 | [docs/formula.md](docs/formula.md) | Current implemented formulas and explainability notes |
 | [docs/explainability.md](docs/explainability.md) | Medical-safe wording and factor explainability guidance |
 | [docs/xlsm-vs-formula.md](docs/xlsm-vs-formula.md) | Matrix of differences between workbook logic and current Markdown formula reference |
-| [docs/external-link.md](docs/external-link.md) | Sources, references, and UI inspirations |
+| [docs/external-link.md](docs/external-link.md) | External references, provenance, and UI inspirations |
 
-Primary source material in the repository:
+Reference materials discussed in the repository:
 
-| Source | Type |
-| --- | --- |
-| [docs/Fatigue Index_scoring_system_15.xlsm](docs/Fatigue%20Index_scoring_system_15.xlsm) | Scoring workbook |
-| [docs/other_sources/SleepSync-1.pdf](docs/other_sources/SleepSync-1.pdf) | Research source PDF |
-| [docs/other_sources/SleepSync-1.txt](docs/other_sources/SleepSync-1.txt) | Extracted text |
-| [docs/other_sources/Song2025_korean sleep intervention real time advice-1.pdf](docs/other_sources/Song2025_korean%20sleep%20intervention%20real%20time%20advice-1.pdf) | Research source PDF |
-| [docs/other_sources/Song2025_korean sleep intervention real time advice-1.txt](docs/other_sources/Song2025_korean%20sleep%20intervention%20real%20time%20advice-1.txt) | Extracted text |
+| Material | Type | Provenance note |
+| --- | --- | --- |
+| [docs/Fatigue Index_scoring_system_15.xlsm](docs/Fatigue%20Index_scoring_system_15.xlsm) | workbook | local working copy used for traceability and alignment work |
+| [docs/other_sources/SleepSync-1.pdf](docs/other_sources/SleepSync-1.pdf) | PDF | third-party reference material stored locally for review |
+| [docs/other_sources/SleepSync-1.txt](docs/other_sources/SleepSync-1.txt) | extracted text | repository-generated extraction from a third-party source |
+| [docs/other_sources/Song2025_korean sleep intervention real time advice-1.pdf](docs/other_sources/Song2025_korean%20sleep%20intervention%20real%20time%20advice-1.pdf) | PDF | third-party reference material stored locally for review |
+| [docs/other_sources/Song2025_korean sleep intervention real time advice-1.txt](docs/other_sources/Song2025_korean%20sleep%20intervention%20real%20time%20advice-1.txt) | extracted text | repository-generated extraction from a third-party source |
 
 ## 🖥️ Product Overview
 
@@ -106,7 +133,7 @@ Important:
 
 - the current code is not yet a final research-grade implementation of the workbook
 - some thresholds and factor definitions still diverge from the Excel model
-- the workbook and PDF sources are stored in the repo to make the model auditable
+- the repository stores source mapping and local review artifacts to make the model auditable
 
 ## 🌍 Multilingual Support
 
@@ -125,7 +152,7 @@ Localization lives primarily in [src/i18n.ts](src/i18n.ts) and locale-aware app 
 This matters for open source because contributors can help on:
 
 - translation quality
-- medical/research wording
+- medical and research wording
 - consistency of consent and explanation text
 - future locale additions
 
@@ -141,7 +168,7 @@ Good first contribution areas:
 | UX | improve schedule entry, reduce ambiguity in the form |
 | Localization | review French, English, and German wording |
 | Frontend | improve explainability panels and page structure |
-| Research alignment | compare code with workbook and source PDFs |
+| Research alignment | compare code with workbook and external reference materials |
 
 If you are not confident with the science, you can still help by improving:
 
@@ -195,7 +222,7 @@ src/
   components/   UI and analysis flow
   core/         data model and scoring logic
   lib/          export and contribution helpers
-docs/           methodology notes, references, source material
+docs/           methodology notes, provenance notes, reference mappings, local review artifacts
 scripts/        documentation and extraction utilities
 public/         static assets
 ```

@@ -223,12 +223,14 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
             sleepSegments: sleepWeekSegments,
             derived,
             scores,
+            trace: analysis.scoreBundle.trace,
           }}
         >
           <ResultsStep
             t={t}
             locale={l}
             scores={scores}
+            scoringVersion={scoringVersion}
             payload={payload}
             collector={collector}
             setCollector={setCollector}

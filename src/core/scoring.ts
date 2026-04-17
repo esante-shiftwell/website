@@ -1,16 +1,17 @@
 import type {
   AnalysisDraft,
   DerivedMetrics,
-  EvidenceRef,
+  EvidenceLink,
   RawSegment,
   ScoreBundle,
   ScoreTrace,
 } from './model';
+import { EVIDENCE_IDS, getEvidenceRefs } from './evidence';
 
 const MINUTES_PER_DAY = 1440;
 const WEEK_MINUTES = 7 * MINUTES_PER_DAY;
 
-export const SCORING_VERSION = 'shiftwell-proxy-v0.1';
+export const SCORING_VERSION = 'shiftwell-proxy-v0.2';
 export const CONSENT_NOTICE_VERSION = 'notice-v0.1';
 
 type NormSegment = {
@@ -31,30 +32,6 @@ const REFERENCE_MEANS: Partial<{
   // sleepScore: 58,
   // adaptabilityScore: 55,
 };
-
-const TRACE_EVIDENCE: EvidenceRef[] = [
-  {
-    id: 'code:scoring',
-    sourceType: 'code',
-    source: 'src/core/scoring.ts',
-    locator: 'calculateScores',
-    note: 'Current runtime source of truth.',
-  },
-  {
-    id: 'workbook:matrix',
-    sourceType: 'workbook',
-    source: 'docs/Fatigue Index_scoring_system_15.xlsm',
-    locator: 'Graphiques brut + Parametres score',
-    note: 'Main burden-matrix reference.',
-  },
-  {
-    id: 'article:frontiers',
-    sourceType: 'article',
-    source: 'Frontiers in Public Health',
-    locator: '10.3389/fpubh.2025.1679296',
-    note: 'Public scientific context referenced in the app.',
-  },
-];
 
 function hhmmToMinutes(value: string): number {
   const [h, m] = value.split(':').map(Number);
@@ -247,21 +224,28 @@ function computeSleepRegularityProxy(mergedSleep: NormSegment[]): number {
   return Math.round((1 - 0.6 * onsetPenalty - 0.4 * durationPenalty) * 100);
 }
 
-function scoreBucketHigherIsWorse(value: number, warnThreshold: number, dangerThreshold: number): number {
-  if (value >= dangerThreshold) return 2;
-  if (value >= warnThreshold) return 1;
-  return 0;
-}
-
-function scoreBucketLowerIsWorse(value: number, warnThreshold: number, dangerThreshold: number): number {
-  // Example: longest recovery / fully rested days
-  if (value <= dangerThreshold) return 2;
-  if (value <= warnThreshold) return 1;
-  return 0;
+function scoreBucketWorkbookBand(
+  value: number,
+  opts: {
+    lowWhenLessThan?: number;
+    highWhenGreaterThan?: number;
+    lowWhenGreaterThan?: number;
+    highWhenLessThan?: number;
+  },
+): number {
+  if (opts.highWhenGreaterThan != null && value > opts.highWhenGreaterThan) return 2;
+  if (opts.highWhenLessThan != null && value < opts.highWhenLessThan) return 2;
+  if (opts.lowWhenLessThan != null && value < opts.lowWhenLessThan) return 0;
+  if (opts.lowWhenGreaterThan != null && value > opts.lowWhenGreaterThan) return 0;
+  return 1;
 }
 
 function clampScore100(n: number) {
   return Math.round(clamp(n, 0, 100));
+}
+
+function evidenceLink(refId: string, locator?: string, note?: string, quote?: string): EvidenceLink {
+  return { refId, locator, note, quote };
 }
 
 function computeDerivedMetrics(draft: AnalysisDraft): DerivedMetrics {
@@ -274,16 +258,29 @@ function computeDerivedMetrics(draft: AnalysisDraft): DerivedMetrics {
 
   const longShiftCount = work.filter((s) => s.endAbs - s.startAbs >= 10 * 60).length;
 
+  let count24hBreaks = 0;
   let longestRecovery = 0;
   let shortBreaksCount = 0;
-  if (work.length > 1) {
+  if (work.length === 0) {
+    count24hBreaks = Math.floor(WEEK_MINUTES / (24 * 60));
+    longestRecovery = WEEK_MINUTES;
+  } else {
+    const edgeStartGap = Math.max(0, work[0].startAbs);
+    const edgeEndGap = Math.max(0, WEEK_MINUTES - work[work.length - 1].endAbs);
+    count24hBreaks += Math.floor(edgeStartGap / (24 * 60));
+    count24hBreaks += Math.floor(edgeEndGap / (24 * 60));
+    longestRecovery = Math.max(longestRecovery, edgeStartGap, edgeEndGap);
+
     for (let i = 0; i < work.length - 1; i++) {
       const gapMin = Math.max(0, work[i + 1].startAbs - work[i].endAbs);
       longestRecovery = Math.max(longestRecovery, gapMin);
+      count24hBreaks += Math.floor(gapMin / (24 * 60));
       if (gapMin < 11 * 60) shortBreaksCount += 1; // proxy threshold
     }
   }
 
+  const dailyWork = computeDailySleep(work);
+  const restDaysCount = dailyWork.filter((m) => m === 0).length;
   const dailySleep = computeDailySleep(sleep);
   const fullyRestedDaysCount = dailySleep.filter((m) => m >= 7 * 60).length;
 
@@ -304,8 +301,10 @@ function computeDerivedMetrics(draft: AnalysisDraft): DerivedMetrics {
   return {
     totalWorkHours: round1(totalWorkMinutes / 60),
     longShiftCount,
+    count24hBreaks,
     longestRecoveryHours: round1(longestRecovery / 60),
     shortBreaksCount,
+    restDaysCount,
     fullyRestedDaysCount,
     nightShiftCount,
     biologicalHoursLost: round1(biologicalWorkMinutes / 60), // proxy: work encroachment on biological sleep window
@@ -317,16 +316,39 @@ function computeDerivedMetrics(draft: AnalysisDraft): DerivedMetrics {
 }
 
 function scoreSLIProxy(derived: DerivedMetrics) {
-  // TODO: aligner strictement les seuils avec le tableau de l'article + protocole.
   const items = {
-    workedHours: scoreBucketHigherIsWorse(derived.totalWorkHours, 40, 48),
-    longShifts: scoreBucketHigherIsWorse(derived.longShiftCount, 1, 3),
-    longestRecovery: scoreBucketLowerIsWorse(derived.longestRecoveryHours, 48, 36),
-    shortBreaks: scoreBucketHigherIsWorse(derived.shortBreaksCount, 1, 3),
-    fullyRestedDays: scoreBucketLowerIsWorse(derived.fullyRestedDaysCount, 3, 1),
-    nightShifts: scoreBucketHigherIsWorse(derived.nightShiftCount, 1, 3),
-    biologicalHoursLost: scoreBucketHigherIsWorse(derived.biologicalHoursLost, 4, 8),
-    socialHoursLost: scoreBucketHigherIsWorse(derived.socialHoursLost, 8, 13),
+    workedHours: scoreBucketWorkbookBand(derived.totalWorkHours, {
+      lowWhenLessThan: 40,
+      highWhenGreaterThan: 48,
+    }),
+    longShifts: scoreBucketWorkbookBand(derived.longShiftCount, {
+      lowWhenLessThan: 2,
+      highWhenGreaterThan: 2,
+    }),
+    count24hBreaks: scoreBucketWorkbookBand(derived.count24hBreaks, {
+      lowWhenGreaterThan: 1,
+      highWhenLessThan: 1,
+    }),
+    shortBreaks: scoreBucketWorkbookBand(derived.shortBreaksCount, {
+      lowWhenLessThan: 1,
+      highWhenGreaterThan: 1,
+    }),
+    restDays: scoreBucketWorkbookBand(derived.restDaysCount, {
+      lowWhenGreaterThan: 1,
+      highWhenLessThan: 1,
+    }),
+    nightShifts: scoreBucketWorkbookBand(derived.nightShiftCount, {
+      lowWhenLessThan: 1,
+      highWhenGreaterThan: 2,
+    }),
+    biologicalHoursLost: scoreBucketWorkbookBand(derived.biologicalHoursLost, {
+      lowWhenLessThan: 8,
+      highWhenGreaterThan: 8,
+    }),
+    socialHoursLost: scoreBucketWorkbookBand(derived.socialHoursLost, {
+      lowWhenLessThan: 6,
+      highWhenGreaterThan: 13,
+    }),
   };
 
   const sliRaw = Object.values(items).reduce((a, b) => a + b, 0); // 0..16
@@ -356,8 +378,14 @@ function makeExplanations(derived: DerivedMetrics, sliItemScores: Record<string,
   if (sliItemScores.nightShifts > 0) {
     out.push(`Night shifts detected (${derived.nightShiftCount})`);
   }
+  if (sliItemScores.count24hBreaks > 0) {
+    out.push(`Low 24h recovery count (${derived.count24hBreaks})`);
+  }
   if (sliItemScores.shortBreaks > 0) {
     out.push(`Short recovery breaks between shifts (${derived.shortBreaksCount})`);
+  }
+  if (sliItemScores.restDays > 0) {
+    out.push(`Low number of full rest days (${derived.restDaysCount})`);
   }
   if (sliItemScores.biologicalHoursLost > 0) {
     out.push(`Work overlaps biological sleep window (${derived.biologicalHoursLost}h)`);
@@ -388,10 +416,19 @@ function buildTrace(args: {
   const durationScore = clampScore100(100 - (durationDelta / 3) * 100);
   const regularityScore = clampScore100(derived.sleepRegularityProxy);
   const inverseRisk = 100 - riskScore;
+  const traceEvidenceIds = [
+    EVIDENCE_IDS.coreScoring,
+    EVIDENCE_IDS.formulaDoc,
+    EVIDENCE_IDS.workbookMatrix,
+    EVIDENCE_IDS.workbookParams,
+    EVIDENCE_IDS.frontiersArticle,
+    EVIDENCE_IDS.sleepSyncPdf,
+    EVIDENCE_IDS.song2025Pdf,
+  ] as const;
 
   return {
     scoringVersion: SCORING_VERSION,
-    evidence: TRACE_EVIDENCE,
+    evidence: getEvidenceRefs(traceEvidenceIds),
     factors: [
       {
         key: 'workedHours',
@@ -400,9 +437,15 @@ function buildTrace(args: {
         bucket: sliItemScores.workedHours,
         contribution: round1((sliItemScores.workedHours / 16) * 100),
         formulaRef: 'SLI proxy workload bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.workbookMatrix],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> totalWorkHours; scoreSLIProxy -> workedHours'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Risk Score -> Factor thresholds currently implemented -> workedHours'),
+          evidenceLink(EVIDENCE_IDS.workbookMatrix, 'Graphiques brut!J4:K6 (J6 score, K6 raw)'),
+          evidenceLink(EVIDENCE_IDS.workbookParams, 'Parametres score!E6,E8', 'Workbook thresholds for weekly hours appear at 40h and 48h.'),
+        ],
         dependsOn: ['derived.totalWorkHours'],
-        status: 'proxy',
+        status: 'implemented',
       },
       {
         key: 'longShifts',
@@ -410,21 +453,33 @@ function buildTrace(args: {
         value: derived.longShiftCount,
         bucket: sliItemScores.longShifts,
         contribution: round1((sliItemScores.longShifts / 16) * 100),
-        formulaRef: 'SLI proxy long-shift bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        formulaRef: 'Workbook-aligned long-shift bucket',
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.workbookMatrix],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> longShiftCount; scoreSLIProxy -> longShifts'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Risk Score -> Factor thresholds currently implemented -> longShifts'),
+          evidenceLink(EVIDENCE_IDS.workbookMatrix, 'Graphiques brut!L4:M6 (L6 score, M6 raw)'),
+          evidenceLink(EVIDENCE_IDS.workbookParams, 'Parametres score!C9,E9', 'Workbook aligns long shifts with a 10h duration rule and 0 / 1 / 2+ scoring around count 2.'),
+        ],
         dependsOn: ['derived.longShiftCount'],
-        status: 'proxy',
+        status: 'implemented',
       },
       {
-        key: 'longestRecovery',
-        label: 'Longest recovery',
-        value: derived.longestRecoveryHours,
-        bucket: sliItemScores.longestRecovery,
-        contribution: round1((sliItemScores.longestRecovery / 16) * 100),
-        formulaRef: 'SLI proxy recovery bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix'],
-        dependsOn: ['derived.longestRecoveryHours'],
-        status: 'disputed',
+        key: 'count24hBreaks',
+        label: '24h breaks',
+        value: derived.count24hBreaks,
+        bucket: sliItemScores.count24hBreaks,
+        contribution: round1((sliItemScores.count24hBreaks / 16) * 100),
+        formulaRef: 'Workbook-aligned 24h-break bucket',
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.workbookMatrix],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> count24hBreaks; scoreSLIProxy -> count24hBreaks'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Risk Score -> Factor thresholds currently implemented -> count24hBreaks'),
+          evidenceLink(EVIDENCE_IDS.workbookMatrix, 'Graphiques brut!N4:O6 (N6 score, O6 raw)'),
+          evidenceLink(EVIDENCE_IDS.workbookParams, 'Graphiques brut!N6:O6', 'Current runtime interprets 24h pauses as the count of full 24h blocks between work segments inside the week.'),
+        ],
+        dependsOn: ['derived.count24hBreaks'],
+        status: 'implemented',
       },
       {
         key: 'shortBreaks',
@@ -433,20 +488,31 @@ function buildTrace(args: {
         bucket: sliItemScores.shortBreaks,
         contribution: round1((sliItemScores.shortBreaks / 16) * 100),
         formulaRef: 'SLI proxy short-break bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.workbookMatrix],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> shortBreaksCount; scoreSLIProxy -> shortBreaks'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Risk Score -> Factor thresholds currently implemented -> shortBreaks'),
+          evidenceLink(EVIDENCE_IDS.workbookMatrix, 'Graphiques brut!P4:Q6 (P6 score, Q6 raw)'),
+          evidenceLink(EVIDENCE_IDS.workbookParams, 'Parametres score!C24,E24', 'Workbook references a <11h quick-return rule.'),
+        ],
         dependsOn: ['derived.shortBreaksCount'],
-        status: 'proxy',
+        status: 'implemented',
       },
       {
-        key: 'fullyRestedDays',
-        label: 'Fully rested days',
-        value: derived.fullyRestedDaysCount,
-        bucket: sliItemScores.fullyRestedDays,
-        contribution: round1((sliItemScores.fullyRestedDays / 16) * 100),
-        formulaRef: 'SLI proxy rest-day bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix'],
-        dependsOn: ['derived.fullyRestedDaysCount'],
-        status: 'disputed',
+        key: 'restDays',
+        label: 'Rest days',
+        value: derived.restDaysCount,
+        bucket: sliItemScores.restDays,
+        contribution: round1((sliItemScores.restDays / 16) * 100),
+        formulaRef: 'Workbook-aligned rest-day bucket',
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.workbookMatrix],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> restDaysCount; scoreSLIProxy -> restDays'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Risk Score -> Factor thresholds currently implemented -> restDays'),
+          evidenceLink(EVIDENCE_IDS.workbookMatrix, 'Graphiques brut!R4:S6 (R6 score, S6 raw)'),
+        ],
+        dependsOn: ['derived.restDaysCount'],
+        status: 'implemented',
       },
       {
         key: 'nightShifts',
@@ -455,9 +521,20 @@ function buildTrace(args: {
         bucket: sliItemScores.nightShifts,
         contribution: round1((sliItemScores.nightShifts / 16) * 100),
         formulaRef: 'SLI proxy night-shift bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix', 'article:frontiers'],
+        evidenceRefs: [
+          EVIDENCE_IDS.coreScoring,
+          EVIDENCE_IDS.formulaDoc,
+          EVIDENCE_IDS.workbookMatrix,
+          EVIDENCE_IDS.frontiersArticle,
+        ],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> nightShiftCount; scoreSLIProxy -> nightShifts'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Risk Score -> Factor thresholds currently implemented -> nightShifts'),
+          evidenceLink(EVIDENCE_IDS.workbookMatrix, 'Graphiques brut!T4:U6 (T6 score, U6 raw)'),
+          evidenceLink(EVIDENCE_IDS.frontiersArticle, undefined, 'Used as public scientific framing for night-work burden, not yet as a page-specific formula citation.'),
+        ],
         dependsOn: ['derived.nightShiftCount'],
-        status: 'proxy',
+        status: 'implemented',
       },
       {
         key: 'biologicalHoursLost',
@@ -465,8 +542,25 @@ function buildTrace(args: {
         value: derived.biologicalHoursLost,
         bucket: sliItemScores.biologicalHoursLost,
         contribution: round1((sliItemScores.biologicalHoursLost / 16) * 100),
-        formulaRef: 'SLI proxy biological-window bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix', 'article:frontiers'],
+        formulaRef: 'Workbook-aligned threshold on biological-hours proxy (proxy for optimal sleep hours lost)',
+        evidenceRefs: [
+          EVIDENCE_IDS.coreScoring,
+          EVIDENCE_IDS.formulaDoc,
+          EVIDENCE_IDS.workbookMatrix,
+          EVIDENCE_IDS.frontiersArticle,
+          EVIDENCE_IDS.sleepSyncPdf,
+        ],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> biologicalHoursLost; scoreSLIProxy -> biologicalHoursLost'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Biological Window Proxy; Risk Score -> biologicalHoursLost'),
+          evidenceLink(
+            EVIDENCE_IDS.workbookMatrix,
+            'Graphiques brut!V4:W6 (V6 score, W6 raw)',
+            'Workbook wording is optimal sleep hours lost; runtime currently approximates it with work overlap in a fixed biological window.',
+          ),
+          evidenceLink(EVIDENCE_IDS.frontiersArticle, undefined, 'Public context only; not yet mapped to an exact page for factor 7.'),
+          evidenceLink(EVIDENCE_IDS.sleepSyncPdf, 'SleepSync-1.txt extracted text header', 'Supporting sleep opportunity context; page mapping pending.'),
+        ],
         dependsOn: ['derived.biologicalHoursLost'],
         status: 'proxy',
       },
@@ -476,8 +570,17 @@ function buildTrace(args: {
         value: derived.socialHoursLost,
         bucket: sliItemScores.socialHoursLost,
         contribution: round1((sliItemScores.socialHoursLost / 16) * 100),
-        formulaRef: 'SLI proxy social-window bucket',
-        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        formulaRef: 'Workbook-aligned threshold on social-hours proxy (metric semantics still proxy)',
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.workbookMatrix],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeDerivedMetrics -> socialHoursLost; scoreSLIProxy -> socialHoursLost'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Social Window Proxy; Risk Score -> socialHoursLost'),
+          evidenceLink(
+            EVIDENCE_IDS.workbookMatrix,
+            'Graphiques brut!X4:Y6 (X6 score, Y6 raw)',
+            'Workbook thresholds are reused, but the runtime metric still approximates social time with fixed windows.',
+          ),
+        ],
         dependsOn: ['derived.socialHoursLost'],
         status: 'proxy',
       },
@@ -487,7 +590,12 @@ function buildTrace(args: {
         value: derived.avgSleepHours,
         contribution: durationScore,
         formulaRef: 'Sleep proxy duration component',
-        evidenceRefs: ['code:scoring'],
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.sleepSyncPdf, EVIDENCE_IDS.song2025Pdf],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'scoreSleepProxy -> durationScore'),
+          evidenceLink(EVIDENCE_IDS.sleepSyncPdf, 'SleepSync-1.txt extracted text header', 'Sleep-related supporting source; page mapping pending.'),
+          evidenceLink(EVIDENCE_IDS.song2025Pdf, 'Song2025 extracted text header', 'Sleep intervention context only; not an exact runtime formula citation.'),
+        ],
         dependsOn: ['derived.avgSleepHours'],
         status: 'proxy',
       },
@@ -497,7 +605,11 @@ function buildTrace(args: {
         value: derived.sleepRegularityProxy,
         contribution: regularityScore,
         formulaRef: 'Sleep proxy regularity component',
-        evidenceRefs: ['code:scoring'],
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.sleepSyncPdf],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'computeSleepRegularityProxy + scoreSleepProxy -> regularityScore'),
+          evidenceLink(EVIDENCE_IDS.sleepSyncPdf, 'SleepSync-1.txt extracted text header', 'Supporting sleep regularity context; exact SRI mapping still pending.'),
+        ],
         dependsOn: ['derived.sleepRegularityProxy'],
         status: 'proxy',
       },
@@ -508,13 +620,18 @@ function buildTrace(args: {
         label: 'Risk score',
         value: riskScore,
         formulaRef: `sliRaw=${sliRaw}; riskScore=(sliRaw/16)*100`,
-        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.workbookMatrix],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'scoreSLIProxy -> sliRaw + riskScore'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Risk Score -> Risk aggregation'),
+          evidenceLink(EVIDENCE_IDS.workbookMatrix, 'Graphiques brut!J6:X6', 'Workbook exposes item buckets; runtime normalizes sum to 0..100.'),
+        ],
         dependsOn: [
           'workedHours',
           'longShifts',
-          'longestRecovery',
+          'count24hBreaks',
           'shortBreaks',
-          'fullyRestedDays',
+          'restDays',
           'nightShifts',
           'biologicalHoursLost',
           'socialHoursLost',
@@ -526,7 +643,12 @@ function buildTrace(args: {
         label: 'Sleep score',
         value: sleepScore,
         formulaRef: 'durationScore*0.55 + regularityScore*0.45',
-        evidenceRefs: ['code:scoring'],
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc, EVIDENCE_IDS.sleepSyncPdf],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'scoreSleepProxy'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Sleep Score'),
+          evidenceLink(EVIDENCE_IDS.sleepSyncPdf, 'SleepSync-1.txt extracted text header', 'Supporting sleep context only; exact formula comes from runtime code.'),
+        ],
         dependsOn: ['sleepDuration', 'sleepRegularityProxy'],
         status: 'proxy',
       },
@@ -535,7 +657,11 @@ function buildTrace(args: {
         label: 'Adaptability score',
         value: adaptabilityScore,
         formulaRef: `inverseRisk=${inverseRisk}; inverseRisk*0.65 + sleepScore*0.35`,
-        evidenceRefs: ['code:scoring'],
+        evidenceRefs: [EVIDENCE_IDS.coreScoring, EVIDENCE_IDS.formulaDoc],
+        evidenceLinks: [
+          evidenceLink(EVIDENCE_IDS.coreScoring, 'scoreAdaptabilityProxy'),
+          evidenceLink(EVIDENCE_IDS.formulaDoc, 'Adaptability Score'),
+        ],
         dependsOn: ['riskScore', 'sleepScore'],
         status: 'proxy',
       },

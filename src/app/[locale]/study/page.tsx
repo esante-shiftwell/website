@@ -9,40 +9,47 @@ export function generateStaticParams() {
 
 const content = {
   fr: {
-    title: 'Étude & participation',
+    title: 'Etude & participation',
     subtitle:
-      'Informations sur le cadre de participation à l’étude Shiftwell (chronobiologie, horaires atypiques).',
+      'Informations sur le cadre de participation a l etude Shiftwell (chronobiologie, horaires atypiques).',
     sections: {
       purpose: 'Objectif',
       who: 'Qui peut participer',
-      data: 'Données collectées (MVP)',
+      data: 'Donnees collectees (MVP)',
       process: 'Processus de contribution',
-      duration: 'Durée estimée',
+      duration: 'Duree estimee',
+      provenance: 'Provenance & references',
     },
     purpose:
-      'Shiftwell vise à structurer la collecte de données agenda travail/sommeil pour analyser l’adaptabilité aux horaires atypiques dans un cadre de recherche en chronobiologie.',
+      'Shiftwell vise a structurer la collecte de donnees agenda travail/sommeil pour analyser l adaptabilite aux horaires atypiques dans un cadre de recherche en chronobiologie.',
     who: [
-      'Professionnels avec horaires atypiques (santé, sécurité, transport/logistique, industrie, restauration, etc.)',
-      'Travail de nuit, roulement, horaires irréguliers ou fractionnés',
+      'Professionnels avec horaires atypiques (sante, securite, transport/logistique, industrie, restauration, etc.)',
+      'Travail de nuit, roulement, horaires irreguliers ou fractionnes',
       'Participation volontaire',
     ],
     data: [
       'Agenda hebdomadaire (segments travail/sommeil)',
-      'Métier (catégorie)',
-      "Tranche d’âge",
+      'Metier (categorie)',
+      'Tranche d age',
       'Sexe (si retenu dans le protocole final)',
-      'Réponses complémentaires (mode long)',
-      'Scores calculés (proxy v0.1)',
-      'Aucune identité obligatoire dans le dataset principal (MVP)',
+      'Reponses complementaires (mode long)',
+      'Scores calcules (proxy v0.1)',
+      'Aucune identite obligatoire dans le dataset principal (MVP)',
     ],
     process: [
-      '1. L’utilisateur remplit son agenda et calcule son score localement.',
-      '2. Le score est affiché sans obligation de contribution.',
-      '3. L’utilisateur peut ensuite contribuer à l’étude (opt-in).',
+      '1. L utilisateur remplit son agenda et calcule son score localement.',
+      '2. Le score est affiche sans obligation de contribution.',
+      '3. L utilisateur peut ensuite contribuer a l etude (opt-in).',
       '4. Consentement explicite requis avant envoi.',
-      '5. Les versions (scoring/notice) sont attachées à l’envoi.',
+      '5. Les versions (scoring/notice) sont attachees a l envoi.',
     ],
-    duration: ['Mode court : ~2 à 4 minutes', 'Mode long : ~5 à 8 minutes (MVP cible)'],
+    duration: ['Mode court : ~2 a 4 minutes', 'Mode long : ~5 a 8 minutes (MVP cible)'],
+    provenance:
+      'Les regles de scoring et d explicabilite peuvent s appuyer sur des references scientifiques tierces et sur des copies locales de travail. Ces contenus externes ne sont pas des documents auteurs par Shiftwell.',
+    ctas: {
+      analyze: 'Analyse',
+      consent: 'Notice de consentement',
+    },
   },
   en: {
     title: 'Study & participation',
@@ -54,6 +61,7 @@ const content = {
       data: 'Collected data (MVP)',
       process: 'Contribution process',
       duration: 'Estimated duration',
+      provenance: 'Provenance & references',
     },
     purpose:
       'Shiftwell aims to structure work/sleep schedule data collection to study adaptability to atypical working hours in a chronobiology research context.',
@@ -79,6 +87,12 @@ const content = {
       '5. Versioning (scoring/notice) is attached to submission.',
     ],
     duration: ['Short mode: ~2 to 4 minutes', 'Long mode: ~5 to 8 minutes (MVP target)'],
+    provenance:
+      'Scoring and explainability rules may rely on third-party scientific references and local working copies. Those external materials are not authored or owned by Shiftwell.',
+    ctas: {
+      analyze: 'Analyze',
+      consent: 'Consent notice',
+    },
   },
   de: {
     title: 'Studie & Teilnahme',
@@ -89,13 +103,14 @@ const content = {
       who: 'Wer kann teilnehmen',
       data: 'Erhobene Daten (MVP)',
       process: 'Ablauf der Teilnahme',
-      duration: 'Geschätzte Dauer',
+      duration: 'Geschatzte Dauer',
+      provenance: 'Provenienz & Referenzen',
     },
     purpose:
-      'Shiftwell strukturiert die Erhebung von Arbeits-/Schlafplänen, um die Anpassungsfähigkeit an atypische Arbeitszeiten im Rahmen chronobiologischer Forschung zu untersuchen.',
+      'Shiftwell strukturiert die Erhebung von Arbeits-/Schlafplanen, um die Anpassungsfahigkeit an atypische Arbeitszeiten im Rahmen chronobiologischer Forschung zu untersuchen.',
     who: [
-      'Berufstätige mit atypischen Arbeitszeiten (Pflege, Sicherheit, Logistik, Industrie, Gastronomie usw.)',
-      'Nachtarbeit, Schichtrotation, unregelmäßige oder geteilte Zeiten',
+      'Berufstatige mit atypischen Arbeitszeiten (Pflege, Sicherheit, Logistik, Industrie, Gastronomie usw.)',
+      'Nachtarbeit, Schichtrotation, unregelmassige oder geteilte Zeiten',
       'Freiwillige Teilnahme',
     ],
     data: [
@@ -105,16 +120,22 @@ const content = {
       'Geschlecht (falls im finalen Protokoll vorgesehen)',
       'Zusatzfragen (Langmodus)',
       'Berechnete Scores (Proxy v0.1)',
-      'Keine Pflicht-Identität im Hauptdatensatz (MVP)',
+      'Keine Pflicht-Identitat im Hauptdatensatz (MVP)',
     ],
     process: [
-      '1. Nutzer gibt Plan ein und berechnet Score lokal.',
+      '1. Nutzer gibt Plan ein und berechnet den Score lokal.',
       '2. Der Score wird ohne Beitragspflicht angezeigt.',
       '3. Danach kann freiwillig zur Studie beigetragen werden (Opt-in).',
-      '4. Vor dem Senden ist eine ausdrückliche Einwilligung erforderlich.',
-      '5. Versionen (Scoring/Notice) werden an die Übermittlung angehängt.',
+      '4. Vor dem Senden ist eine ausdruckliche Einwilligung erforderlich.',
+      '5. Versionen (Scoring/Notice) werden an die Ubermittlung angehangt.',
     ],
     duration: ['Kurzmodus: ~2 bis 4 Minuten', 'Langmodus: ~5 bis 8 Minuten (MVP-Ziel)'],
+    provenance:
+      'Scoring- und Erklarningsregeln konnen sich auf wissenschaftliche Drittquellen und lokale Arbeitskopien stutzen. Diese externen Materialien werden nicht von Shiftwell verfasst oder besessen.',
+    ctas: {
+      analyze: 'Analyse',
+      consent: 'Einwilligungsnotice',
+    },
   },
 } as const;
 
@@ -130,7 +151,7 @@ export default async function StudyPage({
 
   return (
     <main>
-      <LocaleNav locale={locale}/>
+      <LocaleNav locale={locale} />
 
       <section className="card" style={{ padding: 20, marginBottom: 16 }}>
         <span className="badge secondary">Study</span>
@@ -201,12 +222,19 @@ export default async function StudyPage({
 
           <div className="divider" />
 
+          <h3 style={{ marginTop: 0 }}>{c.sections.provenance}</h3>
+          <p className="small muted" style={{ marginBottom: 0 }}>
+            {c.provenance}
+          </p>
+
+          <div className="divider" />
+
           <div className="row">
             <Link className="btn primary" href={`/${locale}/analyze/`}>
-              Analyze
+              {c.ctas.analyze}
             </Link>
             <Link className="btn" href={`/${locale}/consent/`}>
-              Consent notice
+              {c.ctas.consent}
             </Link>
           </div>
         </section>

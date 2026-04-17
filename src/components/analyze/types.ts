@@ -28,8 +28,10 @@ export type ParticipantProfile = {
 export type DerivedMetrics = {
   totalWorkHours: number;
   longShiftCount: number;
+  count24hBreaks: number;
   longestRecoveryHours: number;
   shortBreaksCount: number;
+  restDaysCount: number;
   fullyRestedDaysCount: number;
   nightShiftCount: number;
   biologicalHoursLost: number;

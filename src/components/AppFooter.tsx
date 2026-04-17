@@ -13,24 +13,24 @@ function detectLocale(pathname: string): FooterLocale | null {
 
 const footerCopy = {
   fr: {
-    note: 'Recherche · pas un avis médical',
+    note: 'Recherche · pas un avis medical',
     localFirst: 'Local',
     optIn: 'Opt-in',
-    paper: 'Paper',
+    paper: 'Reference externe',
     lang: 'Langue',
   },
   en: {
     note: 'Research · not medical advice',
     localFirst: 'Local',
     optIn: 'Opt-in',
-    paper: 'Paper',
+    paper: 'External reference',
     lang: 'Language',
   },
   de: {
     note: 'Forschung · keine medizinische Beratung',
     localFirst: 'Lokal',
     optIn: 'Opt-in',
-    paper: 'Paper',
+    paper: 'Externe Referenz',
     lang: 'Sprache',
   },
 } as const;
@@ -43,21 +43,15 @@ function withTrailingSlash(path: string) {
 function buildLocaleHref(pathname: string, targetLocale: FooterLocale): string {
   const segments = pathname.split('/').filter(Boolean);
 
-  // root
   if (segments.length === 0) return `/${targetLocale}/`;
 
-  // already localized: replace first segment
   const first = segments[0];
   if (LOCALES.includes(first as FooterLocale)) {
     segments[0] = targetLocale;
-
-    // "/fr" -> "/en/"
     if (segments.length === 1) return `/${targetLocale}/`;
-
     return withTrailingSlash(`/${segments.join('/')}`);
   }
 
-  // not localized -> fallback
   return `/${targetLocale}/`;
 }
 

@@ -10,42 +10,45 @@ const NOTICE_VERSION = 'notice-v0.1';
 
 const content = {
   fr: {
-    title: "Notice d'information (participation étude)",
+    title: "Notice d'information (participation etude)",
     subtitle:
-      'Version de travail pour le MVP. À faire valider par la partenaire médicale / cadre RGPD avant diffusion large.',
+      'Version de travail pour le MVP. A faire valider par la partenaire medicale / cadre RGPD avant diffusion large.',
     sections: {
-      controller: 'Responsable / cadre de l’étude',
-      purpose: 'Finalité',
-      data: 'Données traitées',
+      controller: 'Responsable / cadre de l etude',
+      purpose: 'Finalite',
+      data: 'Donnees traitees',
       legal: 'Base de participation',
       rights: 'Vos droits',
       withdrawal: 'Retrait du consentement',
       contact: 'Contact',
+      provenance: 'Cadre de provenance',
     },
     body: {
       controller:
-        'Projet Shiftwell (cadre de recherche en chronobiologie). Compléter ici les informations institutionnelles et de contact une fois finalisées.',
+        'Projet Shiftwell (cadre de recherche en chronobiologie). Completer ici les informations institutionnelles et de contact une fois finalisees.',
       purpose:
-        'Structurer la collecte d’un agenda travail/sommeil hebdomadaire et de variables minimales afin d’analyser l’adaptabilité aux horaires atypiques dans un cadre de recherche.',
+        'Structurer la collecte d un agenda travail/sommeil hebdomadaire et de variables minimales afin d analyser l adaptabilite aux horaires atypiques dans un cadre de recherche.',
       data: [
         'Agenda travail/sommeil sur 7 jours',
-        'Métier (catégorie), tranche d’âge, sexe (si retenu)',
-        'Réponses complémentaires (mode long)',
-        'Scores calculés et métadonnées de version (scoring / notice)',
-        'Aucune identité obligatoire dans le dataset principal du MVP',
+        'Metier (categorie), tranche d age, sexe (si retenu)',
+        'Reponses complementaires (mode long)',
+        'Scores calcules et metadonnees de version (scoring / notice)',
+        'Aucune identite obligatoire dans le dataset principal du MVP',
       ],
       legal:
-        'La contribution à l’étude est optionnelle et repose sur un consentement explicite recueilli séparément dans l’interface, après calcul local du score.',
+        'La contribution a l etude est optionnelle et repose sur un consentement explicite recueilli separement dans l interface, apres calcul local du score.',
       rights: [
-        'Accès aux informations communiquées',
-        'Rectification (selon les modalités retenues pour le dataset)',
+        'Acces aux informations communiquees',
+        'Rectification (selon les modalites retenues pour le dataset)',
         'Retrait du consentement',
-        'Information sur la conservation et la suppression (à préciser dans la version finalisée)',
+        'Information sur la conservation et la suppression (a preciser dans la version finalisee)',
       ],
       withdrawal:
-        'Le retrait du consentement doit être possible via un contact dédié ou un canal défini dans la version finale de la notice. Ajouter ici la procédure opérationnelle.',
+        'Le retrait du consentement doit etre possible via un contact dedie ou un canal defini dans la version finale de la notice. Ajouter ici la procedure operationnelle.',
       contact:
-        'TODO — Ajouter le contact de l’équipe de recherche (email institutionnel) et, si nécessaire, les informations DPO / structure.',
+        'TODO - Ajouter le contact de l equipe de recherche (email institutionnel) et, si necessaire, les informations DPO / structure.',
+      provenance:
+        'Les references scientifiques externes mobilisees pour le scoring et l explicabilite restent des oeuvres tierces. Le projet ne revendique ni paternite ni propriete sur ces contenus.',
     },
   },
   en: {
@@ -60,6 +63,7 @@ const content = {
       rights: 'Your rights',
       withdrawal: 'Withdrawal of consent',
       contact: 'Contact',
+      provenance: 'Provenance framework',
     },
     body: {
       controller:
@@ -84,13 +88,15 @@ const content = {
       withdrawal:
         'Consent withdrawal must be possible through a dedicated contact or channel defined in the final notice. Add the operational process here.',
       contact:
-        'TODO — Add research team contact (institutional email) and, if needed, DPO / institution information.',
+        'TODO - Add research team contact (institutional email) and, if needed, DPO / institution information.',
+      provenance:
+        'External scientific references used for scoring and explainability remain third-party works. Shiftwell does not claim authorship or ownership over those materials.',
     },
   },
   de: {
     title: 'Teilnehmerinformation (Studienbeitrag)',
     subtitle:
-      'Arbeitsversion für das MVP. Vor breiter Nutzung durch medizinische Partner / DSGVO-Rahmen validieren.',
+      'Arbeitsversion fur das MVP. Vor breiter Nutzung durch medizinische Partner / DSGVO-Rahmen validieren.',
     sections: {
       controller: 'Verantwortung / Studienrahmen',
       purpose: 'Zweck',
@@ -99,31 +105,34 @@ const content = {
       rights: 'Ihre Rechte',
       withdrawal: 'Widerruf der Einwilligung',
       contact: 'Kontakt',
+      provenance: 'Provenienzrahmen',
     },
     body: {
       controller:
-        'Shiftwell-Projekt (chronobiologischer Forschungskontext). Institutionelle Angaben und Kontaktdaten hier ergänzen, sobald final.',
+        'Shiftwell-Projekt (chronobiologischer Forschungskontext). Institutionelle Angaben und Kontaktdaten hier erganzen, sobald final.',
       purpose:
-        'Strukturierte Erhebung eines Wochenplans Arbeit/Schlaf und minimaler Variablen zur Analyse der Anpassungsfähigkeit an atypische Arbeitszeiten im Forschungsrahmen.',
+        'Strukturierte Erhebung eines Wochenplans Arbeit/Schlaf und minimaler Variablen zur Analyse der Anpassungsfahigkeit an atypische Arbeitszeiten im Forschungsrahmen.',
       data: [
         '7-Tage Arbeits-/Schlafplan',
         'Beruf (Kategorie), Altersgruppe, Geschlecht (falls vorgesehen)',
         'Zusatzantworten (Langmodus)',
         'Berechnete Scores und Versions-Metadaten (Scoring / Notice)',
-        'Keine verpflichtende Identität im Hauptdatensatz des MVP',
+        'Keine verpflichtende Identitat im Hauptdatensatz des MVP',
       ],
       legal:
-        'Der Studienbeitrag ist optional und basiert auf einer ausdrücklichen Einwilligung, die nach der lokalen Score-Berechnung separat eingeholt wird.',
+        'Der Studienbeitrag ist optional und basiert auf einer ausdrucklichen Einwilligung, die nach der lokalen Score-Berechnung separat eingeholt wird.',
       rights: [
-        'Auskunft über übermittelte Informationen',
+        'Auskunft uber ubermittelte Informationen',
         'Berichtigung (je nach Datensatzdesign)',
         'Widerruf der Einwilligung',
-        'Information zu Aufbewahrung/Löschung (in finaler Notice zu präzisieren)',
+        'Information zu Aufbewahrung/Loschung (in finaler Notice zu prazisieren)',
       ],
       withdrawal:
-        'Der Widerruf der Einwilligung muss über einen definierten Kontakt/Kanal möglich sein. Hier den operativen Prozess in der finalen Version ergänzen.',
+        'Der Widerruf der Einwilligung muss uber einen definierten Kontakt/Kanal moglich sein. Hier den operativen Prozess in der finalen Version erganzen.',
       contact:
-        'TODO — Kontakt des Forschungsteams (institutionelle E-Mail) und ggf. DPO/Institution ergänzen.',
+        'TODO - Kontakt des Forschungsteams (institutionelle E-Mail) und ggf. DPO/Institution erganzen.',
+      provenance:
+        'Externe wissenschaftliche Referenzen fur Scoring und Erklarbarkeit bleiben Werke Dritter. Shiftwell beansprucht weder Autorschaft noch Eigentum an diesen Materialien.',
     },
   },
 } as const;
@@ -140,7 +149,7 @@ export default async function ConsentPage({
 
   return (
     <main>
-      <LocaleNav locale={locale}/>
+      <LocaleNav locale={locale} />
 
       <section className="card" style={{ padding: 20, marginBottom: 16 }}>
         <span className="badge warn">{NOTICE_VERSION}</span>
@@ -187,6 +196,15 @@ export default async function ConsentPage({
           <p className="small muted">{c.body.withdrawal}</p>
         </Section>
       </div>
+
+      <section className="card" style={{ padding: 16, marginTop: 16 }}>
+        <h2 className="section-title" style={{ fontSize: 18 }}>
+          {c.sections.provenance}
+        </h2>
+        <p className="small muted" style={{ marginBottom: 0 }}>
+          {c.body.provenance}
+        </p>
+      </section>
 
       <section className="card" style={{ padding: 16, marginTop: 16 }}>
         <h2 className="section-title" style={{ fontSize: 18 }}>

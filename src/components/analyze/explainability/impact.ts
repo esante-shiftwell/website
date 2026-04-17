@@ -1,9 +1,19 @@
+import type { EvidenceLink, EvidenceRef, FactorEvaluation, ScoreEvaluation } from '@/core/model';
 import type { RecomputeScoresFn, ExplainFocus, ExplainabilityState, Scores } from './types';
+
+type ImpactEvidence = EvidenceRef & {
+  resolvedLocator: string;
+  resolvedNote?: string;
+  quote?: string;
+};
 
 type Impact = {
   scores: Array<{ key: 'risk' | 'sleep' | 'adaptability'; label: string }>;
   metrics: Array<{ key: string; label: string }>;
   warnings?: string[];
+  formulaRef?: string;
+  status?: string;
+  evidence?: ImpactEvidence[];
   simulatedDelta?: {
     title: string;
     before: Scores;
@@ -12,6 +22,8 @@ type Impact = {
     note?: string;
   };
 };
+
+const SCHEDULE_INPUT_KEYS = ['schedule.workSegments', 'schedule.sleepSegments'] as const;
 
 function deltaScores(before: Scores, after: Scores): Scores {
   return {
@@ -30,15 +42,7 @@ function addOneHourSleep(state: ExplainabilityState): ExplainabilityState['sleep
   const first = segments[0];
 
   if (!first) {
-    return [
-      {
-        id: 'sim_sleep',
-        day: 0,
-        startMin: 22 * 60,
-        endMin: 23 * 60,
-        overnight: false,
-      },
-    ];
+    return [{ id: 'sim_sleep', day: 0, startMin: 22 * 60, endMin: 23 * 60, overnight: false }];
   }
 
   if (!first.overnight && first.endMin <= 23 * 60) {
@@ -56,6 +60,124 @@ function addOneHourSleep(state: ExplainabilityState): ExplainabilityState['sleep
       overnight: false,
     },
   ];
+}
+
+function scoreKeyToUiKey(key: ScoreEvaluation['key']): 'risk' | 'sleep' | 'adaptability' {
+  if (key === 'riskScore') return 'risk';
+  if (key === 'sleepScore') return 'sleep';
+  return 'adaptability';
+}
+
+function focusToTraceKeys(focus: ExplainFocus) {
+  if (focus.kind === 'score') {
+    return {
+      score:
+        focus.key === 'score.risk'
+          ? 'riskScore'
+          : focus.key === 'score.sleep'
+            ? 'sleepScore'
+            : 'adaptabilityScore',
+    } as const;
+  }
+
+  if (focus.kind === 'metric') {
+    const metricKey = focus.key.replace(/^derived\./, '');
+    return { factor: metricKey } as const;
+  }
+
+  return null;
+}
+
+function resolveEvidence(refIds: string[], links: EvidenceLink[] | undefined, state: ExplainabilityState): ImpactEvidence[] {
+  const evidenceMap = new Map(state.trace.evidence.map((item) => [item.id, item]));
+  if (links?.length) {
+    const resolved: ImpactEvidence[] = [];
+    for (const link of links) {
+      const item = evidenceMap.get(link.refId);
+      if (!item) continue;
+      resolved.push({
+          ...item,
+          resolvedLocator: link.locator ?? item.locator,
+          resolvedNote: link.note ?? item.note,
+          quote: link.quote,
+        });
+    }
+    return resolved;
+  }
+
+  const resolved: ImpactEvidence[] = [];
+  for (const id of refIds) {
+    const item = evidenceMap.get(id);
+    if (!item) continue;
+    resolved.push({
+        ...item,
+        resolvedLocator: item.locator,
+        resolvedNote: item.note,
+      });
+  }
+
+  return resolved;
+}
+
+function uniqueByKey<T extends { key: string }>(items: T[]): T[] {
+  const seen = new Set<string>();
+  return items.filter((item) => {
+    if (seen.has(item.key)) return false;
+    seen.add(item.key);
+    return true;
+  });
+}
+
+function impactFromSchedule(
+  state: ExplainabilityState,
+  ui: {
+    metric: (k: string) => string;
+    score: (k: 'risk' | 'sleep' | 'adaptability') => string;
+  },
+): Pick<Impact, 'scores' | 'metrics' | 'warnings'> {
+  const scores = state.trace.scores.map((score) => {
+    const key = scoreKeyToUiKey(score.key);
+    return { key, label: ui.score(key) };
+  });
+
+  const derivedDependencies = uniqueByKey(
+    state.trace.factors.flatMap((factor) =>
+      factor.dependsOn
+        .filter((dep) => dep.startsWith('derived.'))
+        .map((dep) => ({ key: dep, label: ui.metric(dep) })),
+    ),
+  );
+
+  const metrics = [
+    ...SCHEDULE_INPUT_KEYS.map((key) => ({ key, label: ui.metric(key) })),
+    ...derivedDependencies,
+  ];
+
+  return {
+    scores,
+    metrics,
+  };
+}
+
+function impactFromField(
+  focus: ExplainFocus & { kind: 'field' },
+  state: ExplainabilityState,
+  ui: {
+    metric: (k: string) => string;
+    score: (k: 'risk' | 'sleep' | 'adaptability') => string;
+    notUsed: string;
+  },
+): Pick<Impact, 'scores' | 'metrics' | 'warnings'> {
+  const traceFactor = state.trace.factors.find((entry) => entry.dependsOn.includes(focus.key));
+  if (traceFactor) {
+    return impactFromFactor(traceFactor, state, ui);
+  }
+
+  return {
+    scores: [],
+    metrics: [{ key: focus.key, label: ui.metric(focus.key) }],
+    warnings: [ui.notUsed],
+  };
 }
 
 function simulateByTweak(
@@ -108,6 +230,64 @@ function simulateByTweak(
   return null;
 }
 
+function impactFromScore(
+  score: ScoreEvaluation,
+  state: ExplainabilityState,
+  ui: {
+    metric: (k: string) => string;
+    score: (k: 'risk' | 'sleep' | 'adaptability') => string;
+  },
+): Pick<Impact, 'scores' | 'metrics' | 'formulaRef' | 'status' | 'evidence'> {
+  const scores = [scoreKeyToUiKey(score.key)].map((key) => ({ key, label: ui.score(key) }));
+  const metrics = score.dependsOn.map((dep) => {
+    const isScore = dep.endsWith('Score');
+    const key = isScore
+      ? dep === 'riskScore'
+        ? 'score.risk'
+        : dep === 'sleepScore'
+          ? 'score.sleep'
+          : 'score.adaptability'
+      : dep.startsWith('derived.')
+        ? dep
+        : dep;
+    return { key, label: isScore ? ui.score(scoreKeyToUiKey(dep as ScoreEvaluation['key'])) : ui.metric(key) };
+  });
+
+  return {
+    scores,
+    metrics,
+    formulaRef: score.formulaRef,
+    status: score.status,
+    evidence: resolveEvidence(score.evidenceRefs, score.evidenceLinks, state),
+  };
+}
+
+function impactFromFactor(
+  factor: FactorEvaluation,
+  state: ExplainabilityState,
+  ui: {
+    metric: (k: string) => string;
+    score: (k: 'risk' | 'sleep' | 'adaptability') => string;
+  },
+): Pick<Impact, 'scores' | 'metrics' | 'formulaRef' | 'status' | 'evidence'> {
+  const scoreDeps = state.trace.scores
+    .filter((score) => score.dependsOn.includes(factor.key))
+    .map((score) => ({ key: scoreKeyToUiKey(score.key), label: ui.score(scoreKeyToUiKey(score.key)) }));
+
+  const metrics = factor.dependsOn.map((dep) => ({
+    key: dep,
+    label: ui.metric(dep),
+  }));
+
+  return {
+    scores: scoreDeps,
+    metrics,
+    formulaRef: factor.formulaRef,
+    status: factor.status,
+    evidence: resolveEvidence(factor.evidenceRefs, factor.evidenceLinks, state),
+  };
+}
+
 export function computeImpactForFocus(
   focus: ExplainFocus | null,
   state: ExplainabilityState,
@@ -120,65 +300,48 @@ export function computeImpactForFocus(
 ): Impact {
   if (!focus) return { scores: [], metrics: [] };
 
-  const map: Record<string, { scores: Array<'risk' | 'sleep' | 'adaptability'>; metrics: string[] }> = {
-    'score.adaptability': {
-      scores: ['adaptability'],
-      metrics: ['score.risk', 'score.sleep', 'derived.totalSleepHours', 'derived.biologicalHoursLost'],
-    },
-    'score.risk': {
-      scores: ['risk', 'adaptability'],
-      metrics: ['derived.totalWorkHours', 'derived.nightShiftCount', 'derived.shortBreaksCount'],
-    },
-    'score.sleep': {
-      scores: ['sleep', 'adaptability'],
-      metrics: ['derived.totalSleepHours', 'derived.avgSleepHours', 'derived.sleepRegularityProxy'],
-    },
-    'profile.fatigue': { scores: ['risk', 'adaptability'], metrics: ['profile.fatigue'] },
-    'profile.schedulePredictability': {
-      scores: ['risk', 'adaptability'],
-      metrics: ['profile.schedulePredictability'],
-    },
-    'profile.commuteMinutes': { scores: ['risk'], metrics: ['profile.commuteMinutes'] },
-    'derived.totalWorkHours': { scores: ['risk'], metrics: ['derived.totalWorkHours'] },
-    'derived.totalSleepHours': { scores: ['sleep', 'adaptability'], metrics: ['derived.totalSleepHours'] },
-    'derived.avgSleepHours': { scores: ['sleep', 'adaptability'], metrics: ['derived.avgSleepHours'] },
-    'derived.longShiftCount': { scores: ['risk'], metrics: ['derived.longShiftCount'] },
-    'derived.shortBreaksCount': { scores: ['risk'], metrics: ['derived.shortBreaksCount'] },
-    'derived.nightShiftCount': { scores: ['risk', 'adaptability'], metrics: ['derived.nightShiftCount'] },
-    'derived.biologicalHoursLost': {
-      scores: ['risk', 'adaptability'],
-      metrics: ['derived.biologicalHoursLost'],
-    },
-    'derived.socialHoursLost': { scores: ['risk'], metrics: ['derived.socialHoursLost'] },
-    'derived.sleepRegularityProxy': {
-      scores: ['sleep', 'adaptability'],
-      metrics: ['derived.sleepRegularityProxy'],
-    },
-    schedule: {
-      scores: ['risk', 'sleep', 'adaptability'],
-      metrics: [
-        'schedule.workSegments',
-        'schedule.sleepSegments',
-        'derived.totalWorkHours',
-        'derived.totalSleepHours',
-      ],
-    },
-  };
+  const traceKeys = focusToTraceKeys(focus);
 
-  const entry = map[focus.key] ?? null;
+  if (traceKeys?.score) {
+    const score = state.trace.scores.find((entry) => entry.key === traceKeys.score);
+    if (score) {
+      return {
+        ...impactFromScore(score, state, ui),
+        simulatedDelta: simulateByTweak(focus, state, recomputeScores) ?? undefined,
+      };
+    }
+  }
 
-  if (!entry) {
+  if (traceKeys?.factor) {
+    const factor = state.trace.factors.find(
+      (entry) => entry.key === traceKeys.factor || `derived.${entry.key}` === focus.key,
+    );
+    if (factor) {
+      return {
+        ...impactFromFactor(factor, state, ui),
+        simulatedDelta: simulateByTweak(focus, state, recomputeScores) ?? undefined,
+      };
+    }
+  }
+
+  if (focus.kind === 'schedule') {
     return {
-      scores: [],
-      metrics: [],
-      warnings: [ui.notUsed],
+      ...impactFromSchedule(state, ui),
+      simulatedDelta: simulateByTweak(focus, state, recomputeScores) ?? undefined,
+    };
+  }
+
+  if (focus.kind === 'field') {
+    return {
+      ...impactFromField(focus, state, ui),
       simulatedDelta: simulateByTweak(focus, state, recomputeScores) ?? undefined,
     };
   }
 
   return {
-    scores: entry.scores.map((key) => ({ key, label: ui.score(key) })),
-    metrics: entry.metrics.map((key) => ({ key, label: ui.metric(key) })),
+    scores: [],
+    metrics: [],
+    warnings: [ui.notUsed],
     simulatedDelta: simulateByTweak(focus, state, recomputeScores) ?? undefined,
   };
 }

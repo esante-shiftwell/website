@@ -9,123 +9,141 @@ export function generateStaticParams() {
 
 const content = {
   fr: {
-    title: 'Méthodologie',
+    title: 'Methodologie',
     subtitle:
-      'Comment Shiftwell calcule les scores (version MVP) et comment cela se relie à la base scientifique.',
+      'Comment Shiftwell calcule les scores (version MVP) et comment cela se relie a des references externes.',
     sections: {
       scoring: 'Scores (MVP v0.1)',
-      source: 'Source scientifique',
-      mapping: 'Mapping article ↔ Shiftwell',
+      source: 'References externes',
+      mapping: 'Mapping reference externe ↔ Shiftwell',
       limits: 'Limites actuelles',
-      roadmap: 'Roadmap méthodologique',
+      roadmap: 'Roadmap methodologique',
     },
     scoringItems: [
-      'Score Risque (SLI proxy) : score de charge/risque hebdomadaire dérivé de l’agenda travail/sommeil.',
-      'Score Sommeil (proxy) : combine durée moyenne de sommeil + proxy de régularité.',
-      'Score Adaptabilité (principal) : combine risque inverse + score sommeil (proxy v0.1).',
+      'Score Risque (SLI proxy) : score de charge ou risque hebdomadaire derive de l agenda travail et sommeil.',
+      'Score Sommeil (proxy) : combine duree moyenne de sommeil et proxy de regularite.',
+      'Score Adaptabilite (principal) : combine risque inverse et score sommeil (proxy v0.1).',
     ],
     sourceText:
-      'La base scientifique du projet repose sur un article de référence en santé publique/chronobiologie. La version MVP implémente une logique proxy pour accélérer le pilote produit, puis sera alignée plus strictement au protocole.',
+      "Shiftwell s'appuie sur des references scientifiques externes et sur une copie locale de travail du workbook. La version MVP implemente une logique proxy pour accelerer le pilote produit, puis sera alignee plus strictement au protocole.",
+    noticeText:
+      "Les references ci-dessous restent des oeuvres externes. Leur presence ici ne signifie ni paternite ni propriete par Shiftwell.",
+    mappingHeaders: ['Reference externe', 'Variable Shiftwell', 'Statut'],
+    backToAnalyze: "Retour a l'analyse",
+    externalArticle: 'Article externe',
+    externalWorkbook: 'Workbook externe (copie locale de travail)',
     mappingRows: [
-      ['Heures travaillées', 'Calculé à partir des segments de travail de la semaine', 'Implémenté'],
-      ['Longs shifts', 'Nombre de segments de travail longs (proxy seuil)', 'Implémenté (proxy)'],
-      ['Récupération', 'Plus longue fenêtre de récupération entre shifts', 'Implémenté (proxy)'],
-      ['Night shifts', 'Chevauchement avec fenêtre biologique nuit', 'Implémenté (proxy)'],
-      ['Perte biologique', 'Travail dans fenêtre biologique (23h–7h, proxy)', 'Implémenté (proxy)'],
-      ['Perte sociale', 'Travail dans fenêtre sociale (proxy)', 'Implémenté (proxy)'],
-      ['SRI/TST', 'Proxy régularité + durée totale sommeil', 'Proxy MVP'],
+      ['Heures travaillees', 'Calcule a partir des segments de travail de la semaine', 'Implemente'],
+      ['Longs shifts', 'Nombre de segments de travail longs (proxy seuil)', 'Implemente (proxy)'],
+      ['Recuperation', 'Plus longue fenetre de recuperation entre shifts', 'Implemente (proxy)'],
+      ['Night shifts', 'Chevauchement avec fenetre biologique nuit', 'Implemente (proxy)'],
+      ['Perte biologique', 'Travail dans fenetre biologique (23h-7h, proxy)', 'Implemente (proxy)'],
+      ['Perte sociale', 'Travail dans fenetre sociale (proxy)', 'Implemente (proxy)'],
+      ['SRI/TST', 'Proxy regularite + duree totale sommeil', 'Proxy MVP'],
     ],
     limits: [
-      'Version actuelle = proxy v0.1 (seuils/pondérations à verrouiller avec le protocole final).',
-      'Saisie auto-déclarative (pas d’actigraphie).',
-      'Score d’adaptabilité non calibré sur cohorte dans la V1.',
+      'Version actuelle = proxy v0.1 (seuils et ponderations a verrouiller avec le protocole final).',
+      "Saisie auto declaree (pas d'actigraphie).",
+      "Score d'adaptabilite non calibre sur cohorte dans la V1.",
       'Aucune recommandation clinique en sortie (volontairement).',
     ],
     roadmap: [
-      'Alignement strict des seuils SLI avec le papier/protocole',
-      'Ajout d’une référence moyenne (papier ou cohorte)',
-      'Calibration du score d’adaptabilité sur données de cohorte',
-      'Évolution vers un vrai calendrier visuel (drag/drop) si besoin',
+      'Alignement strict des seuils SLI avec le papier ou protocole',
+      "Ajout d'une reference moyenne (papier ou cohorte)",
+      "Calibration du score d'adaptabilite sur donnees de cohorte",
+      'Evolution vers un vrai calendrier visuel (drag and drop) si besoin',
     ],
   },
   en: {
     title: 'Methodology',
     subtitle:
-      'How Shiftwell computes scores (MVP version) and how it relates to the scientific basis.',
+      'How Shiftwell computes scores (MVP version) and how it relates to external references.',
     sections: {
       scoring: 'Scores (MVP v0.1)',
-      source: 'Scientific source',
-      mapping: 'Paper ↔ Shiftwell mapping',
+      source: 'External references',
+      mapping: 'External reference ↔ Shiftwell mapping',
       limits: 'Current limitations',
       roadmap: 'Method roadmap',
     },
     scoringItems: [
-      'Risk score (SLI proxy): weekly load/risk score derived from work/sleep schedule.',
-      'Sleep score (proxy): combines average sleep duration + regularity proxy.',
-      'Adaptability score (main): combines inverse risk + sleep score (proxy v0.1).',
+      'Risk score (SLI proxy): weekly load or risk score derived from work and sleep schedule.',
+      'Sleep score (proxy): combines average sleep duration and regularity proxy.',
+      'Adaptability score (main): combines inverse risk and sleep score (proxy v0.1).',
     ],
     sourceText:
-      'The scientific basis comes from a chronobiology/public health paper. The MVP currently implements a proxy logic for a fast product pilot, then will be aligned more strictly with the protocol.',
+      'Shiftwell relies on third-party scientific references and on a local working copy of the workbook. The MVP currently implements proxy logic for a fast product pilot, then will be aligned more strictly with the protocol.',
+    noticeText:
+      'The references below remain external works. Showing them here does not mean authorship or ownership by Shiftwell.',
+    mappingHeaders: ['External reference item', 'Shiftwell variable', 'Status'],
+    backToAnalyze: 'Back to Analyze',
+    externalArticle: 'External article',
+    externalWorkbook: 'External workbook (local working copy)',
     mappingRows: [
       ['Hours worked', 'Computed from weekly work segments', 'Implemented'],
       ['Long shifts', 'Count of long work segments (proxy threshold)', 'Implemented (proxy)'],
       ['Recovery', 'Longest recovery window between shifts', 'Implemented (proxy)'],
       ['Night shifts', 'Overlap with biological night window', 'Implemented (proxy)'],
-      ['Biological loss', 'Work encroachment in biological window (23:00–07:00 proxy)', 'Implemented (proxy)'],
+      ['Biological loss', 'Work encroachment in biological window (23:00-07:00 proxy)', 'Implemented (proxy)'],
       ['Social loss', 'Work encroachment in social window (proxy)', 'Implemented (proxy)'],
       ['SRI/TST', 'Regularity proxy + total sleep time', 'MVP proxy'],
     ],
     limits: [
-      'Current version = proxy v0.1 (thresholds/weights still to be aligned with final protocol).',
+      'Current version = proxy v0.1 (thresholds and weights still to be aligned with the final protocol).',
       'Self-reported input (no actigraphy).',
       'Adaptability score not cohort-calibrated in V1.',
       'No clinical recommendations in output (intentional).',
     ],
     roadmap: [
-      'Strict SLI thresholds alignment with paper/protocol',
+      'Strict SLI threshold alignment with paper or protocol',
       'Add average reference (paper or cohort baseline)',
       'Calibrate adaptability score on cohort data',
-      'Move to a true visual calendar grid (drag/drop) if needed',
+      'Move to a true visual calendar grid (drag and drop) if needed',
     ],
   },
   de: {
     title: 'Methodik',
     subtitle:
-      'Wie Shiftwell die Scores berechnet (MVP) und wie dies mit der wissenschaftlichen Basis zusammenhängt.',
+      'Wie Shiftwell die Scores berechnet (MVP) und wie dies mit externen Referenzen zusammenhangt.',
     sections: {
       scoring: 'Scores (MVP v0.1)',
-      source: 'Wissenschaftliche Quelle',
-      mapping: 'Mapping Paper ↔ Shiftwell',
+      source: 'Externe Referenzen',
+      mapping: 'Externes Referenz-Mapping ↔ Shiftwell',
       limits: 'Aktuelle Grenzen',
       roadmap: 'Methodik-Roadmap',
     },
     scoringItems: [
-      'Risiko-Score (SLI-Proxy): wöchentlicher Belastungs-/Risikoscore aus Arbeits-/Schlafplan.',
-      'Schlaf-Score (Proxy): kombiniert mittlere Schlafdauer + Regelmäßigkeits-Proxy.',
-      'Anpassungsfähigkeit (Hauptscore): kombiniert inverses Risiko + Schlaf-Score (Proxy v0.1).',
+      'Risiko-Score (SLI-Proxy): wochentlicher Belastungs- oder Risikoscore aus Arbeits- und Schlafplan.',
+      'Schlaf-Score (Proxy): kombiniert mittlere Schlafdauer und Regelmassigkeits-Proxy.',
+      'Anpassungsfahigkeit (Hauptscore): kombiniert inverses Risiko und Schlaf-Score (Proxy v0.1).',
     ],
     sourceText:
-      'Die wissenschaftliche Basis stammt aus einem Referenzartikel (Chronobiologie/Public Health). Im MVP wird eine Proxy-Logik verwendet; später erfolgt die strengere Protokoll-Ausrichtung.',
+      'Shiftwell nutzt wissenschaftliche Drittquellen und eine lokale Arbeitskopie des Workbooks. Im MVP wird eine Proxy-Logik verwendet; spater erfolgt die strengere Protokoll-Ausrichtung.',
+    noticeText:
+      'Die unten genannten Referenzen bleiben externe Werke. Ihre Anzeige hier bedeutet keine Urheberschaft oder Eigentumerschaft durch Shiftwell.',
+    mappingHeaders: ['Externe Referenz', 'Shiftwell-Variable', 'Status'],
+    backToAnalyze: 'Zuruck zur Analyse',
+    externalArticle: 'Externer Artikel',
+    externalWorkbook: 'Externes Workbook (lokale Arbeitskopie)',
     mappingRows: [
       ['Arbeitsstunden', 'Aus Wochen-Arbeitssegmenten berechnet', 'Implementiert'],
-      ['Lange Schichten', 'Anzahl langer Arbeitsschichten (Proxy-Schwelle)', 'Implementiert (Proxy)'],
-      ['Erholung', 'Längste Erholungsphase zwischen Schichten', 'Implementiert (Proxy)'],
-      ['Nachtschichten', 'Überlappung mit biologischem Nachtfenster', 'Implementiert (Proxy)'],
-      ['Biologischer Verlust', 'Arbeit im biologischen Fenster (23–7 Uhr, Proxy)', 'Implementiert (Proxy)'],
+      ['Lange Schichten', 'Anzahl langer Arbeitssegmente (Proxy-Schwelle)', 'Implementiert (Proxy)'],
+      ['Erholung', 'Langstes Erholungsfenster zwischen Schichten', 'Implementiert (Proxy)'],
+      ['Nachtschichten', 'Uberlappung mit biologischem Nachtfenster', 'Implementiert (Proxy)'],
+      ['Biologischer Verlust', 'Arbeit im biologischen Fenster (23-7 Uhr, Proxy)', 'Implementiert (Proxy)'],
       ['Sozialer Verlust', 'Arbeit im sozialen Zeitfenster (Proxy)', 'Implementiert (Proxy)'],
-      ['SRI/TST', 'Regelmäßigkeits-Proxy + Gesamtschlafzeit', 'MVP Proxy'],
+      ['SRI/TST', 'Regelmassigkeits-Proxy + Gesamtschlafzeit', 'MVP Proxy'],
     ],
     limits: [
-      'Aktuelle Version = Proxy v0.1 (Schwellen/Gewichte noch mit Protokoll abzugleichen).',
+      'Aktuelle Version = Proxy v0.1 (Schwellen und Gewichte noch mit dem finalen Protokoll abzugleichen).',
       'Selbstberichtete Eingaben (keine Aktigraphie).',
       'Anpassungs-Score in V1 nicht auf Kohorte kalibriert.',
       'Keine klinischen Empfehlungen in der Ausgabe (absichtlich).',
     ],
     roadmap: [
-      'Strikte SLI-Schwellen am Paper/Protokoll ausrichten',
-      'Referenzmittelwert (Paper oder Kohorte) hinzufügen',
+      'Strikte SLI-Schwellen am Paper oder Protokoll ausrichten',
+      'Referenzmittelwert (Paper oder Kohorte) hinzufugen',
       'Anpassungs-Score auf Kohortendaten kalibrieren',
-      'Später visuelle Kalenderansicht (Drag/Drop) falls nötig',
+      'Spater visuelle Kalenderansicht (Drag and Drop) falls notig',
     ],
   },
 } as const;
@@ -142,7 +160,7 @@ export default async function MethodPage({
 
   return (
     <main>
-      <LocaleNav locale={locale}/>
+      <LocaleNav locale={locale} />
 
       <section className="card" style={{ padding: 20, marginBottom: 16 }}>
         <span className="badge primary">Method</span>
@@ -173,21 +191,38 @@ export default async function MethodPage({
           <p className="small muted">{c.sourceText}</p>
 
           <div className="notice" style={{ marginTop: 10 }}>
-            <div className="small">
-              <strong>Paper:</strong>{' '}
-              <a
-                href="https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2025.1679296/full"
-                target="_blank"
-                rel="noreferrer"
-              >
-                Frontiers in Public Health (Shiftwork Lifestyle Index related paper)
-              </a>
+            <div className="small">{c.noticeText}</div>
+          </div>
+
+          <div className="grid" style={{ gap: 10, marginTop: 12 }}>
+            <div className="card soft" style={{ padding: 12 }}>
+              <div className="small muted" style={{ fontWeight: 700 }}>
+                {c.externalArticle}
+              </div>
+              <div className="small" style={{ marginTop: 6 }}>
+                <a
+                  href="https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2025.1679296/full"
+                  target="_blank"
+                  rel="noreferrer"
+                >
+                  Frontiers in Public Health
+                </a>
+              </div>
+            </div>
+
+            <div className="card soft" style={{ padding: 12 }}>
+              <div className="small muted" style={{ fontWeight: 700 }}>
+                {c.externalWorkbook}
+              </div>
+              <div className="small" style={{ marginTop: 6 }}>
+                See provenance-aware source mapping in the repository docs.
+              </div>
             </div>
           </div>
 
           <div className="row" style={{ marginTop: 12 }}>
             <Link className="btn" href={`/${locale}/analyze/`}>
-              Back to Analyze
+              {c.backToAnalyze}
             </Link>
           </div>
         </section>
@@ -202,9 +237,9 @@ export default async function MethodPage({
           <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
             <thead>
               <tr>
-                {['Article item', 'Shiftwell variable', 'Status'].map((h) => (
+                {c.mappingHeaders.map((header) => (
                   <th
-                    key={h}
+                    key={header}
                     style={{
                       textAlign: 'left',
                       fontSize: 13,
@@ -213,7 +248,7 @@ export default async function MethodPage({
                       color: 'var(--muted)',
                     }}
                   >
-                    {h}
+                    {header}
                   </th>
                 ))}
               </tr>
@@ -221,9 +256,9 @@ export default async function MethodPage({
             <tbody>
               {c.mappingRows.map((row) => (
                 <tr key={row[0]}>
-                  {row.map((cell, i) => (
+                  {row.map((cell, index) => (
                     <td
-                      key={`${row[0]}-${i}`}
+                      key={`${row[0]}-${index}`}
                       style={{
                         padding: '10px 8px',
                         borderBottom: '1px solid var(--border)',

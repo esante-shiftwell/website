@@ -33,6 +33,9 @@ type ProfileStepCopy = {
   commute: string;
   naps: string;
   caffeine: string;
+  scoringReady: string;
+  scoringLater: string;
+  longModeNotice: string;
 
   previous: string;
   next: string;
@@ -144,8 +147,15 @@ export default function ProfileStep({
       </div>
 
       {profile.mode === 'long' && (
-        <div className="grid grid-2" style={{ marginTop: 12 }}>
-          <Field label={t.fatigue}>
+        <div style={{ marginTop: 12 }}>
+          <div className="notice warn" style={{ marginBottom: 12 }}>
+            <div className="small">
+              <strong>{t.scoringLater}</strong> {t.longModeNotice}
+            </div>
+          </div>
+
+          <div className="grid grid-2">
+          <Field label={`${t.fatigue} · ${t.scoringLater}`}>
             <RangeInput
               min={1}
               max={5}
@@ -154,7 +164,7 @@ export default function ProfileStep({
             />
           </Field>
 
-          <Field label={t.predictability}>
+          <Field label={`${t.predictability} · ${t.scoringLater}`}>
             <RangeInput
               min={1}
               max={5}
@@ -163,7 +173,7 @@ export default function ProfileStep({
             />
           </Field>
 
-          <Field label={t.commute}>
+          <Field label={`${t.commute} · ${t.scoringLater}`}>
             <input
               className="input"
               type="number"
@@ -179,7 +189,7 @@ export default function ProfileStep({
             />
           </Field>
 
-          <Field label={t.naps}>
+          <Field label={`${t.naps} · ${t.scoringLater}`}>
             <input
               className="input"
               type="number"
@@ -195,7 +205,7 @@ export default function ProfileStep({
             />
           </Field>
 
-          <Field label={t.caffeine}>
+          <Field label={`${t.caffeine} · ${t.scoringLater}`}>
             <input
               className="input"
               type="number"
@@ -210,6 +220,7 @@ export default function ProfileStep({
               }
             />
           </Field>
+          </div>
         </div>
       )}
 

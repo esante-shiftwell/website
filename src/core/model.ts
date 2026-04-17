@@ -37,8 +37,10 @@ export interface AnalysisDraft {
 export interface DerivedMetrics {
   totalWorkHours: number;
   longShiftCount: number;
+  count24hBreaks: number;
   longestRecoveryHours: number;
   shortBreaksCount: number;
+  restDaysCount: number;
   fullyRestedDaysCount: number;
   nightShiftCount: number;
   biologicalHoursLost: number;
@@ -51,9 +53,19 @@ export interface DerivedMetrics {
 export interface EvidenceRef {
   id: string;
   sourceType: 'workbook' | 'pdf' | 'article' | 'code';
+  title: string;
   source: string;
   locator: string;
+  href?: string;
   note?: string;
+  tags?: string[];
+}
+
+export interface EvidenceLink {
+  refId: string;
+  locator?: string;
+  note?: string;
+  quote?: string;
 }
 
 export interface FactorEvaluation {
@@ -64,6 +76,7 @@ export interface FactorEvaluation {
   contribution?: number;
   formulaRef: string;
   evidenceRefs: string[];
+  evidenceLinks?: EvidenceLink[];
   dependsOn: string[];
   status: 'implemented' | 'proxy' | 'missing' | 'disputed';
 }
@@ -74,6 +87,7 @@ export interface ScoreEvaluation {
   value: number;
   formulaRef: string;
   evidenceRefs: string[];
+  evidenceLinks?: EvidenceLink[];
   dependsOn: string[];
   status: 'implemented' | 'proxy' | 'missing' | 'disputed';
 }

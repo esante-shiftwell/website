@@ -18,36 +18,39 @@ type ExplainState = {
 function ui(locale: Locale) {
   if (locale === 'fr') {
     return {
-      title: 'Explicabilité',
-      pick: 'Clique un score/une métrique pour voir définition + dépendances.',
+      title: 'Explicabilite',
+      pick: 'Clique un score ou une metrique pour voir definition, dependances et references.',
       close: 'Fermer',
       open: 'Explain',
       uses: 'Utilise',
-      usedBy: 'Utilisé par',
+      usedBy: 'Utilise par',
       value: 'Valeur',
-      empty: 'Sélectionne un élément.',
+      evidence: 'References',
+      empty: 'Selectionne un element.',
     };
   }
   if (locale === 'de') {
     return {
-      title: 'Erklärbarkeit',
-      pick: 'Klicke Score/Metrik für Definition + Abhängigkeiten.',
-      close: 'Schließen',
+      title: 'Erklarbarkeit',
+      pick: 'Klicke auf Score oder Metrik fur Definition, Abhangigkeiten und Referenzen.',
+      close: 'Schliessen',
       open: 'Explain',
       uses: 'Nutzt',
       usedBy: 'Genutzt von',
       value: 'Wert',
-      empty: 'Wähle ein Element.',
+      evidence: 'Referenzen',
+      empty: 'Wahle ein Element.',
     };
   }
   return {
     title: 'Explainability',
-    pick: 'Click a score/metric to see definition + dependencies.',
+    pick: 'Click a score or metric to see definition, dependencies, and references.',
     close: 'Close',
     open: 'Explain',
     uses: 'Uses',
     usedBy: 'Used by',
     value: 'Value',
+    evidence: 'References',
     empty: 'Select an item.',
   };
 }
@@ -56,14 +59,14 @@ function formatValue(key: string, state: ExplainState): string {
   if (key.startsWith('score.')) {
     const s = key.replace('score.', '') as 'risk' | 'sleep' | 'adaptability';
     const v = state.scores?.[s];
-    return typeof v === 'number' ? v.toFixed(1) : '—';
+    return typeof v === 'number' ? v.toFixed(1) : '--';
   }
 
   if (key.startsWith('derived.')) {
     const dk = key.replace('derived.', '');
     const derivedRec = state.derived as unknown as Record<string, unknown>;
     const v = derivedRec[dk];
-    if (typeof v !== 'number' || !Number.isFinite(v)) return '—';
+    if (typeof v !== 'number' || !Number.isFinite(v)) return '--';
 
     const low = dk.toLowerCase();
     if (low.includes('hours')) return `${(Math.round(v * 10) / 10).toFixed(1)}h`;
@@ -78,11 +81,11 @@ function formatValue(key: string, state: ExplainState): string {
     const pk = key.replace('profile.', '');
     const rec = state.profile as unknown as Record<string, unknown>;
     const v = rec[pk];
-    if (v == null || v === '') return '—';
+    if (v == null || v === '') return '--';
     return String(v);
   }
 
-  return '—';
+  return '--';
 }
 
 export default function ExplainSidebar({
@@ -97,7 +100,6 @@ export default function ExplainSidebar({
   state: ExplainState;
   focusKey: string | null;
   setFocusKey: (k: string) => void;
-
   mobileOpen: boolean;
   setMobileOpen: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
@@ -151,11 +153,11 @@ export default function ExplainSidebar({
 
             <div className="sw-explain-chips">
               {(node.uses ?? []).length === 0 ? (
-                <span className="small muted">—</span>
+                <span className="small muted">--</span>
               ) : (
                 node.uses!.map((k) => {
-                  const n = getNode(map, k);
-                  const label = n ? n.title[state.locale] : k;
+                  const nextNode = getNode(map, k);
+                  const label = nextNode ? nextNode.title[state.locale] : k;
                   return (
                     <button
                       key={k}
@@ -179,19 +181,49 @@ export default function ExplainSidebar({
 
             <div className="sw-explain-chips">
               {usedBy.length === 0 ? (
-                <span className="small muted">—</span>
+                <span className="small muted">--</span>
               ) : (
-                usedBy.map((n) => (
+                usedBy.map((nextNode) => (
                   <button
-                    key={n.key}
+                    key={nextNode.key}
                     type="button"
                     className="sw-explain-chip"
-                    onClick={() => setFocusKey(n.key)}
-                    title={n.key}
+                    onClick={() => setFocusKey(nextNode.key)}
+                    title={nextNode.key}
                   >
-                    {n.title[state.locale]}
+                    {nextNode.title[state.locale]}
                   </button>
                 ))
+              )}
+            </div>
+          </section>
+
+          <section style={{ marginTop: 12 }}>
+            <div className="small muted" style={{ fontWeight: 900, marginBottom: 8 }}>
+              {c.evidence}
+            </div>
+
+            <div className="sw-explain-chips">
+              {(node.evidence ?? []).length === 0 ? (
+                <span className="small muted">--</span>
+              ) : (
+                node.evidence!.map((item) =>
+                  item.url ? (
+                    <a
+                      key={item.id}
+                      className="sw-explain-chip"
+                      href={item.url}
+                      target={item.url.startsWith('http') ? '_blank' : undefined}
+                      rel={item.url.startsWith('http') ? 'noreferrer' : undefined}
+                    >
+                      {item.label}
+                    </a>
+                  ) : (
+                    <span key={item.id} className="sw-explain-chip ghost" title={item.id}>
+                      {item.label}
+                    </span>
+                  ),
+                )
               )}
             </div>
           </section>
@@ -210,7 +242,7 @@ export default function ExplainSidebar({
 
       {mobileOpen ? (
         <div className="sw-explain-mobile-overlay" onMouseDown={() => setMobileOpen(false)}>
-          <div className="sw-explain-mobile-drawer" onMouseDown={(e) => e.stopPropagation()}>
+          <div className="sw-explain-mobile-drawer" onMouseDown={(event) => event.stopPropagation()}>
             <div className="row" style={{ justifyContent: 'space-between' }}>
               <div className="brand-name">{c.title}</div>
               <button type="button" className="btn ghost" onClick={() => setMobileOpen(false)}>

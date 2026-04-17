@@ -4,6 +4,7 @@ import type {
   WeekSegment,
   DerivedMetrics as AnalyzeDerivedMetrics,
 } from '@/components/analyze/types';
+import type { ScoreTrace } from '@/core/model';
 
 export type Scores = { risk: number; sleep: number; adaptability: number };
 
@@ -23,6 +24,7 @@ export type ExplainabilityState = {
   sleepSegments: WeekSegment[];
   derived: DerivedMetrics;
   scores: Scores;
+  trace: ScoreTrace;
 };
 
 export type RecomputeScoresFn = (args: {

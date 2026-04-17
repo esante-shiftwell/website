@@ -24,37 +24,43 @@ type ResultsText = {
 function copy(locale: Locale) {
   if (locale === 'fr') {
     return {
-      studyTitle: "Cadre de l'Ã©tude",
+      studyTitle: "Cadre de l'etude",
       studyText:
-        "Score calculÃ© localement. Contribution Ã  lâ€™Ã©tude ensuite (opt-in, consentement explicite). Pas un avis mÃ©dical.",
-      paper: 'Paper',
+        "Score calcule localement. Contribution a l'etude ensuite (opt-in, consentement explicite). Pas un avis medical. Les references externes restent des oeuvres tierces.",
+      paper: 'Reference externe',
       explain: 'Explain',
       mainScore: 'Score principal',
-      metricsTitle: 'MÃ©triques clÃ©s',
+      metricsTitle: 'Metriques cles',
       scheduleLabel: 'Agenda',
+      formulaVersion: 'Version de formule',
+      formulaNote: "Cette explicabilite correspond a la version runtime actuellement active.",
     };
   }
   if (locale === 'de') {
     return {
       studyTitle: 'Studienrahmen',
       studyText:
-        'Score wird lokal berechnet. Optionaler Studienbeitrag danach (Opt-in, explizite Einwilligung). Kein medizinischer Rat.',
-      paper: 'Paper',
+        'Score wird lokal berechnet. Optionaler Studienbeitrag danach (Opt-in, explizite Einwilligung). Keine medizinische Beratung. Externe Referenzen bleiben Drittquellen.',
+      paper: 'Externe Referenz',
       explain: 'Explain',
       mainScore: 'Hauptscore',
-      metricsTitle: 'SchlÃ¼sselmetriken',
+      metricsTitle: 'Schlusselmetriken',
       scheduleLabel: 'Zeitplan',
+      formulaVersion: 'Formelversion',
+      formulaNote: 'Diese Erklarbarkeit entspricht der aktuell aktiven Runtime-Version.',
     };
   }
   return {
     studyTitle: 'Study context',
     studyText:
-      'Local-first scoring. Optional study contribution afterwards (opt-in, explicit consent). Not medical advice.',
-    paper: 'Paper',
+      'Local-first scoring. Optional study contribution afterwards (opt-in, explicit consent). Not medical advice. External references remain third-party works.',
+    paper: 'External reference',
     explain: 'Explain',
     mainScore: 'Main score',
     metricsTitle: 'Key metrics',
     scheduleLabel: 'Schedule',
+    formulaVersion: 'Formula version',
+    formulaNote: 'This explainability view reflects the currently active runtime version.',
   };
 }
 
@@ -89,6 +95,7 @@ export default function ResultsStep({
   t,
   locale,
   scores,
+  scoringVersion,
   payload,
   collector,
   setCollector,
@@ -100,6 +107,7 @@ export default function ResultsStep({
   t: ResultsText;
   locale: Locale;
   scores: { risk: number; sleep: number; adaptability: number };
+  scoringVersion: string;
   payload: unknown;
   collector: CollectorState;
   setCollector: (updater: (c: CollectorState) => CollectorState) => void;
@@ -129,6 +137,12 @@ export default function ResultsStep({
           <p className="small muted" style={{ marginTop: 8 }}>
             {c.studyText}
           </p>
+          <div className="row" style={{ gap: 8, marginTop: 10 }}>
+            <span className="badge warn">
+              {c.formulaVersion}: {scoringVersion}
+            </span>
+            <span className="small muted">{c.formulaNote}</span>
+          </div>
         </div>
 
         <div className="row" style={{ gap: 8 }}>

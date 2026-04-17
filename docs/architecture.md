@@ -6,7 +6,7 @@ This document explains how Shiftwell is organized so contributors can quickly fi
 
 It is written for:
 
-- developers who know React/Next.js
+- developers who know React and Next.js
 - contributors who are strong in writing or product but weaker in code
 - research collaborators who want to understand where the scoring logic lives
 
@@ -16,11 +16,13 @@ It is written for:
 | --- | --- | --- |
 | Routing | locale-aware pages and navigation | [../src/app](../src/app) |
 | UI flow | multi-step analysis experience | [../src/components](../src/components) |
-| Domain model | schedule and score types | [../src/core/model.ts](../src/core/model.ts) |
-| Scoring engine | interval normalization, derived metrics, score computation | [../src/core/scoring.ts](../src/core/scoring.ts) |
+| Domain model | schedule, score, and trace types | [../src/core/model.ts](../src/core/model.ts) |
+| Evidence registry | canonical source ids and metadata | [../src/core/evidence.ts](../src/core/evidence.ts) |
+| Scoring engine | interval normalization, derived metrics, score computation, trace building | [../src/core/scoring.ts](../src/core/scoring.ts) |
+| Analyze bridge | maps UI schedule input into core draft input | [../src/lib/analyzeCoreBridge.ts](../src/lib/analyzeCoreBridge.ts) |
 | Localization | dictionaries and supported locales | [../src/i18n.ts](../src/i18n.ts) |
 | Export and contribution | JSON export and optional submission | [../src/lib](../src/lib) |
-| Documentation and sources | workbook, PDFs, formula notes | [../docs](../docs) |
+| Documentation and sources | workbook, PDFs, formula notes, evidence tables | [../docs](../docs) |
 
 ## 🔄 User Flow
 
@@ -29,8 +31,9 @@ It is written for:
 | Locale selection | user lands on a language-aware route | [../src/app/page.tsx](../src/app/page.tsx), [../src/app/[locale]/page.tsx](../src/app/[locale]/page.tsx) |
 | Context pages | methodology, study, consent, legal, about | [../src/app/[locale]](../src/app/[locale]) |
 | Analysis entry | user fills weekly work and sleep schedule | [../src/components/AnalyzeClient.tsx](../src/components/AnalyzeClient.tsx) |
-| Score computation | local scoring runs in browser-side app logic | [../src/core/scoring.ts](../src/core/scoring.ts) |
-| Explainability | score and factor explanations are rendered | [../src/components/analyze/explainability](../src/components/analyze/explainability) |
+| Draft normalization | UI segments are converted into core input | [../src/lib/analyzeCoreBridge.ts](../src/lib/analyzeCoreBridge.ts) |
+| Score computation | a single core scoring pipeline runs in the app | [../src/core/scoring.ts](../src/core/scoring.ts) |
+| Explainability | score and factor explanations are rendered from trace and maps | [../src/components/analyze/explainability](../src/components/analyze/explainability) |
 | Contribution | optional consented payload can be exported or sent | [../src/lib/export.ts](../src/lib/export.ts), [../src/lib/collector.ts](../src/lib/collector.ts) |
 
 ## 🗺️ Code Map
@@ -60,8 +63,10 @@ It is written for:
 
 | File | Purpose |
 | --- | --- |
-| [../src/core/model.ts](../src/core/model.ts) | typed data structures for schedule input and scores |
-| [../src/core/scoring.ts](../src/core/scoring.ts) | current proxy scoring implementation |
+| [../src/core/model.ts](../src/core/model.ts) | typed data structures for schedule input, scores, and traces |
+| [../src/core/evidence.ts](../src/core/evidence.ts) | single source of truth for evidence ids and locators |
+| [../src/core/scoring.ts](../src/core/scoring.ts) | current proxy scoring implementation and `ScoreTrace` builder |
+| [../src/lib/analyzeCoreBridge.ts](../src/lib/analyzeCoreBridge.ts) | adapter between UI schedule state and core scoring input |
 
 ## 🌍 Localization
 
@@ -85,7 +90,8 @@ This is a strong beginner-friendly contribution area because many useful changes
 | --- | --- |
 | [formula.md](formula.md) | current app formula reference |
 | [xlsm-vs-formula.md](xlsm-vs-formula.md) | workbook vs Markdown diff matrix |
-| [external-link.md](external-link.md) | source and reference inventory |
+| [external-link.md](external-link.md) | readable source and reference inventory |
+| [source-dictionary.md](source-dictionary.md) | canonical citation map for source ids |
 | [Fatigue Index_scoring_system_15.xlsm](Fatigue%20Index_scoring_system_15.xlsm) | workbook matrix |
 | [other_sources](other_sources) | PDFs and text extractions |
 
@@ -98,8 +104,8 @@ This is a strong beginner-friendly contribution area because many useful changes
 | improve the schedule editor logic | [../src/components/analyze/calendar](../src/components/analyze/calendar) |
 | improve translations | [../src/i18n.ts](../src/i18n.ts) |
 | improve formula explanations | [formula.md](formula.md), [../src/components/analyze/explainability](../src/components/analyze/explainability) |
+| improve evidence traceability | [source-dictionary.md](source-dictionary.md), [../src/core/evidence.ts](../src/core/evidence.ts) |
 | align code with workbook logic | [xlsm-vs-formula.md](xlsm-vs-formula.md), [../src/core/scoring.ts](../src/core/scoring.ts) |
-| improve source traceability | [external-link.md](external-link.md) |
 
 ## ⚖️ Current Architectural Tension
 
@@ -109,8 +115,8 @@ The biggest architectural tension today is between:
 | --- | --- |
 | workbook scoring matrix | rich source reference in `docs/` |
 | production code | proxy implementation in `src/core/scoring.ts` |
-| explainability | partially product-oriented, not yet fully source-cited |
-| schedule entry UX | functional MVP, but still open to redesign for better employment schedule entry |
+| explainability | increasingly trace-backed, but still partly map-based in the UI |
+| schedule entry UX | functional MVP, but still open to redesign for better work-schedule entry |
 
 That means future work will likely happen in this order:
 

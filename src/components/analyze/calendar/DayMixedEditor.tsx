@@ -83,7 +83,11 @@ export default function DayMixedEditor({
     return kind === 'work' ? sleepSegments : workSegments;
   }
   function setListFor(kind: Kind, next: DayPartSegment[]) {
-    kind === 'work' ? setWorkSegments(next) : setSleepSegments(next);
+    if (kind === 'work') {
+      setWorkSegments(next);
+    } else {
+      setSleepSegments(next);
+    }
   }
 
   function canPlace(kind: Kind, parts: Array<Omit<DayPartSegment, 'id'>>) {
