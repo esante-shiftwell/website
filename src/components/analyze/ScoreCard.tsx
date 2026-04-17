@@ -6,16 +6,20 @@ export default function ScoreCard({
   lowLabel,
   highLabel,
   highlight,
+  unavailable,
+  unavailableLabel,
 }: {
   label: string;
-  value: number;
+  value: number | null;
   hint: string;
   inverse: boolean;
   lowLabel: string;
   highLabel: string;
   highlight?: boolean;
+  unavailable?: boolean;
+  unavailableLabel?: string;
 }) {
-  const rounded = Math.round(value);
+  const rounded = value == null ? 0 : Math.round(value);
   const tone = inverse
     ? rounded >= 70
       ? 'good'
@@ -61,8 +65,8 @@ export default function ScoreCard({
           letterSpacing: '-0.02em',
         }}
       >
-        {rounded}
-        <span style={{ fontSize: 14, marginLeft: 4 }}>/100</span>
+        {unavailable ? unavailableLabel ?? 'N/A' : rounded}
+        {!unavailable ? <span style={{ fontSize: 14, marginLeft: 4 }}>/100</span> : null}
       </div>
       <div className="small muted" style={{ marginTop: 2 }}>
         {hint}
@@ -76,11 +80,12 @@ export default function ScoreCard({
           height: 10,
           background: bg,
           overflow: 'hidden',
+          opacity: unavailable ? 0.45 : 1,
         }}
       >
         <div
           style={{
-            width: `${rounded}%`,
+            width: unavailable ? '0%' : `${rounded}%`,
             height: '100%',
             background: 'linear-gradient(90deg, var(--primary), var(--secondary))',
           }}
@@ -96,8 +101,8 @@ export default function ScoreCard({
           color: 'var(--muted)',
         }}
       >
-        <span>{lowLabel}</span>
-        <span>{highLabel}</span>
+        <span>{unavailable ? '' : lowLabel}</span>
+        <span>{unavailable ? '' : highLabel}</span>
       </div>
     </div>
   );

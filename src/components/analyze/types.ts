@@ -47,6 +47,11 @@ export type Scores = {
   adaptability: number; // 0..100
 };
 
+export type AnalysisValidity = {
+  status: 'valid' | 'insufficient';
+  reasons: string[];
+};
+
 export type CollectorState = {
   endpoint: string;
   consent: boolean;

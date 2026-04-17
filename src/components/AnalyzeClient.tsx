@@ -88,6 +88,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
 
   const derived = analysis.derived;
   const scores = analysis.scores;
+  const validity = analysis.validity;
 
   const profilePct = getProfileCompletion(profile);
   const schedulePct = useMemo(() => {
@@ -118,6 +119,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
       sleepSegments: sleepWeekSegments,
       derived,
       scores,
+      validity,
       trace: analysis.scoreBundle.trace,
     };
   }, [
@@ -128,6 +130,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
     l,
     profile,
     scores,
+    validity,
     scoringVersion,
     sleepWeekSegments,
     workWeekSegments,
@@ -223,6 +226,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
             sleepSegments: sleepWeekSegments,
             derived,
             scores,
+            validity,
             trace: analysis.scoreBundle.trace,
           }}
         >
@@ -230,6 +234,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
             t={t}
             locale={l}
             scores={scores}
+            validity={validity}
             scoringVersion={scoringVersion}
             payload={payload}
             collector={collector}

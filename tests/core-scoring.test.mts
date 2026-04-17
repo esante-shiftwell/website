@@ -107,3 +107,31 @@ test('score trace exposes workbook-aligned factor keys in risk dependencies', as
   assert.ok(!riskScore.dependsOn.includes('longestRecovery'));
   assert.ok(!riskScore.dependsOn.includes('fullyRestedDays'));
 });
+
+test('ui bridge marks analysis as insufficient without both work and sleep schedules', async () => {
+  const bridgeModule = await import('../src/lib/analyzeCoreBridge.ts');
+
+  const profile = {
+    mode: 'short',
+    profession: 'nurse',
+    ageBand: '25-34',
+    sex: 'prefer_not_to_say',
+    chronotype: '',
+    fatigue: 3,
+    schedulePredictability: 3,
+    commuteMinutes: 0,
+    napsPerWeek: 0,
+    caffeineCups: 0,
+  };
+
+  const result = bridgeModule.analyzeUiSchedule({
+    locale: 'en',
+    profile,
+    workSegments: [],
+    sleepSegments: [{ id: 's0', day: 0, startMin: 0, endMin: 450, overnight: false }],
+  });
+
+  assert.equal(result.validity.status, 'insufficient');
+  assert.ok(result.validity.reasons.includes('missing_work_segments'));
+  assert.ok(!result.validity.reasons.includes('missing_sleep_segments'));
+});

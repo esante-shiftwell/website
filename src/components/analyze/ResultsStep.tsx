@@ -1,6 +1,6 @@
 'use client';
 
-import type { CollectorState, Locale } from '@/components/analyze/types';
+import type { AnalysisValidity, CollectorState, Locale } from '@/components/analyze/types';
 import ScoreCard from '@/components/analyze/ScoreCard';
 import { FooterActions } from '@/components/analyze/FormBits';
 import { useExplainability } from '@/components/analyze/explainability/ExplainabilityContext';
@@ -34,6 +34,12 @@ function copy(locale: Locale) {
       scheduleLabel: 'Agenda',
       formulaVersion: 'Version de formule',
       formulaNote: "Cette explicabilite correspond a la version runtime actuellement active.",
+      insufficientTitle: 'Analyse incomplete',
+      insufficientGeneric:
+        "Ces scores ne sont pas interpretables tant que l'agenda travail et l'agenda sommeil ne sont pas tous les deux renseignes.",
+      missingWork: "Ajoute au moins un segment de travail pour calculer un risque interpretable.",
+      missingSleep: 'Ajoute au moins un segment de sommeil pour calculer un score sommeil interpretable.',
+      unavailableScore: 'A completer',
     };
   }
   if (locale === 'de') {
@@ -48,6 +54,12 @@ function copy(locale: Locale) {
       scheduleLabel: 'Zeitplan',
       formulaVersion: 'Formelversion',
       formulaNote: 'Diese Erklarbarkeit entspricht der aktuell aktiven Runtime-Version.',
+      insufficientTitle: 'Unvollstandige Analyse',
+      insufficientGeneric:
+        'Diese Scores sind nicht interpretierbar, solange Arbeitsplan und Schlafplan nicht beide ausgefullt sind.',
+      missingWork: 'Fuge mindestens ein Arbeitssegment hinzu, um ein interpretierbares Risikoscore zu berechnen.',
+      missingSleep: 'Fuge mindestens ein Schlafsegment hinzu, um ein interpretierbares Schlafscore zu berechnen.',
+      unavailableScore: 'Erst ausfullen',
     };
   }
   return {
@@ -61,6 +73,12 @@ function copy(locale: Locale) {
     scheduleLabel: 'Schedule',
     formulaVersion: 'Formula version',
     formulaNote: 'This explainability view reflects the currently active runtime version.',
+    insufficientTitle: 'Incomplete analysis',
+    insufficientGeneric:
+      'These scores are not interpretable until both the work schedule and the sleep schedule are filled in.',
+    missingWork: 'Add at least one work segment to compute an interpretable risk score.',
+    missingSleep: 'Add at least one sleep segment to compute an interpretable sleep score.',
+    unavailableScore: 'Complete first',
   };
 }
 
@@ -91,10 +109,21 @@ function metricLabel(locale: Locale, key: string) {
   return map[key] ?? key;
 }
 
+function insufficientMessages(locale: Locale, validity: AnalysisValidity) {
+  const c = copy(locale);
+  const messages = [c.insufficientGeneric];
+
+  if (validity.reasons.includes('missing_work_segments')) messages.push(c.missingWork);
+  if (validity.reasons.includes('missing_sleep_segments')) messages.push(c.missingSleep);
+
+  return messages;
+}
+
 export default function ResultsStep({
   t,
   locale,
   scores,
+  validity,
   scoringVersion,
   payload,
   collector,
@@ -107,6 +136,7 @@ export default function ResultsStep({
   t: ResultsText;
   locale: Locale;
   scores: { risk: number; sleep: number; adaptability: number };
+  validity: AnalysisValidity;
   scoringVersion: string;
   payload: unknown;
   collector: CollectorState;
@@ -118,6 +148,8 @@ export default function ResultsStep({
 }) {
   const c = copy(locale);
   const ex = useExplainability();
+  const isInsufficient = validity.status === 'insufficient';
+  const insufficient = insufficientMessages(locale, validity);
 
   const metricKeys = [
     'derived.totalWorkHours',
@@ -173,6 +205,17 @@ export default function ResultsStep({
 
       <div className="divider" />
 
+      {isInsufficient ? (
+        <div className="notice warn" style={{ marginBottom: 14 }}>
+          <div style={{ fontWeight: 900, marginBottom: 6 }}>{c.insufficientTitle}</div>
+          {insufficient.map((message) => (
+            <div key={message} className="small" style={{ marginTop: 4 }}>
+              {message}
+            </div>
+          ))}
+        </div>
+      ) : null}
+
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontWeight: 900, color: 'var(--ink-2)' }}>{t.resultsTitle}</div>
         <div className="small muted">
@@ -190,12 +233,14 @@ export default function ResultsStep({
       >
         <ScoreCard
           label={t.scoreAdapt}
-          value={scores.adaptability}
-          hint={t.adaptHint}
+          value={isInsufficient ? null : scores.adaptability}
+          hint={isInsufficient ? c.insufficientGeneric : t.adaptHint}
           inverse
           lowLabel={t.scoreScaleLow}
           highLabel={t.scoreScaleHigh}
           highlight
+          unavailable={isInsufficient}
+          unavailableLabel={c.unavailableScore}
         />
       </div>
 
@@ -206,11 +251,13 @@ export default function ResultsStep({
         >
           <ScoreCard
             label={t.scoreSleep}
-            value={scores.sleep}
-            hint={t.sleepHint}
+            value={isInsufficient ? null : scores.sleep}
+            hint={isInsufficient ? c.missingSleep : t.sleepHint}
             inverse
             lowLabel={t.scoreScaleLow}
             highLabel={t.scoreScaleHigh}
+            unavailable={isInsufficient}
+            unavailableLabel={c.unavailableScore}
           />
         </div>
 
@@ -220,11 +267,13 @@ export default function ResultsStep({
         >
           <ScoreCard
             label={t.scoreRisk}
-            value={scores.risk}
-            hint={t.riskHint}
+            value={isInsufficient ? null : scores.risk}
+            hint={isInsufficient ? c.missingWork : t.riskHint}
             inverse={false}
             lowLabel={t.scoreScaleLow}
             highLabel={t.scoreScaleHigh}
+            unavailable={isInsufficient}
+            unavailableLabel={c.unavailableScore}
           />
         </div>
       </div>

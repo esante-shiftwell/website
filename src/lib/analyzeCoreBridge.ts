@@ -7,6 +7,7 @@ import type {
 } from '@/core/model';
 import { calculateScores } from '@/core/scoring';
 import type {
+  AnalysisValidity,
   Locale,
   ParticipantProfile as AnalyzeProfile,
   Scores,
@@ -18,7 +19,23 @@ export type AnalyzeCoreResult = {
   derived: CoreDerivedMetrics;
   scores: Scores;
   scoreBundle: ReturnType<typeof calculateScores>;
+  validity: AnalysisValidity;
 };
+
+function validateUiSchedule(args: {
+  workSegments: WeekSegment[];
+  sleepSegments: WeekSegment[];
+}): AnalysisValidity {
+  const reasons: string[] = [];
+
+  if (args.workSegments.length === 0) reasons.push('missing_work_segments');
+  if (args.sleepSegments.length === 0) reasons.push('missing_sleep_segments');
+
+  return {
+    status: reasons.length > 0 ? 'insufficient' : 'valid',
+    reasons,
+  };
+}
 
 function timeStringFromMinutes(min: number) {
   const value = ((min % 1440) + 1440) % 1440;
@@ -93,6 +110,7 @@ export function analyzeUiSchedule(args: {
 }): AnalyzeCoreResult {
   const draft = buildAnalysisDraftFromUi(args);
   const scoreBundle = calculateScores(draft);
+  const validity = validateUiSchedule(args);
 
   return {
     draft,
@@ -103,5 +121,6 @@ export function analyzeUiSchedule(args: {
       adaptability: scoreBundle.adaptabilityScore,
     },
     scoreBundle,
+    validity,
   };
 }

@@ -1,4 +1,5 @@
 import type {
+  AnalysisValidity,
   Locale,
   ParticipantProfile,
   WeekSegment,
@@ -24,6 +25,7 @@ export type ExplainabilityState = {
   sleepSegments: WeekSegment[];
   derived: DerivedMetrics;
   scores: Scores;
+  validity: AnalysisValidity;
   trace: ScoreTrace;
 };
 
