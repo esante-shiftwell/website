@@ -1,4 +1,11 @@
-import type { AnalysisDraft, DerivedMetrics, RawSegment, ScoreBundle } from './model';
+import type {
+  AnalysisDraft,
+  DerivedMetrics,
+  EvidenceRef,
+  RawSegment,
+  ScoreBundle,
+  ScoreTrace,
+} from './model';
 
 const MINUTES_PER_DAY = 1440;
 const WEEK_MINUTES = 7 * MINUTES_PER_DAY;
@@ -24,6 +31,30 @@ const REFERENCE_MEANS: Partial<{
   // sleepScore: 58,
   // adaptabilityScore: 55,
 };
+
+const TRACE_EVIDENCE: EvidenceRef[] = [
+  {
+    id: 'code:scoring',
+    sourceType: 'code',
+    source: 'src/core/scoring.ts',
+    locator: 'calculateScores',
+    note: 'Current runtime source of truth.',
+  },
+  {
+    id: 'workbook:matrix',
+    sourceType: 'workbook',
+    source: 'docs/Fatigue Index_scoring_system_15.xlsm',
+    locator: 'Graphiques brut + Parametres score',
+    note: 'Main burden-matrix reference.',
+  },
+  {
+    id: 'article:frontiers',
+    sourceType: 'article',
+    source: 'Frontiers in Public Health',
+    locator: '10.3389/fpubh.2025.1679296',
+    note: 'Public scientific context referenced in the app.',
+  },
+];
 
 function hhmmToMinutes(value: string): number {
   const [h, m] = value.split(':').map(Number);
@@ -344,11 +375,187 @@ function makeExplanations(derived: DerivedMetrics, sliItemScores: Record<string,
   return out;
 }
 
+function buildTrace(args: {
+  derived: DerivedMetrics;
+  sliRaw: number;
+  sliItemScores: Record<string, number>;
+  riskScore: number;
+  sleepScore: number;
+  adaptabilityScore: number;
+}): ScoreTrace {
+  const { derived, sliRaw, sliItemScores, riskScore, sleepScore, adaptabilityScore } = args;
+  const durationDelta = Math.abs(derived.avgSleepHours - 7.5);
+  const durationScore = clampScore100(100 - (durationDelta / 3) * 100);
+  const regularityScore = clampScore100(derived.sleepRegularityProxy);
+  const inverseRisk = 100 - riskScore;
+
+  return {
+    scoringVersion: SCORING_VERSION,
+    evidence: TRACE_EVIDENCE,
+    factors: [
+      {
+        key: 'workedHours',
+        label: 'Weekly work hours',
+        value: derived.totalWorkHours,
+        bucket: sliItemScores.workedHours,
+        contribution: round1((sliItemScores.workedHours / 16) * 100),
+        formulaRef: 'SLI proxy workload bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        dependsOn: ['derived.totalWorkHours'],
+        status: 'proxy',
+      },
+      {
+        key: 'longShifts',
+        label: 'Long shifts',
+        value: derived.longShiftCount,
+        bucket: sliItemScores.longShifts,
+        contribution: round1((sliItemScores.longShifts / 16) * 100),
+        formulaRef: 'SLI proxy long-shift bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        dependsOn: ['derived.longShiftCount'],
+        status: 'proxy',
+      },
+      {
+        key: 'longestRecovery',
+        label: 'Longest recovery',
+        value: derived.longestRecoveryHours,
+        bucket: sliItemScores.longestRecovery,
+        contribution: round1((sliItemScores.longestRecovery / 16) * 100),
+        formulaRef: 'SLI proxy recovery bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        dependsOn: ['derived.longestRecoveryHours'],
+        status: 'disputed',
+      },
+      {
+        key: 'shortBreaks',
+        label: 'Short breaks',
+        value: derived.shortBreaksCount,
+        bucket: sliItemScores.shortBreaks,
+        contribution: round1((sliItemScores.shortBreaks / 16) * 100),
+        formulaRef: 'SLI proxy short-break bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        dependsOn: ['derived.shortBreaksCount'],
+        status: 'proxy',
+      },
+      {
+        key: 'fullyRestedDays',
+        label: 'Fully rested days',
+        value: derived.fullyRestedDaysCount,
+        bucket: sliItemScores.fullyRestedDays,
+        contribution: round1((sliItemScores.fullyRestedDays / 16) * 100),
+        formulaRef: 'SLI proxy rest-day bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        dependsOn: ['derived.fullyRestedDaysCount'],
+        status: 'disputed',
+      },
+      {
+        key: 'nightShifts',
+        label: 'Night shifts',
+        value: derived.nightShiftCount,
+        bucket: sliItemScores.nightShifts,
+        contribution: round1((sliItemScores.nightShifts / 16) * 100),
+        formulaRef: 'SLI proxy night-shift bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix', 'article:frontiers'],
+        dependsOn: ['derived.nightShiftCount'],
+        status: 'proxy',
+      },
+      {
+        key: 'biologicalHoursLost',
+        label: 'Biological hours lost',
+        value: derived.biologicalHoursLost,
+        bucket: sliItemScores.biologicalHoursLost,
+        contribution: round1((sliItemScores.biologicalHoursLost / 16) * 100),
+        formulaRef: 'SLI proxy biological-window bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix', 'article:frontiers'],
+        dependsOn: ['derived.biologicalHoursLost'],
+        status: 'proxy',
+      },
+      {
+        key: 'socialHoursLost',
+        label: 'Social hours lost',
+        value: derived.socialHoursLost,
+        bucket: sliItemScores.socialHoursLost,
+        contribution: round1((sliItemScores.socialHoursLost / 16) * 100),
+        formulaRef: 'SLI proxy social-window bucket',
+        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        dependsOn: ['derived.socialHoursLost'],
+        status: 'proxy',
+      },
+      {
+        key: 'sleepDuration',
+        label: 'Average sleep duration',
+        value: derived.avgSleepHours,
+        contribution: durationScore,
+        formulaRef: 'Sleep proxy duration component',
+        evidenceRefs: ['code:scoring'],
+        dependsOn: ['derived.avgSleepHours'],
+        status: 'proxy',
+      },
+      {
+        key: 'sleepRegularityProxy',
+        label: 'Sleep regularity proxy',
+        value: derived.sleepRegularityProxy,
+        contribution: regularityScore,
+        formulaRef: 'Sleep proxy regularity component',
+        evidenceRefs: ['code:scoring'],
+        dependsOn: ['derived.sleepRegularityProxy'],
+        status: 'proxy',
+      },
+    ],
+    scores: [
+      {
+        key: 'riskScore',
+        label: 'Risk score',
+        value: riskScore,
+        formulaRef: `sliRaw=${sliRaw}; riskScore=(sliRaw/16)*100`,
+        evidenceRefs: ['code:scoring', 'workbook:matrix'],
+        dependsOn: [
+          'workedHours',
+          'longShifts',
+          'longestRecovery',
+          'shortBreaks',
+          'fullyRestedDays',
+          'nightShifts',
+          'biologicalHoursLost',
+          'socialHoursLost',
+        ],
+        status: 'proxy',
+      },
+      {
+        key: 'sleepScore',
+        label: 'Sleep score',
+        value: sleepScore,
+        formulaRef: 'durationScore*0.55 + regularityScore*0.45',
+        evidenceRefs: ['code:scoring'],
+        dependsOn: ['sleepDuration', 'sleepRegularityProxy'],
+        status: 'proxy',
+      },
+      {
+        key: 'adaptabilityScore',
+        label: 'Adaptability score',
+        value: adaptabilityScore,
+        formulaRef: `inverseRisk=${inverseRisk}; inverseRisk*0.65 + sleepScore*0.35`,
+        evidenceRefs: ['code:scoring'],
+        dependsOn: ['riskScore', 'sleepScore'],
+        status: 'proxy',
+      },
+    ],
+  };
+}
+
 export function calculateScores(draft: AnalysisDraft): ScoreBundle {
   const derived = computeDerivedMetrics(draft);
   const sli = scoreSLIProxy(derived);
   const sleepScore = scoreSleepProxy(derived);
   const adaptabilityScore = scoreAdaptabilityProxy(sli.riskScore, sleepScore);
+  const trace = buildTrace({
+    derived,
+    sliRaw: sli.sliRaw,
+    sliItemScores: sli.sliItemScores,
+    riskScore: sli.riskScore,
+    sleepScore,
+    adaptabilityScore,
+  });
 
   const delta =
     REFERENCE_MEANS.riskScore == null &&
@@ -375,6 +582,7 @@ export function calculateScores(draft: AnalysisDraft): ScoreBundle {
     derived,
     explanations: makeExplanations(derived, sli.sliItemScores),
     scoringVersion: SCORING_VERSION,
+    trace,
     referenceDelta: delta,
   };
 }

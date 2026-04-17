@@ -8,18 +8,14 @@ import ContributionBox from '@/components/analyze/contribution/ContributionBox';
 
 type ResultsText = {
   resultsTitle: string;
-
   scoreAdapt: string;
   scoreSleep: string;
   scoreRisk: string;
-
   adaptHint: string;
   sleepHint: string;
   riskHint: string;
-
   scoreScaleLow: string;
   scoreScaleHigh: string;
-
   previous: string;
   finish: string;
   resetAll: string;
@@ -28,13 +24,13 @@ type ResultsText = {
 function copy(locale: Locale) {
   if (locale === 'fr') {
     return {
-      studyTitle: "Cadre de l'étude",
+      studyTitle: "Cadre de l'Ã©tude",
       studyText:
-        "Score calculé localement. Contribution à l’étude ensuite (opt-in, consentement explicite). Pas un avis médical.",
+        "Score calculÃ© localement. Contribution Ã  lâ€™Ã©tude ensuite (opt-in, consentement explicite). Pas un avis mÃ©dical.",
       paper: 'Paper',
       explain: 'Explain',
       mainScore: 'Score principal',
-      metricsTitle: 'Métriques clés',
+      metricsTitle: 'MÃ©triques clÃ©s',
       scheduleLabel: 'Agenda',
     };
   }
@@ -46,7 +42,7 @@ function copy(locale: Locale) {
       paper: 'Paper',
       explain: 'Explain',
       mainScore: 'Hauptscore',
-      metricsTitle: 'Schlüsselmetriken',
+      metricsTitle: 'SchlÃ¼sselmetriken',
       scheduleLabel: 'Zeitplan',
     };
   }
@@ -64,24 +60,24 @@ function copy(locale: Locale) {
 
 function metricLabel(locale: Locale, key: string) {
   const fr: Record<string, string> = {
+    'derived.totalWorkHours': 'Travail total (h)',
     'derived.totalSleepHours': 'Sommeil total (h)',
-    'derived.nightWorkHours': 'Travail de nuit (h)',
-    'derived.sleepDays': 'Jours avec sommeil',
-    'derived.maxSleepGapHours': 'Plus grand gap sans sommeil (h)',
+    'derived.nightShiftCount': 'Shifts de nuit',
+    'derived.biologicalHoursLost': 'Heures biologiques perdues',
     schedule: 'Agenda',
   };
   const en: Record<string, string> = {
+    'derived.totalWorkHours': 'Total work (h)',
     'derived.totalSleepHours': 'Total sleep (h)',
-    'derived.nightWorkHours': 'Night work (h)',
-    'derived.sleepDays': 'Days with sleep',
-    'derived.maxSleepGapHours': 'Longest sleep gap (h)',
+    'derived.nightShiftCount': 'Night shifts',
+    'derived.biologicalHoursLost': 'Biological hours lost',
     schedule: 'Schedule',
   };
   const de: Record<string, string> = {
+    'derived.totalWorkHours': 'Arbeit gesamt (h)',
     'derived.totalSleepHours': 'Schlaf total (h)',
-    'derived.nightWorkHours': 'Nachtarbeit (h)',
-    'derived.sleepDays': 'Tage mit Schlaf',
-    'derived.maxSleepGapHours': 'Längste Schlaflücke (h)',
+    'derived.nightShiftCount': 'Nachtschichten',
+    'derived.biologicalHoursLost': 'Biologische Stunden verloren',
     schedule: 'Zeitplan',
   };
 
@@ -94,28 +90,21 @@ export default function ResultsStep({
   locale,
   scores,
   payload,
-
   collector,
   setCollector,
-
   onCopyJson,
   onDownloadJson,
-
   onPrev,
   onResetAll,
 }: {
   t: ResultsText;
   locale: Locale;
-
   scores: { risk: number; sleep: number; adaptability: number };
   payload: unknown;
-
   collector: CollectorState;
   setCollector: (updater: (c: CollectorState) => CollectorState) => void;
-
   onCopyJson: () => void;
   onDownloadJson: () => void;
-
   onPrev: () => void;
   onResetAll: () => void;
 }) {
@@ -123,10 +112,10 @@ export default function ResultsStep({
   const ex = useExplainability();
 
   const metricKeys = [
+    'derived.totalWorkHours',
     'derived.totalSleepHours',
-    'derived.nightWorkHours',
-    'derived.sleepDays',
-    'derived.maxSleepGapHours',
+    'derived.nightShiftCount',
+    'derived.biologicalHoursLost',
   ] as const;
 
   return (
@@ -170,7 +159,6 @@ export default function ResultsStep({
 
       <div className="divider" />
 
-      {/* Scores */}
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'baseline' }}>
         <div style={{ fontWeight: 900, color: 'var(--ink-2)' }}>{t.resultsTitle}</div>
         <div className="small muted">
@@ -227,22 +215,21 @@ export default function ResultsStep({
         </div>
       </div>
 
-      {/* Key metrics */}
       <div style={{ marginTop: 14 }}>
         <div className="small muted" style={{ fontWeight: 900, marginBottom: 8 }}>
           {c.metricsTitle}
         </div>
 
         <div className="row" style={{ gap: 8 }}>
-          {metricKeys.map((k) => (
+          {metricKeys.map((key) => (
             <button
-              key={k}
+              key={key}
               type="button"
               className="btn ghost"
-              onClick={() => ex.openWithFocus({ kind: 'metric', key: k, label: metricLabel(locale, k) })}
-              title={k}
+              onClick={() => ex.openWithFocus({ kind: 'metric', key, label: metricLabel(locale, key) })}
+              title={key}
             >
-              {metricLabel(locale, k)}
+              {metricLabel(locale, key)}
             </button>
           ))}
 
@@ -257,7 +244,6 @@ export default function ResultsStep({
         </div>
       </div>
 
-      {/* ✅ Contribution box */}
       <ContributionBox
         locale={locale}
         scoringVersion="proxy-v0.1"

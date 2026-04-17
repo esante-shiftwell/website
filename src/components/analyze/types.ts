@@ -27,13 +27,16 @@ export type ParticipantProfile = {
 
 export type DerivedMetrics = {
   totalWorkHours: number;
-  totalSleepHours: number;
-  avgSleepHours: number;
-  sleepRegularity: number; // 0..100
-  nightWorkHours: number;
   longShiftCount: number;
-  minRecoveryHours: number;
-  weekendWorkHours: number;
+  longestRecoveryHours: number;
+  shortBreaksCount: number;
+  fullyRestedDaysCount: number;
+  nightShiftCount: number;
+  biologicalHoursLost: number;
+  socialHoursLost: number;
+  avgSleepHours: number;
+  totalSleepHours: number;
+  sleepRegularityProxy: number; // 0..100
 };
 
 export type Scores = {

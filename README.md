@@ -52,9 +52,10 @@ Recommended reading order:
 1. [docs/README.md](docs/README.md)
 2. [docs/architecture.md](docs/architecture.md)
 3. [docs/formula.md](docs/formula.md)
-4. [docs/xlsm-vs-formula.md](docs/xlsm-vs-formula.md)
-5. [docs/external-link.md](docs/external-link.md)
-6. [src/core/scoring.ts](src/core/scoring.ts)
+4. [docs/explainability.md](docs/explainability.md)
+5. [docs/xlsm-vs-formula.md](docs/xlsm-vs-formula.md)
+6. [docs/external-link.md](docs/external-link.md)
+7. [src/core/scoring.ts](src/core/scoring.ts)
 
 Key documents:
 
@@ -63,6 +64,7 @@ Key documents:
 | [docs/README.md](docs/README.md) | Documentation index |
 | [docs/architecture.md](docs/architecture.md) | Technical and product architecture overview |
 | [docs/formula.md](docs/formula.md) | Current implemented formulas and explainability notes |
+| [docs/explainability.md](docs/explainability.md) | Medical-safe wording and factor explainability guidance |
 | [docs/xlsm-vs-formula.md](docs/xlsm-vs-formula.md) | Matrix of differences between workbook logic and current Markdown formula reference |
 | [docs/external-link.md](docs/external-link.md) | Sources, references, and UI inspirations |
 
@@ -208,4 +210,4 @@ The long-term goal is to make Shiftwell:
 - easy to understand for non-expert contributors
 - easy to inspect for research collaborators
 
-The best next-stop documents for contributors are [docs/architecture.md](docs/architecture.md), [docs/formula.md](docs/formula.md), and [docs/xlsm-vs-formula.md](docs/xlsm-vs-formula.md).
+The best next-stop documents for contributors are [docs/architecture.md](docs/architecture.md), [docs/explainability.md](docs/explainability.md), [docs/formula.md](docs/formula.md), and [docs/xlsm-vs-formula.md](docs/xlsm-vs-formula.md).

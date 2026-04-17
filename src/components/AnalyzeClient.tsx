@@ -4,12 +4,8 @@ import { useMemo, useState } from 'react';
 
 import { TEXT, isLocale } from '@/components/analyze/copy';
 import type { Locale, WeekSegment } from '@/components/analyze/types';
-import {
-  computeDerivedMetrics,
-  computeScores,
-  getOrCreateAnonymousId,
-  getProfileCompletion,
-} from '@/components/analyze/utils';
+import { getOrCreateAnonymousId, getProfileCompletion } from '@/components/analyze/utils';
+import { analyzeUiSchedule } from '@/lib/analyzeCoreBridge';
 
 import LocaleNav from './LocaleNav';
 import AnalyzeHeaderCard from '@/components/analyze/AnalyzeHeaderCard';
@@ -40,7 +36,7 @@ function dayPartsToWeekSegments(segs: DayPartSegment[]): WeekSegment[] {
 }
 
 function copiedAlert(locale: Locale) {
-  if (locale === 'fr') return 'JSON copié';
+  if (locale === 'fr') return 'JSON copiÃ©';
   if (locale === 'de') return 'JSON kopiert';
   return 'JSON copied';
 }
@@ -79,13 +75,19 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
   const workWeekSegments = useMemo(() => dayPartsToWeekSegments(workSegments), [workSegments]);
   const sleepWeekSegments = useMemo(() => dayPartsToWeekSegments(sleepSegments), [sleepSegments]);
 
-  // IMPORTANT: on garde DerivedMetrics (pas de cast qui pète computeScores)
-  const derived = useMemo(
-    () => computeDerivedMetrics(workWeekSegments, sleepWeekSegments),
-    [workWeekSegments, sleepWeekSegments],
+  const analysis = useMemo(
+    () =>
+      analyzeUiSchedule({
+        locale: l,
+        profile,
+        workSegments: workWeekSegments,
+        sleepSegments: sleepWeekSegments,
+      }),
+    [l, profile, sleepWeekSegments, workWeekSegments],
   );
 
-  const scores = useMemo(() => computeScores(derived, profile), [derived, profile]);
+  const derived = analysis.derived;
+  const scores = analysis.scores;
 
   const profilePct = getProfileCompletion(profile);
   const schedulePct = useMemo(() => {
@@ -98,8 +100,8 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
   const overallPct = Math.round((profilePct + schedulePct + resultsPct) / 3);
 
   const canGoProfileNext = profilePct >= 60;
+  const scoringVersion = analysis.scoreBundle.scoringVersion;
 
-  // stable createdAt (avoid recompute)
   const [createdAt] = useState(() => new Date().toISOString());
 
   const payload = useMemo(() => {
@@ -107,7 +109,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
 
     return {
       project: 'shiftwell',
-      scoringVersion: 'proxy-v0.1',
+      scoringVersion,
       locale: l,
       createdAt,
       anonymousId,
@@ -116,8 +118,40 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
       sleepSegments: sleepWeekSegments,
       derived,
       scores,
+      trace: analysis.scoreBundle.trace,
     };
-  }, [collector.includeAnonymousId, createdAt, derived, l, profile, scores, sleepWeekSegments, workWeekSegments]);
+  }, [
+    analysis.scoreBundle.trace,
+    collector.includeAnonymousId,
+    createdAt,
+    derived,
+    l,
+    profile,
+    scores,
+    scoringVersion,
+    sleepWeekSegments,
+    workWeekSegments,
+  ]);
+
+  const recomputeScores = useMemo(
+    () =>
+      ({
+        profile: nextProfile,
+        workSegments: nextWorkSegments,
+        sleepSegments: nextSleepSegments,
+      }: {
+        profile: typeof profile;
+        workSegments: typeof workWeekSegments;
+        sleepSegments: typeof sleepWeekSegments;
+      }) =>
+        analyzeUiSchedule({
+          locale: l,
+          profile: nextProfile,
+          workSegments: nextWorkSegments,
+          sleepSegments: nextSleepSegments,
+        }).scores,
+    [l],
+  );
 
   async function handleCopyJson() {
     try {
@@ -147,7 +181,7 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
         stepTitle={stepLabels[stepIndex] ?? t.analyze}
         helper={t.helper}
         saveVersionLabel={t.saveVersion}
-        saveVersionValue="proxy-v0.1"
+        saveVersionValue={scoringVersion}
         labels={stepLabels}
         current={stepIndex}
         percent={overallPct}
@@ -180,10 +214,10 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
       {stepIndex === 2 && (
         <ExplainabilityProvider
           locale={l}
-          computeScores={computeScores}
+          recomputeScores={recomputeScores}
           state={{
             locale: l,
-            scoringVersion: 'proxy-v0.1',
+            scoringVersion,
             profile,
             workSegments: workWeekSegments,
             sleepSegments: sleepWeekSegments,

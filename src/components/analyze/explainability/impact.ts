@@ -1,4 +1,4 @@
-import type { ComputeScoresFn, ExplainFocus, ExplainabilityState, Scores } from './types';
+import type { RecomputeScoresFn, ExplainFocus, ExplainabilityState, Scores } from './types';
 
 type Impact = {
   scores: Array<{ key: 'risk' | 'sleep' | 'adaptability'; label: string }>;
@@ -25,79 +25,84 @@ function clamp(n: number, a: number, b: number) {
   return Math.max(a, Math.min(b, n));
 }
 
+function addOneHourSleep(state: ExplainabilityState): ExplainabilityState['sleepSegments'] {
+  const segments = [...state.sleepSegments];
+  const first = segments[0];
+
+  if (!first) {
+    return [
+      {
+        id: 'sim_sleep',
+        day: 0,
+        startMin: 22 * 60,
+        endMin: 23 * 60,
+        overnight: false,
+      },
+    ];
+  }
+
+  if (!first.overnight && first.endMin <= 23 * 60) {
+    segments[0] = { ...first, endMin: clamp(first.endMin + 60, 0, 1439) };
+    return segments;
+  }
+
+  return [
+    ...segments,
+    {
+      id: 'sim_sleep_extra',
+      day: first.day,
+      startMin: 21 * 60,
+      endMin: 22 * 60,
+      overnight: false,
+    },
+  ];
+}
+
 function simulateByTweak(
   focus: ExplainFocus,
   state: ExplainabilityState,
-  computeScores: ComputeScoresFn,
+  recomputeScores: RecomputeScoresFn,
 ): Impact['simulatedDelta'] | null {
   const before = state.scores;
-
-  // clones typés + accès dynamique safe
-  const nextProfile: ExplainabilityState['profile'] = { ...state.profile };
-  const nextDerived: ExplainabilityState['derived'] = { ...(state.derived ?? {}) };
-
+  const nextProfile = { ...state.profile };
   const profileRec = nextProfile as unknown as Record<string, unknown>;
-  const derivedRec = nextDerived as Record<string, unknown>;
 
-  // heuristiques simples (tu changes plus tard)
-  if (focus.kind === 'score') {
-    // simulate "more sleep" when focusing a score
-    derivedRec.totalSleepHours = (Number(derivedRec.totalSleepHours) || 0) + 1;
-    const after = computeScores(nextDerived, nextProfile);
+  if (focus.kind === 'score' || focus.kind === 'schedule') {
+    const after = recomputeScores({
+      profile: nextProfile,
+      workSegments: state.workSegments,
+      sleepSegments: addOneHourSleep(state),
+    });
+
     return {
-      title: '+1h sleep (simulated)',
+      title: '+1h sleep (simulated through core pipeline)',
       before,
       after,
       delta: deltaScores(before, after),
-      note: 'Simulation simple (pas une recommandation).',
+      note: 'Exploratory simulation routed through the current core scoring pipeline.',
     };
   }
 
   if (focus.kind === 'field' && focus.key.startsWith('profile.')) {
-    const k = focus.key.replace('profile.', '');
-    const v = profileRec[k];
+    const key = focus.key.replace('profile.', '');
+    const value = profileRec[key];
 
-    if (typeof v === 'number') {
-      const bump = k.includes('Minutes') ? 10 : 1;
-      profileRec[k] = clamp(v + bump, 0, 9999);
-      const after = computeScores(nextDerived, nextProfile);
+    if (typeof value === 'number') {
+      const bump = key.includes('Minutes') ? 10 : 1;
+      profileRec[key] = clamp(value + bump, 0, 9999);
+      const after = recomputeScores({
+        profile: nextProfile,
+        workSegments: state.workSegments,
+        sleepSegments: state.sleepSegments,
+      });
+
       return {
-        title: `${focus.key} + ${bump} (simulated)`,
+        title: `${focus.key} + ${bump} (simulated through core pipeline)`,
         before,
         after,
         delta: deltaScores(before, after),
       };
     }
-
-    return null;
-  }
-
-  if (focus.kind === 'metric' || (focus.kind === 'field' && focus.key.startsWith('derived.'))) {
-    const dk = focus.key.replace('derived.', '');
-    const v = Number(derivedRec[dk]);
-    if (Number.isFinite(v)) {
-      derivedRec[dk] = v + 1;
-      const after = computeScores(nextDerived, nextProfile);
-      return {
-        title: `${focus.key} + 1 (simulated)`,
-        before,
-        after,
-        delta: deltaScores(before, after),
-      };
-    }
-    return null;
-  }
-
-  if (focus.kind === 'schedule') {
-    derivedRec.totalSleepHours = (Number(derivedRec.totalSleepHours) || 0) + 1;
-    const after = computeScores(nextDerived, nextProfile);
-    return {
-      title: '+1h sleep (simulated)',
-      before,
-      after,
-      delta: deltaScores(before, after),
-      note: 'Simulation simple sur une métrique dérivée.',
-    };
   }
 
   return null;
@@ -106,7 +111,7 @@ function simulateByTweak(
 export function computeImpactForFocus(
   focus: ExplainFocus | null,
   state: ExplainabilityState,
-  computeScores: ComputeScoresFn,
+  recomputeScores: RecomputeScoresFn,
   ui: {
     metric: (k: string) => string;
     score: (k: 'risk' | 'sleep' | 'adaptability') => string;
@@ -115,64 +120,65 @@ export function computeImpactForFocus(
 ): Impact {
   if (!focus) return { scores: [], metrics: [] };
 
-  // mapping minimal (tu modifies ici plus tard)
   const map: Record<string, { scores: Array<'risk' | 'sleep' | 'adaptability'>; metrics: string[] }> = {
-    // Scores
     'score.adaptability': {
       scores: ['adaptability'],
-      metrics: ['score.risk', 'score.sleep', 'derived.totalSleepHours', 'derived.nightWorkHours'],
+      metrics: ['score.risk', 'score.sleep', 'derived.totalSleepHours', 'derived.biologicalHoursLost'],
     },
     'score.risk': {
       scores: ['risk', 'adaptability'],
-      metrics: ['derived.nightWorkHours', 'derived.maxSleepGapHours', 'profile.schedulePredictability'],
+      metrics: ['derived.totalWorkHours', 'derived.nightShiftCount', 'derived.shortBreaksCount'],
     },
     'score.sleep': {
       scores: ['sleep', 'adaptability'],
-      metrics: ['derived.totalSleepHours', 'derived.sleepDays', 'derived.maxSleepGapHours'],
+      metrics: ['derived.totalSleepHours', 'derived.avgSleepHours', 'derived.sleepRegularityProxy'],
     },
-
-    // Profile fields (examples)
     'profile.fatigue': { scores: ['risk', 'adaptability'], metrics: ['profile.fatigue'] },
     'profile.schedulePredictability': {
       scores: ['risk', 'adaptability'],
       metrics: ['profile.schedulePredictability'],
     },
     'profile.commuteMinutes': { scores: ['risk'], metrics: ['profile.commuteMinutes'] },
-
-    // Derived
+    'derived.totalWorkHours': { scores: ['risk'], metrics: ['derived.totalWorkHours'] },
     'derived.totalSleepHours': { scores: ['sleep', 'adaptability'], metrics: ['derived.totalSleepHours'] },
-    'derived.nightWorkHours': { scores: ['risk', 'adaptability'], metrics: ['derived.nightWorkHours'] },
-    'derived.sleepDays': { scores: ['sleep', 'adaptability'], metrics: ['derived.sleepDays'] },
-    'derived.maxSleepGapHours': {
-      scores: ['risk', 'sleep', 'adaptability'],
-      metrics: ['derived.maxSleepGapHours'],
+    'derived.avgSleepHours': { scores: ['sleep', 'adaptability'], metrics: ['derived.avgSleepHours'] },
+    'derived.longShiftCount': { scores: ['risk'], metrics: ['derived.longShiftCount'] },
+    'derived.shortBreaksCount': { scores: ['risk'], metrics: ['derived.shortBreaksCount'] },
+    'derived.nightShiftCount': { scores: ['risk', 'adaptability'], metrics: ['derived.nightShiftCount'] },
+    'derived.biologicalHoursLost': {
+      scores: ['risk', 'adaptability'],
+      metrics: ['derived.biologicalHoursLost'],
     },
-
-    // Schedule (global)
+    'derived.socialHoursLost': { scores: ['risk'], metrics: ['derived.socialHoursLost'] },
+    'derived.sleepRegularityProxy': {
+      scores: ['sleep', 'adaptability'],
+      metrics: ['derived.sleepRegularityProxy'],
+    },
     schedule: {
       scores: ['risk', 'sleep', 'adaptability'],
-      metrics: ['schedule.workSegments', 'schedule.sleepSegments', 'derived.totalSleepHours', 'derived.nightWorkHours'],
+      metrics: [
+        'schedule.workSegments',
+        'schedule.sleepSegments',
+        'derived.totalWorkHours',
+        'derived.totalSleepHours',
+      ],
     },
   };
 
-  const key = focus.key;
-  const entry = map[key] ?? map[focus.kind === 'field' ? focus.key : ''] ?? null;
+  const entry = map[focus.key] ?? null;
 
   if (!entry) {
     return {
       scores: [],
       metrics: [],
       warnings: [ui.notUsed],
-      simulatedDelta: simulateByTweak(focus, state, computeScores) ?? undefined,
+      simulatedDelta: simulateByTweak(focus, state, recomputeScores) ?? undefined,
     };
   }
 
-  const scores = entry.scores.map((k) => ({ key: k, label: ui.score(k) }));
-  const metrics = entry.metrics.map((k) => ({ key: k, label: ui.metric(k) }));
-
   return {
-    scores,
-    metrics,
-    simulatedDelta: simulateByTweak(focus, state, computeScores) ?? undefined,
+    scores: entry.scores.map((key) => ({ key, label: ui.score(key) })),
+    metrics: entry.metrics.map((key) => ({ key, label: ui.metric(key) })),
+    simulatedDelta: simulateByTweak(focus, state, recomputeScores) ?? undefined,
   };
 }

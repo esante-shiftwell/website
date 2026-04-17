@@ -5,15 +5,15 @@ export type SegmentKind = 'work' | 'sleep';
 
 export interface RawSegment {
   id: string;
-  dayIndex: number; // 0..6
-  start: string; // HH:MM
-  end: string; // HH:MM
+  dayIndex: number;
+  start: string;
+  end: string;
   kind: SegmentKind;
 }
 
 export interface LongAnswers {
-  fatigue?: number; // 0..10
-  sleepQuality?: number; // 0..10
+  fatigue?: number;
+  sleepQuality?: number;
   lateCaffeine?: boolean;
 }
 
@@ -43,21 +43,58 @@ export interface DerivedMetrics {
   nightShiftCount: number;
   biologicalHoursLost: number;
   socialHoursLost: number;
-
   avgSleepHours: number;
   totalSleepHours: number;
-  sleepRegularityProxy: number; // 0..100
+  sleepRegularityProxy: number;
+}
+
+export interface EvidenceRef {
+  id: string;
+  sourceType: 'workbook' | 'pdf' | 'article' | 'code';
+  source: string;
+  locator: string;
+  note?: string;
+}
+
+export interface FactorEvaluation {
+  key: string;
+  label: string;
+  value: number;
+  bucket?: number;
+  contribution?: number;
+  formulaRef: string;
+  evidenceRefs: string[];
+  dependsOn: string[];
+  status: 'implemented' | 'proxy' | 'missing' | 'disputed';
+}
+
+export interface ScoreEvaluation {
+  key: 'riskScore' | 'sleepScore' | 'adaptabilityScore';
+  label: string;
+  value: number;
+  formulaRef: string;
+  evidenceRefs: string[];
+  dependsOn: string[];
+  status: 'implemented' | 'proxy' | 'missing' | 'disputed';
+}
+
+export interface ScoreTrace {
+  scoringVersion: string;
+  factors: FactorEvaluation[];
+  scores: ScoreEvaluation[];
+  evidence: EvidenceRef[];
 }
 
 export interface ScoreBundle {
-  riskScore: number; // 0..100
-  sleepScore: number; // 0..100
-  adaptabilityScore: number; // 0..100
-  sliRaw: number; // 0..16 (proxy)
+  riskScore: number;
+  sleepScore: number;
+  adaptabilityScore: number;
+  sliRaw: number;
   sliItemScores: Record<string, number>;
   derived: DerivedMetrics;
   explanations: string[];
   scoringVersion: string;
+  trace: ScoreTrace;
   referenceDelta?: {
     riskScore?: number;
     sleepScore?: number;

@@ -8,16 +8,18 @@ If you are new to the repository, use this order:
 
 1. [../README.md](../README.md)
 2. [architecture.md](architecture.md)
-3. [formula.md](formula.md)
-4. [xlsm-vs-formula.md](xlsm-vs-formula.md)
-5. [external-link.md](external-link.md)
-6. [../src/core/scoring.ts](../src/core/scoring.ts)
+3. [explainability.md](explainability.md)
+4. [formula.md](formula.md)
+5. [xlsm-vs-formula.md](xlsm-vs-formula.md)
+6. [external-link.md](external-link.md)
+7. [../src/core/scoring.ts](../src/core/scoring.ts)
 
 ## 🗺️ Document Map
 
 | File | Why it exists |
 | --- | --- |
 | [architecture.md](architecture.md) | Explains how the app is structured and where contributors should work |
+| [explainability.md](explainability.md) | Defines medically careful wording and factor-level explainability guidance |
 | [formula.md](formula.md) | Describes the formulas currently implemented in the codebase |
 | [xlsm-vs-formula.md](xlsm-vs-formula.md) | Highlights gaps between the Excel matrix and the current Markdown formula reference |
 | [external-link.md](external-link.md) | Lists scientific references, local source documents, and UI inspirations |

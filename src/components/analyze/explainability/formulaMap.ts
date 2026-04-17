@@ -3,16 +3,11 @@ import type { Locale } from '@/components/analyze/types';
 export type NodeKind = 'score' | 'metric' | 'input' | 'group';
 
 export type FormulaNode = {
-  key: string; // ex: "score.adaptability", "derived.totalSleepHours", "profile.fatigue"
+  key: string;
   kind: NodeKind;
-
   title: Record<Locale, string>;
   summary?: Record<Locale, string>;
-
-  // relations (data-driven)
-  uses?: string[]; // keys used by this node
-
-  // optional evidence links (later you can expand)
+  uses?: string[];
   evidence?: Array<{ label: string; url: string }>;
 };
 
@@ -26,6 +21,17 @@ type FormulaCopyOverrides = Partial<{
   scoreSleep: string;
   scoreRisk: string;
 }>;
+
+const PAPER_URL =
+  'https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2025.1679296/full';
+
+function methodEvidence() {
+  return [{ label: 'Method page', url: '/method/' }];
+}
+
+function paperEvidence() {
+  return [{ label: 'Frontiers paper', url: PAPER_URL }];
+}
 
 function isRecord(v: unknown): v is Record<string, unknown> {
   return typeof v === 'object' && v !== null;
@@ -62,7 +68,7 @@ export function buildFormulaMap(locale: Locale, t: unknown): FormulaMap {
   };
 
   const L_ADAPT = withLocaleOverride(
-    title('Adaptabilité', 'Adaptability', 'Anpassung') as Record<Locale, string>,
+    title('AdaptabilitÃ©', 'Adaptability', 'Anpassung') as Record<Locale, string>,
     locale,
     overrides.scoreAdapt,
   );
@@ -80,42 +86,42 @@ export function buildFormulaMap(locale: Locale, t: unknown): FormulaMap {
   return {
     scoringVersion: 'proxy-v0.1',
     nodes: [
-      // ---------------- Scores ----------------
       {
         key: 'score.adaptability',
         kind: 'score',
         title: L_ADAPT,
         summary: summary(
-          'Score principal : compatibilité travail/sommeil sur 7 jours.',
+          'Score principal : compatibilitÃ© travail/sommeil sur 7 jours.',
           'Main score: work/sleep compatibility over 7 days.',
-          'Hauptscore: Kompatibilität Arbeit/Schlaf über 7 Tage.',
+          'Hauptscore: KompatibilitÃ¤t Arbeit/Schlaf Ã¼ber 7 Tage.',
         ) as Record<Locale, string>,
         uses: ['score.sleep', 'score.risk'],
+        evidence: [...methodEvidence(), ...paperEvidence()],
       },
       {
         key: 'score.sleep',
         kind: 'score',
         title: L_SLEEP,
         summary: summary(
-          'Proxy sommeil basé sur durée + régularité.',
+          'Proxy sommeil basÃ© sur durÃ©e + rÃ©gularitÃ©.',
           'Sleep proxy based on duration + regularity.',
-          'Schlaf-Proxy basierend auf Dauer + Regelmäßigkeit.',
+          'Schlaf-Proxy basierend auf Dauer + RegelmÃ¤ÃŸigkeit.',
         ) as Record<Locale, string>,
-        uses: ['derived.totalSleepHours', 'derived.sleepDays', 'derived.maxSleepGapHours'],
+        uses: ['derived.totalSleepHours', 'derived.avgSleepHours', 'derived.sleepRegularityProxy'],
+        evidence: methodEvidence(),
       },
       {
         key: 'score.risk',
         kind: 'score',
         title: L_RISK,
         summary: summary(
-          'Proxy risque sensible à la nuit et aux gaps sans sommeil.',
+          'Proxy risque sensible Ã  la nuit et aux gaps sans sommeil.',
           'Risk proxy sensitive to night work and long sleep gaps.',
-          'Risiko-Proxy sensitiv für Nachtarbeit und lange Schlaflücken.',
+          'Risiko-Proxy sensitiv fÃ¼r Nachtarbeit und lange SchlaflÃ¼cken.',
         ) as Record<Locale, string>,
-        uses: ['derived.nightWorkHours', 'derived.totalWorkHours', 'derived.maxSleepGapHours'],
+        uses: ['derived.totalWorkHours', 'derived.nightShiftCount', 'derived.shortBreaksCount'],
+        evidence: [...methodEvidence(), ...paperEvidence()],
       },
-
-      // ---------------- Derived metrics ----------------
       {
         key: 'derived.totalSleepHours',
         kind: 'metric',
@@ -126,38 +132,41 @@ export function buildFormulaMap(locale: Locale, t: unknown): FormulaMap {
         summary: summary(
           'Somme des segments sommeil sur 7 jours.',
           'Sum of sleep segments over 7 days.',
-          'Summe der Schlafsegmente über 7 Tage.',
+          'Summe der Schlafsegmente Ã¼ber 7 Tage.',
         ) as Record<Locale, string>,
         uses: ['schedule.sleepSegments'],
+        evidence: methodEvidence(),
       },
       {
-        key: 'derived.sleepDays',
+        key: 'derived.avgSleepHours',
         kind: 'metric',
-        title: title('Jours avec sommeil', 'Days with sleep', 'Tage mit Schlaf') as Record<
+        title: title('Sommeil moyen (h)', 'Average sleep (h)', 'Ø Schlaf (h)') as Record<
           Locale,
           string
         >,
         summary: summary(
-          'Nombre de jours (0..7) contenant au moins un segment sommeil.',
-          'Number of days (0..7) with at least one sleep segment.',
-          'Anzahl der Tage (0..7) mit mindestens einem Schlafsegment.',
+          'Durée moyenne de sommeil sur la semaine.',
+          'Average sleep duration across the week.',
+          'Durchschnittliche Schlafdauer über die Woche.',
         ) as Record<Locale, string>,
         uses: ['schedule.sleepSegments'],
+        evidence: methodEvidence(),
       },
       {
-        key: 'derived.maxSleepGapHours',
+        key: 'derived.sleepRegularityProxy',
         kind: 'metric',
         title: title(
-          'Max gap sans sommeil (h)',
-          'Max gap w/o sleep (h)',
-          'Max. Schlaflücke (h)',
+          'Régularité sommeil (proxy)',
+          'Sleep regularity (proxy)',
+          'Schlafregelmäßigkeit (Proxy)',
         ) as Record<Locale, string>,
         summary: summary(
-          'Plus longue période sans sommeil sur la semaine (circulaire).',
-          'Longest no-sleep gap over the week (circular).',
-          'Längste Zeit ohne Schlaf über die Woche (zirkulär).',
+          'Proxy de régularité basé sur le sommeil hebdomadaire.',
+          'Regularity proxy based on weekly sleep timing.',
+          'Regelmäßigkeits-Proxy auf Basis des Wochenschlafs.',
         ) as Record<Locale, string>,
         uses: ['schedule.sleepSegments'],
+        evidence: methodEvidence(),
       },
       {
         key: 'derived.totalWorkHours',
@@ -169,59 +178,61 @@ export function buildFormulaMap(locale: Locale, t: unknown): FormulaMap {
         summary: summary(
           'Somme des segments travail sur 7 jours.',
           'Sum of work segments over 7 days.',
-          'Summe der Arbeitssegmente über 7 Tage.',
+          'Summe der Arbeitssegmente Ã¼ber 7 Tage.',
         ) as Record<Locale, string>,
         uses: ['schedule.workSegments'],
+        evidence: methodEvidence(),
       },
       {
-        key: 'derived.nightWorkHours',
+        key: 'derived.nightShiftCount',
         kind: 'metric',
-        title: title(
-          'Travail de nuit (h)',
-          'Night work (h)',
-          'Nachtarbeit (h)',
-        ) as Record<Locale, string>,
+        title: title('Shifts de nuit', 'Night shifts', 'Nachtschichten') as Record<
+          Locale,
+          string
+        >,
         summary: summary(
-          'Heures de travail la nuit (proxy selon découpage).',
-          'Hours worked at night (proxy based on time window).',
-          'Arbeitsstunden nachts (Proxy je Zeitfenster).',
+          'Nombre de shifts détectés comme nuit via une fenêtre biologique proxy.',
+          'Count of shifts detected as night shifts through a biological proxy window.',
+          'Anzahl als Nachtschicht erkannter Segmente via biologisches Proxy-Fenster.',
         ) as Record<Locale, string>,
         uses: ['schedule.workSegments'],
+        evidence: [...methodEvidence(), ...paperEvidence()],
       },
-
-      // ---------------- Inputs (profile / schedule) ----------------
       {
         key: 'schedule.workSegments',
         kind: 'input',
         title: title('Agenda travail', 'Work schedule', 'Arbeitsplan') as Record<Locale, string>,
         summary: summary(
-          'Segments travail renseignés (clic semaine).',
+          'Segments travail renseignÃ©s (clic semaine).',
           'Entered work segments (weekly click).',
           'Eingegebene Arbeitssegmente (Wochenklick).',
         ) as Record<Locale, string>,
+        evidence: methodEvidence(),
       },
       {
         key: 'schedule.sleepSegments',
         kind: 'input',
         title: title('Agenda sommeil', 'Sleep schedule', 'Schlafplan') as Record<Locale, string>,
         summary: summary(
-          'Segments sommeil renseignés (clic semaine).',
+          'Segments sommeil renseignÃ©s (clic semaine).',
           'Entered sleep segments (weekly click).',
           'Eingegebene Schlafsegmente (Wochenklick).',
         ) as Record<Locale, string>,
+        evidence: methodEvidence(),
       },
       {
         key: 'profile.fatigue',
         kind: 'input',
-        title: title('Fatigue (0–5)', 'Fatigue (0–5)', 'Müdigkeit (0–5)') as Record<
+        title: title('Fatigue (0â€“5)', 'Fatigue (0â€“5)', 'MÃ¼digkeit (0â€“5)') as Record<
           Locale,
           string
         >,
         summary: summary(
-          'Champ profil (peut être peu utilisé en v0.1).',
+          'Champ profil (peut Ãªtre peu utilisÃ© en v0.1).',
           'Profile field (may be lightly used in v0.1).',
           'Profilfeld (evtl. wenig genutzt in v0.1).',
         ) as Record<Locale, string>,
+        evidence: methodEvidence(),
       },
     ],
   };
