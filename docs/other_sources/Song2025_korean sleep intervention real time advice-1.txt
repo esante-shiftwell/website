@@ -1,0 +1,1556 @@
+Submitted: 1 April, 2025; Revised: 29 May, 2025; Accepted: 3 June, 2025
+© The Author(s) 2025. Published by Oxford University Press on behalf of Sleep Research Society. All rights reserved. For commercial re-use, please co ntact
+reprints@oup.com for reprints and translation rights for reprints. All other permissions can be obtained through our RightsLink service via the Per missions
+link on the article page on our site—for further information please contact journals.permissions@oup.com.
+SLEEPJ, 2025, 48,1 – 1 7
+doi:10.1093/sleep/zsaf160
+Advance Access publication 9 June 2025
+Original Article
+Original Article
+A digital, real-time, history-based sleep-management
+tool to enhance alertness
+Yun Min Song1,2,† , Su Jung Choi 3,† , Dongju Lim1,2, Reinatt Hansel Wijaya4, Hyeong Jun Jang 2,5, Hea Ree Park 6, E u nY e o nJ o o6,* and
+Jae Kyoung Kim1,2,7,*
+1 Department of Mathematical Sciences, KAIST, Daejeon, Republic of Korea , 2 Biomedical Mathematics Group, Pioneer Research Center for Mathematical and
+Computational Sciences, Institute for Basic Science, Daejeon, Republic of Korea , 3 Graduate School of Clinical Nursing Science, Sungkyunkwan University, Seoul,
+Republic of Korea, 4 School of Computing, KAIST, Daejeon, Republic of Korea , 5 School of T ransdisciplinary Studies, KAIST, Daejeon, Republic of Korea, 6 Department
+of Neurology , Neuroscience Center, Samsung Medical Center, Samsung Biomedical Research Institute, School of Medicine, Sungkyunkwan University, Seoul,
+Republic of Korea and 7 Department of Medicine, College of Medicine, Korea University, Seoul, Republic of Korea
+*Corresponding authors. Eun Yeon Joo, Department of Neurology , Neuroscience Center, Samsung Medical Center, Samsung Biomedical Research Institut e, School
+of Medicine, Sungkyunkwan University , Seoul 06351, Republic of Korea. Email: ejoo@skku.edu; Jae Kyoung Kim, Department of Mathematical Sciences, KAIST ,
+Daejeon 34141, Republic of Korea. Email: jaekkim@kaist.ac.kr.
+† These authors contributed equally to this work.
+Abstract
+In today’s 24-h society, chronic sleep disruption and circadian misalignment have led to a “global sleep crisis,” increasing the risk
+of cognitive impairment, workplace accidents, and long-term health consequences. Yet, most sleep management strategies rely on
+one-size-fits-all recommendations that overlook individual variability, resulting in suboptimal and/or impractical solutions. T o address
+this, we previously developed a real-time, personalized sleep scheduling framework based on tracking of dynamic sleep pressure and
+circadian rhythms using a mathematical model. We recently implemented this framework in SleepWake, a mobile app designed for
+real-world applications. In a retrospective analysis of a 71-participant clinical study and a prospective trial with 19 shift workers, greater
+adherence to SleepWake’s personalized recommendations led to significant improvements in alertness. These benefits stemmed
+from two key innovations that go beyond static sleep guidelines: real-time prescribed supplemental sleep to counteract prior deficits
+and personalized sleep phase alignment tailored to individual circadian patterns. This study provides the first direct evidence that
+continuously updated, individualized sleep schedules can optimize alertness and sleep health in real-world settings. By delivering sleep
+recommendations rooted in sleep physiology and evidence-based modeling, SleepWake has the potential to improve health, enhance
+safety, and elevate the overall quality of life in today’s around-the-clock society.
+Key words: sleep; circadian rhythm; mathematical model; mobile application; shift work; alertness; sleep intervention
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+2 | SLEEPJ, 2025, Vol. 48, No. 11
+Graphical Abstract
+Statement of Significance
+The increasing demand for work outside daylight hours poses significant health and safety risks. T o address these challenges, we
+previously developed a real-time, personalized sleep scheduling framework powered by a mathematical model. In this study , we
+implemented the framework through SleepWake, a mobile app that tailors sleep schedules based on real-time updates of individual
+sleep history . Unlike generic guidelines, SleepWake dynamically adjusts sleep schedules, offering additional rest when needed and
+aligning sleep with natural rhythms. Among 71 female and 19 male shift workers, those who followed the app’s recommendations
+showed significant improvements in alertness. These findings underscore the benefits of continuously updated, personalized sleep
+schedules grounded in sleep physiology and evidence-based modeling for optimizing alertness.
+Introduction
+Artificial light is pervasive in modern society , and nighttime activ-
+ities have become both common and crucial for maintaining
+essential societal functions [ 1, 2]. In Europe, approximately 20 per
+cent of workers engage in night shifts at least once a month [ 3],
+with a higher rate in the United States [ 4]. In South Korea and
+Japan, over 10 per cent of workers participate in night shifts [ 5,
+6]. Furthermore, it has been suggested that over 80 per cent of the
+general population may lead lifestyles that resemble those of shift
+workers [7], highlighting the widespread prevalence of nighttime
+activities that extend beyond traditional shift work. This trend
+is further supported by a recent study reporting that high-GDP
+countries tend to have later bedtimes [ 8].
+Widespread nocturnal activity disrupts natural sleep patterns
+and circadian rhythms, which are inherently synchronized with
+the light–dark cycle [ 9, 10]. These disruptions result in sleep
+deprivation and poor sleep quality , which can have profound
+impacts on individual health. These impacts include immuno-
+logical and metabolic changes and an increased risk of diseases,
+including diabetes and certain types of cancer [ 11–14]. Moreover,
+insufficient sleep and misaligned work schedules impair alertness
+and cognitive function, reducing productivity and elevating the
+risk of errors, injuries, and accidents [15–17]. These issues present
+significant challenges to public health and safety and the overall
+well-being of society .
+In response, a variety of nonpharmacological interventions,
+such as improvements in sleep hygiene and light therapy , have
+been developed [
+18–20]. These interventions aim to promote suffi-
+cient, biologically appropriate sleep and optimize alertness when
+required, even in contexts where biological rhythms are mis-
+aligned with societal demands. A key strategy in these interven-
+tions is the establishment of appropriate sleep schedules [ 21].
+However, most existing approaches rely on one-size-fits-all sleep
+schedules, leading to conf licting recommendations: some studies
+advocate for morning sleep after a night shift [ 22], while others
+suggest evening sleep [ 23–25], split sleep [ 26], or brief naps [ 27].
+These approaches also fail to account for individual differences in
+factors such as sleep history and work schedules. Thus, they are
+often impractical and do not accommodate the diverse sleep pat-
+terns required to meet individual needs and circumstances [
+28].
+Furthermore, even within the same individual, optimal sleep pat-
+terns may vary depending on factors such as prior sleep history .
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 3
+T o overcome the shortcomings of these one-size-fits-all sleep
+interventions, recent advancements in mathematical modeling
+have paved the way for personalized sleep strategies [ 29–33].
+These models leverage individual sleep histories to predict real-
+time f luctuations in sleep pressure and circadian rhythms, the
+primary regulators of sleep and alertness [
+29, 34–36]. Based
+on these predictions, the framework generates physiologically
+optimal sleep schedules tailored to enhance alertness during
+individual-selected periods, unlike previous uniform approaches
+[
+29–33]. This adaptability is particularly beneficial for individuals
+with irregular or highly variable schedules, offering practical
+solutions to the diverse and dynamic nature of sleep needs.
+Furthermore, the integration of these frameworks into real-
+world settings has been accelerated by the widespread use of
+digital technologies, including wearable devices and smartphones
+equipped with advanced sensors and algorithms [
+37, 38].
+These interventions incorporating model-based sleep schedul-
+ing can improve shift workers’ sleep by increasing total sleep
+time (TST), reducing sleep onset latency , and alleviating insomnia
+[
+30–32]. However, some of the previous studies combined sleep
+scheduling with additional educational resources—such as guid-
+ance on caffeine use and light exposure—making it difficult to
+isolate the effects of sleep schedule adjustments [
+30, 31]. Impor-
+tantly , prior intervention studies utilizing mathematical mod-
+els lacked detailed analyses of how participants’ sleep patterns
+changed in response to these interventions [
+30–32]. As a result, it
+remains unclear whether the observed benefits stemmed directly
+from sleep schedule modifications or were inf luenced by external
+factors. Additionally , these studies relied on estimated sleep data
+based on activity schedules rather than observed sleep histories
+to simulate the models, potentially compromising the accuracy
+of alertness predictions [
+29]. This limitation may explain why one
+study failed to observe a clear improvement in alertness despite
+implementing a model-based intervention [
+31].
+This study aimed to address a previously unresolved ques-
+tion: does adherence to continuously updated sleep schedules—
+tailored through a mathematical model integrating sleep his-
+tory—enhance alertness? We recently developed a framework
+that generates personalized and effective sleep schedules to opti-
+mize alertness for upcoming work periods while maintaining
+physiologically feasible sleep patterns based on predictions from a
+mathematical model [
+29]. Our model leverages real-time updates
+of observed sleep data to forecast alertness, unlike previous inter-
+vention frameworks that relied on estimated sleep data derived
+from activity schedules [
+30–32]. T o apply this framework in a real-
+world setting, we implemented it as a mobile app, SleepWake.
+The effectiveness of SleepWake’s sleep recommendations was
+evaluated through a retrospective analysis of a prior clinical study
+involving 71 female shift workers, followed by a clinical study with
+19 male shift workers. By analyzing daily real-time sleep data, we
+assessed how precise alignment with personalized sleep recom-
+mendations and deviations from baseline sleep patterns inf lu-
+enced alertness. Lastly , we analyzed how our personalized inter-
+vention integrates previous sleep history to improve alertness—
+distinguishing it from conventional one-size-fits-all approaches.
+Materials and Methods
+Overview of the SleepWake app and evaluation of its
+effectiveness
+In our recent study , we introduced a real-time sleep intervention
+framework based on a physiologically based mathematical model
+[29]. This model predicts real-time alertness by simulating the
+dynamic interplay between sleep pressure and circadian pro-
+cesses based on previous sleep history (see Mathematical model
+and sleep recommendation section for details) [ 29, 34]. Based on
+these predictions and individual schedules, the framework rec-
+ommends an optimized sleep pattern called Adaptive Circadian
+Split Sleep (ACSS) [
+29]. ACSS is designed to maintain high model-
+predicted alertness during desired activity periods while being
+practical and feasible for real-world implementation (see Math-
+ematical model and sleep recommendation section for details).
+Implementing the ACSS pattern in real-world settings requires
+real-time sleep data collection and model-based simulations. T o
+support this, we previously proposed the concept of a mobile sleep
+recommendation app based on ACSS, though it was not imple-
+mented at the time. In the present study , we developed SleepWake,
+a mobile app designed to deliver ACSS-based recommendations
+(
+Figure 1, A–C). SleepWake integrates past sleep history ( Figure 1,
+A, left) through Apple Health and Samsung Health, which provide
+accurate sleep records from smartwatches [39–42]. In cases where
+sleep data is missing, such as when smartwatches are not worn,
+users can manually input their sleep records. Additionally , users
+can input information on future bedtime availability and work
+schedules (
+Figure 1, A, right).
+Using this input, the app provides real-time alertness pre-
+dictions around the current time ( Figure 1, B, left) and recom-
+mends an optimal sleep period ( Figure 1, B, right) for the follow-
+ing day based on the integrated model (see Mathematical model
+and sleep recommendation section for details). The recommended
+sleep period follows the ACSS pattern, starting from the earliest
+feasible bedtime and continuing until the next day’s work period
+begins. The sleep period represents the minimum sleep required
+to maintain the average predicted alertness above zero during the
+upcoming work period while avoiding physiologically infeasible
+sleep windows.
+Additionally , the app collects real-time subjective ratings
+(Figure 1, C), including daily alertness (1–10 scale) and sleep
+quality (1–5 scale). The daily alertness item, available in the
+afternoon each day , prompts participants to ref lect on their
+overall alertness throughout the day , rather than at a specific
+moment. The prompt was: “How alert did you feel throughout the
+day?” (translated into Korean). The sleep quality item assesses
+the perceived quality of the most recent sleep period, using the
+prompt: “How was your sleep quality last night?” (translated into
+Korean).
+While users are recommended sleep periods by SleepWake
+(Figure 1, B, right), their adherence to these recommendations
+varies, potentially inf luencing the effectiveness of the app. T o
+quantify adherence, we computed an agreement between the
+observed (
+Figure 1, D, shaded region) and recommended (Figure 1,
+D, hatched region) sleep periods as follows:
+Agreement =
+⎧
+⎪⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎨
+⎪⎪
+⎪
+⎪
+⎪
+⎪
+⎪
+⎩
+Length
+((
+Observed Sleep
+)⋂ (
+Recommended Sleep
+))
+Length
+(
+Recommended Sleep
+)
+if Recommended Sleep ⊈ Observed Sleep
+Length
+(
+Observed Sleep
+)
+Length
+(
+Recommended Sleep
+)
+if Recommended Sleep ⊆ Observed Sleep
+,( 1 )
+If users did not fully adhere to the recommendation, the
+agreement ref lects the proportion of the recommended sleep
+period achieved by the observed sleep period (
+Figure 1, D,
+top). In cases of partial overlap, only the overlapping portion
+of sleep is included in the agreement calculation ( Figure 1,
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+4 | SLEEPJ, 2025, Vol. 48, No. 11
+Figure 1. Method to evaluate the effectiveness of mathematical model-based sleep scheduling using the SleepWake app. (A) The SleepWake app
+processes users’ sleep history (shaded regions, left), logged mainly via smartwatch or manually by the user if necessary . The app also collects users ’
+schedule information, including the earliest possible bedtime for the current day (dashed line, right) and the designated work period for the follow ing
+day (bracketed region, right). (B) Using these inputs, SleepWake computes and displays real-time alertness predictions (shaded region, left) arou nd the
+current time (dashed line, left). The app also identifies optimal sleep patterns (hatched region, right) between the upcoming earliest possible bed time
+(dashed line, right) and the work period (bracketed region, right) to enhance alertness during the work period, as determined by the embedded
+mathematical model. (C) SleepWake further collects user-reported assessments of overall alertness for the day (daily alertness, scale 1 ∼ 10), and the
+perceived quality of the previous night’s sleep (daily sleep quality , scale 1 ∼ 5). (D) T o evaluate user adherence to SleepWake’s recommendations, the
+daily agreement between periods of observed sleep (shaded region) and SleepWake’s recommended sleep (hatched region) was calculated as the
+proportion of their overlapping periods.
+D, middle). If users fully adhered to the recommended sleep
+period, any additional sleep beyond the recommendation further
+increased the adherence score, allowing values to exceed one
+(
+Figure 1, D, bottom). This approach ref lects the fact that the
+recommended sleep period represents the minimum duration
+needed to maintain a mean predicted alertness above zero.
+Therefore, sleeping beyond the recommendation—provided the
+full recommended window is included—may confer additional
+benefits.
+Notably , equation (1) is a modification of the commonly used
+percentage overlap:
+percentage overlap =
+Length
+((
+Observed Sleep
+)⋂ (
+Recommended Sleep
+))
+Length
+(
+Recommended Sleep
+) × 100
+(
+%
+)
+,
+(2)
+which has also been used in previous studies to evaluate adher-
+ence to sleep recommendations [ 32]. T o assess the robustness of
+our findings to the choice of adherence metric, we performed a
+sensitivity analysis by repeating all analyses using equation ( 2)i n
+place of equation ( 1).
+Mathematical model and sleep recommendation
+The SleepWake app integrates a physiologically based mathemat-
+ical model that simulates two key processes regulating human
+sleep and alertness: sleep pressure and the circadian process [ 29,
+34]. Sleep pressure accumulates during wakefulness, increasing
+the need for sleep and reducing alertness, and dissipates during
+sleep to restore homeostasis, typically following an exponential
+decay trajectory . The circadian process represents f luctuations in
+the internal biological clock, inf luencing both alertness and sleep
+propensity . This process generally follows a sinusoidal pattern
+with a ∼ 24-h period, reaching its nadir near the minimum of core
+body temperature (CBTmin). Specifically , the circadian process is
+modeled using a Van der Pol oscillator, which allows for modu-
+lation by light exposure, resulting in variations in period, phase,
+and amplitude. Detailed model equations and parameter values
+are provided in the supplementary materials of our previous
+study [
+34].
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 5
+In the present work, we used the same parameters and ini-
+tial conditions as in the previous study [ 34], with one excep-
+tion: the intrinsic period of the circadian rhythm ( τc)w a ss e tt o
+24.2 h, consistent with the original formulation [ 43]. Additionally ,
+we adopted a previously used assumed light intensity profile
+for simulating the circadian process—250 lux during wakeful-
+ness and 0 lux during sleep, accounting for the effects of arti-
+ficial lighting [
+34]. While light exposure was not directly mea-
+sured, such an assumed light profile based on sleep patterns has
+been shown to accurately predict alertness and circadian phase
+shifts [34, 44–46].
+In the model, the circadian process defines a dynamic sleep
+threshold. When sleep pressure exceeds this threshold, the
+individual is naturally predisposed to fall asleep. Consequently ,
+remaining awake during these periods requires increased effort
+and is typically associated with reduced alertness. Conversely ,
+when sleep pressure is below the sleep threshold, the individual
+is naturally inclined to stay awake, requiring minimal effort and
+corresponding to heightened alertness. Based on this framework,
+alertness at any given time is defined as the scaled difference
+between the sleep threshold and sleep pressure (i.e. sleep
+threshold
+− sleep pressure). This definition is consistent with our
+previous study , which successfully predicted the alertness levels
+of shift-working nurses in a real-world setting [ 29]. Specifically ,
+the alertness level ( AL(t))a tag i v e nt i m et is defined as:
+AL(t) = max
+(
+min
+(
+− 100, 100
+(
+H+(t) − H(t)
+)
+3
+)
+, 100
+)
+where H+(t) is the sleep threshold driven by the circadian process,
+and H(t) is the value of sleep pressure. Here, the scaling factor
+100/3 is used because H+(t) − H(t) typically ranges from − 3t o
+3. The max and min functions are applied to cap the resulting
+alertness value within the range [ − 100,100].
+A previous study compared various sleep patterns using the
+physiologically based mathematical model and developed the
+ACSS pattern [29]. This pattern consists of two key components: a
+minimum necessary main sleep period and a late nap before work.
+The main sleep duration is determined based on the user’s desired
+sleep onset and model simulations to ensure model-predicted
+alertness remains above zero at sleep offset. This split-sleep strat-
+egy is designed to sustain high model-predicted alertness during
+both work and nonwork periods, making it particularly beneficial
+for work schedules that deviate from traditional daylight hours.
+Based on the ACSS pattern, SleepWake provides daily updated,
+personalized sleep recommendations that are more concretely
+defined and refined compared to the conceptual approach pro-
+posed in our previous study [
+29]. Recommendations are generated
+within a time window between the user’s desired sleep onset and 1
+h before the upcoming work onset. Here, the 1-h margin accounts
+for commute time and helps minimize the impact of sleep inertia,
+which can reduce alertness and typically dissipates within 30–
+60 min [
+47]. Importantly , SleepWake’s recommendations dynam-
+ically incorporate the user’s accumulating sleep history . As more
+data becomes available, the model re-simulates or extends predic-
+tions of sleep pressure and sleep threshold into subsequent days,
+building on prior simulation results. This allows SleepWake not
+only to incorporate past sleep history but also to continuously
+fine-tune the timing and duration of both main sleep and naps
+within the ACSS framework.
+Specifically , SleepWake primarily recommends the minimum
+necessary main sleep duration required to reduce daytime
+sleepiness [34]. This main sleep begins at the user’s desired sleep
+onset if the simulated sleep pressure exceeds the sleep threshold
+at that time, indicating that natural sleep is likely according to
+the model. The sleep continues until sleep pressure drops to meet
+the sleep threshold, ensuring that awakening does not require
+effort and alertness is above zero. If, however, the simulated sleep
+pressure is lower than the sleep threshold at the user’s desired
+onset time, the main sleep is delayed until sleep pressure reaches
+the sleep threshold. If the main sleep period is insufficient to
+maintain the average predicted alertness above zero during future
+work periods, SleepWake suggests an additional late nap. The
+nap duration is set to the minimum necessary to ensure that
+the average predicted alertness remains above zero during work
+hours, and it extends until 1 h before the upcoming work onset.
+If there is no upcoming work period due to a scheduled day off,
+only the necessary main sleep period is recommended.
+If the desired sleep onset and the next work shift are too
+close, allocating sufficient main sleep or maintaining alertness
+above zero during future work periods may be impossible, even
+after maximizing sleep duration. In such cases, SleepWake rec-
+ommends advancing sleep onset while ensuring that the rec-
+ommended sleep schedule avoids unfeasible periods, such as
+overlapping with work hours or times when alertness is above
+zero, which would make falling asleep physiologically difficult.
+Data for retrospective analysis and reconstruction of
+SleepWake recommendations
+T o assess the effectiveness of the SleepWake intervention before
+the prospective clinical study , we utilized a dataset from a
+prior clinical study (Approval No. 2021-03-197) [ 29]. This dataset
+includes data from 71 female Korean nurses with over 2.5 years of
+shift work experience at a metropolitan hospital ( ≥2000 beds) in
+Seoul, Republic of Korea. The participants followed various shift
+schedules, including 8-h three-shift, 8-h two-shift, 12-h two-shift,
+and fixed night shifts. Between May 2021 and April 2022, data on
+the participants’ sleep and work periods, along with KSS scores
+at the beginning and end of each shift, were collected using wrist
+actigraphy and daily sleep diaries.
+With the collected sleep data, we reconstructed SleepWake’s
+recommended sleep period—spanning from the desired sleep
+onset to the work period—by simulating the same mathemati-
+cal model embedded in the SleepWake app. In this process, the
+desired sleep onset was gradually advanced until either (1) the
+average predicted alertness remained above zero during future
+work hours or (2) further advancement led to an unfeasible sleep
+schedule, mirroring the SleepWake app’s approach of recom-
+mending earlier sleep onset in such cases (see Mathematical model
+and sleep recommendation section for details). We then compared
+the reconstructed recommended sleep periods with the observed
+sleep data and analyzed their association with the corresponding
+KSS scores. Notably , this analysis was not conducted in the previ-
+ous study [
+29].
+Participants in the prospective clinical study
+This study involved 19 Emergency Medical Technicians (EMTs)
+working on a three-shift system at a private emergency medical
+service who volunteered to participate and were already using
+a smartwatch (Approval No. 2024-01-061). The mean age of the
+participants was 33.47± 7.90 years, and all participants were male
+(
+T able 1). The participants followed a 20-day rotating shift sched-
+ule consisting of the following cycle: 5 days of morning shifts,
+2 days off, 5 days of night shifts, 2 days off, 5 days of evening shifts,
+and 1 day off. The shift times were as follows: morning (07:00 am
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+6 | SLEEPJ, 2025, Vol. 48, No. 11
+Table 1. Demographics of the Participants
+Characteristics n (%) M ± SD Range
+Male 19 (100)
+Age, y 33.47 ± 7.90 (26–53)
+Height, cm 176.15 ± 5.71 (165–187)
+Weight, kg 79.0 ± 8.49 (68–97)
+T otal career, y 8.75 ± 9.18 (1.17–29.42)
+Shift work career, y 8.58 ± 8.94 (1.17–29.25)
+Data collection
+period, days
+31.58 ± 8.09 (23–45)
+to 03:00 pm), evening (03:00 pm to 11:00 pm), and night (11:00 pm
+to 07:00 am). Data collection was conducted from February to May
+2024.
+Participants were instructed to wear their smartwatch while
+sleeping and to install the SleepWake mobile app on their smart-
+phones. Among the participants, three used an Apple Watch,
+while the remainder used a Galaxy Watch. Data collection com-
+menced on the first day of their day shift. Sleep data collected via
+the smartwatch was automatically synchronized with the Sleep-
+Wake app. If sleep data were not recorded via the smartwatches,
+participants were asked to manually log their sleep in the app.
+During the baseline phase (first ∼ 6 days), the intervention-related
+features of the mobile app were locked to prevent participant
+access. On the first day of the intervention period, a password to
+unlock the app was provided, enabling participants to access the
+intervention content.
+Participants were not required to strictly adhere to the sleep
+recommendations. This study design aimed to evaluate whether
+improvements in alertness occurred specifically among those
+who best adhered to the recommended sleep patterns during
+the intervention phase. Notably , this design is the key distinction
+from previous studies on sleep interventions using mathematical
+models [
+30–32].
+TST , Midsleep, CBTmin, and phase similarity calculation
+T o assess the impact of sleep history on daily agreement and
+alertness, we calculated TST and midsleep for each day , based on
+the identified main sleep episode. The main sleep was defined as
+the longest sleep between shifts or the sleep episode immediately
+following a night shift. On days off without scheduled shifts, we
+applied a notional shift boundary from 07:00 pm to 07:00 pm (i.e.
+zero duration). This choice was based on the distribution of sleep
+onset times (
+Figure S1 ), which showed minimal sleep initiation
+around that time. Sleep episodes occurring between two main
+sleep episodes were classified as naps. TST was the sum of the
+main sleep and any subsequent naps, and midsleep was defined
+as the midpoint of the main sleep episode.
+Additionally , to assess the effect of alignment between sleep
+timing and the optimal circadian phase for alertness, we esti-
+mated each participant’s daily circadian phase—specifically , the
+timing of the CBTmin—using the mathematical model integrated
+within the SleepWake app. This model includes a variable (y; see
+Supplementary Information of [
+34] for details) that simulates the
+dynamics of the circadian pacemaker based on a Van der Pol
+oscillator and serves as a proxy for core body temperature [ 43],
+exhibiting a daily rhythm. The time at which this variable reaches
+its minimum during the daily cycle is identified as the CBTmin.
+T o quantify the alignment between two specific time points
+within the 24-h day—such as the average midsleep over the
+preceding 3 days and the midsleep on the current day , or the
+CBTmin and the current day’s midsleep—we calculated their time
+difference in hours, referred to as the phase difference. Using
+this phase difference, phase similarity was calculated using the
+following equation:
+phase similarity = cos
+(
+2π
+(
+phase difference
+)
+24h
+)
+.
+Phase similarity ranges from − 1 to 1, where 1 indicates com-
+pletely aligned midsleep times, while − 1 indicates a completely
+reversed sleep phase with a 12-h difference in midsleep times.
+Statistical analysis
+The associations of daily TST and agreement with mean KSS
+or alertness were explored by calculating Pearson correlation
+coefficients ( r) and confidence intervals (CI) using the “corr.test”
+function in R. Additionally , partial correlations between daily
+agreement and alertness were also computed, controlling for the
+effects of TST . This was done using residuals from linear regres-
+sion models for daily TST agreement and daily TST alertness. The
+linear regression models were fitted using the “lm” function in R,
+and correlations between the residuals, along with their CIs, were
+calculated with the “corr.test” function.
+T o evaluate the inter-individual effects of the intervention
+based on adherence, we categorized participants into high- and
+low-adherence groups and analyzed changes in average daily
+alertness, TST , and sleep quality from baseline (P1) to interven-
+tion (P2) phases. The significance of these changes was assessed
+using the two-sided Wilcoxon signed-rank test, conducted via
+the “stat_compare_means” function in R [
+48]. Additionally , the
+correlation between changes in the average daily agreement and
+alertness from P1 to P2 was examined by calculating r and CIs
+using the “corr.test” function in R. Based on the calculated r,w e
+then conducted a post hoc power analysis to justify the study’s
+sample size, using the “pwr.r.test” function in R.
+T o investigate the underlying mechanism of SleepWake’s rec-
+ommendations, we examined how daily TST , the mean TST over
+the preceding 3 days (TST prev), and phase similarity between the
+average midsleep over the prior 3 days and the current day’s
+midsleep relate to agreement and alertness. These relationships
+were assessed using multiple linear regression models fitted with
+the lm function in R. Additionally , we analyzed the association
+between alertness and either the phase similarity between the
+current day’s midsleep and the predicted CBTmin, or the CBTmin
+itself, by calculating r and CIs using the “corr.test” function in R.
+Results
+Retrospective analysis for evaluation of SleepWake’s
+effectiveness
+T o evaluate the effectiveness of SleepWake’s sleep recommen-
+dations, we first conducted a retrospective analysis using data
+from a previous clinical study that involved 71 female shift work-
+ers (
+Figure 2, A;s e e Materials and Methods section for details)
+[29]. These participants were assigned to various rotating shift
+schedules, including two-, three-, or night-only shifts. They wore
+actigraphy devices and kept sleep diaries during a∼ 14-day clinical
+experiment conducted in real-world settings. The study collected
+data on sleep and work periods, as well as subjective sleepiness
+levels, which were measured using the Karolinska Sleepiness
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 7
+Scale (KSS) score at the beginning and end of each work period
+(Figure 2, B).
+Using these data, we reconstructed the estimated SleepWake
+recommendations ( Figure 2, B;s e e Materials and Methods section
+for details). We then examined the association between the mean
+KSS score for each daily work period (mean KSS) and the agree-
+ment between the reconstructed SleepWake recommendations
+and observed sleep period (
+Figure 1, D) preceding the correspond-
+ing work period ( Figure 2, C;s e e Materials and Methods section for
+details). Additionally , we analyzed the association between daily
+mean KSS and TST of the sleep period to assess whether TST
+acts as a confounding factor in the relationship between daily
+agreement and mean KSS (see Materials and Methods section for
+details).
+The overall TST data exhibited an approximately normal distri-
+bution, with a mean of ∼ 470 min ( Figure 2, D, top). When analyz-
+ing the full dataset, while daily TST did not correlate significantly
+with mean KSS ( r =− 0.052, p = .298), the daily agreement with
+the SleepWake recommendations exhibited a significant nega-
+tive correlation with the mean KSS ( r =− 0.230, p = 2.533e-06)
+(Figure 2, E and F, top). This suggests that longer TST does not lead
+to greater alertness, whereas greater adherence to SleepWake’s
+recommendations does lead to improved alertness. Furthermore,
+when restricting the analysis to data within narrower TST ranges
+centered around the mean (
+Figure 2, D, bottom), the correla-
+tion between TST and the mean KSS score remained insignifi-
+cant ( r =− 0.075, p = .232), while the significant negative corre-
+lation between agreement and KSS score persisted ( r = − 0.167,
+p = .007) ( Figure 2, E and F, bottom). These results indicate that
+even with similar TST , greater adherence to SleepWake recom-
+mendations can lead to higher levels of alertness. Notably , this
+significant association was also held when focusing exclusively
+on night shift days—periods typically associated with circadian
+disruption (
+Figure S2 ). T aken together, this retrospective anal-
+ysis demonstrated the potential for adherence to SleepWake’s
+recommendations to improve alertness in real-world settings,
+even under conditions of circadian misalignment such as night
+shift work.
+Participants with high levels of adherence experienced
+improvements in alertness
+Given the promising results of the retrospective analysis for
+SleepWake’s evaluation, we conducted a prospective clini-
+cal study . We recruited 19 male shift workers (mean age:
+33.47 ± 7.90 years) employed as EMTs who followed the same
+rotating three-shift schedule (morning, evening, night, and
+off) on a 20-day cycle (
+Figure 3, A). During the clinical study ,
+participants were instructed to integrate the SleepWake app
+into their daily routines, ensuring that objective sleep data
+from their smartwatches were recorded in the app. In addition,
+participants logged daily ratings of alertness and sleep quality ,
+while momentary alertness ratings were recorded at least three
+times per day . The logged data was transmitted to a connected
+server for collection.
+The clinical study spanned ∼ 26 days, comprising a ∼ 6-day
+Baseline phase (P1) and a ∼ 20-day Intervention phase (P2)
+(Figure 3, B). During P1, the real-time alertness predictions and the
+recommended optimal sleep period for the following day (Figure 2,
+B) were not displayed to participants, although these outputs
+continued to be calculated in the background. In contrast, during
+P2, these features were fully visible and accessible to participants.
+Across all participants, P1 included only off days and a single shift
+type: 15 participants were assigned to the morning shift, while 4
+participants were in the evening shift during this period.
+Based on the collected data, SleepWake’s recommendations
+were reconstructed using the same approach as in the retrospec-
+tive analysis (see Materials and Methods section for details), and its
+daily agreement with the observed sleep period was calculated.
+Using the daily agreement changes between P1 and P2, we evalu-
+ated each participant’s adherence. Specifically , we compared the
+average daily agreement over the entire P1 period (
+Figure 3, C,d a y s
+1–6) with a subset of P2 ( Figure 3, C, days 21–26) that featured
+the same shift schedule and occurred 20 days later. Therefore,
+data from days 7 to 20 were excluded from this comparison,
+as the shift schedules during that time differed from those in
+P1. This approach enabled a fair assessment of adherence by
+controlling for shift type. Participants were then grouped based on
+individual changes in average daily agreement between P1 and P2:
+those with increased agreement in P2 were assigned to the high
+adherence (HA) group, while the remainder were categorized as
+the low adherence (LA) group (
+Figure 2, C). The HA and LA groups
+consisted of 10 and 9 participants, respectively . The average daily
+agreement increased by 21.8 ± 36.0%p from P1 to P2 in the HA
+group and decreased by 10.7 ± 6.3%p in the LA group.
+For each group, we analyzed individual changes in daily alert-
+ness (Figure 1, C, top), TST , and sleep quality (Figure 1, C, bottom)
+between P1 and P2 (Figure 3, E–G). When comparing P1 and P2, the
+HA group exhibited a statistically significant increase in alertness
+(p = .012), rising from a mean of 4.67 to 5.64, whereas the LA group
+showed significant decreases (p = .02), from a mean of 5.64 to 4.49
+(Figure 3, E). This indicates that alertness improved only for those
+who adhered closely to the recommendations. Notably , changes in
+average daily agreement and alertness were positively correlated
+(
+Figure S3;s e eMaterials and Methods section for details), suggesting
+that greater adherence to the recommendations leads to greater
+improvements in alertness.
+Interestingly , there was no significant change in TST in the HA
+group ( p = .058), increasing from a mean of 356.0 to 397.3 min
+(Figure 3, F, left), suggesting that the improvement in alertness
+resulted from better alignment between sleep patterns and the
+recommended schedule rather than increased TST . The insignif-
+icant change in TST also indicates that adhering to the recom-
+mended schedule does not negatively impact TST . Furthermore,
+sleep quality remained stable in the HA group ( p = .72), with
+a mean change from 2.93 to 3.05 (
+Figure 3, G, left), indicating
+that following the recommended sleep schedule does not have
+a significant adverse impact on sleep quality . In contrast, the
+LA group experienced a significant decrease in both TST ( p =
+.0039), dropping from a mean of 374.6 to 332.7 min (
+Figure 3, F,
+right) and sleep quality ( p = .030), decreasing from a mean of 3.19
+to 2.63 ( Figure 3, G, right), highlighting that deviation from the
+recommended sleep schedule is associated with reduced TST and
+sleep quality , which can negatively impact health and safety .
+T aken together, the SleepWake app effectively identified opti-
+mal sleep periods to enhance alertness without compromising
+TST or quality , with significant benefits observed only when users
+actively follow the recommendations.
+Greater agreement between observed and recommended
+sleep schedules is associated with greater daily
+alertness, even with similar TST
+We demonstrated that greater adherence to the recommended
+sleep schedule over a period with consistent work patterns led
+to improvements in alertness ( Figure 3). This finding suggests
+that alertness would generally be greater on days when users
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+8 | SLEEPJ, 2025, Vol. 48, No. 11
+Figure 2. Greater agreement with SleepWake’s recommendations is associated with greater daily alertness. (A) A retrospective analysis was conducted
+using data from 71 female shift workers (mean age = 29.10± 3.71) following three different rotating shift schedules. (B) The shift workers’ sleep
+(shaded region) and work (bracketed region) period data, along with KSS scores at the beginning (filled triangle) and end (hollow triangle) of each wo rk
+period, were collected via actigraphy and sleep diaries. Based on the collected data, the SleepWake recommendation (hatched region) was
+reconstructed. (C) For each daily work period, the mean KSS score, TST of the sleep period preceding the work period, and the agreement between the
+sleep period and the reconstructed SleepWake recommendations were calculated. (D–F) In the entire dataset (count = 407), where daily TST values
+followed an approximately normal distribution (D , top), daily TST (E, top left) did not show a significant correlation with the mean KSS (F , top).
+However, greater daily agreement (E, top right) showed a significant negative correlation with the mean KSS (F , top). This indicates that it is not gre ater
+TST but greater agreement with SleepWake recommendations that leads to a lower mean KSS (i.e. greater alertness). Error bars in (F) denote 95% CIs.
+Analysis within a narrower daily TST range—5 to 9 h (D , bottom, shaded region)—centered around the mean daily TST revealed no significant
+association between daily TST and mean KSS (E, bottom left; F , bottom). In contrast, the negative association between daily agreement and mean KSS
+remained significant (E, bottom right; F , bottom). This suggests that adherence to SleepWake recommendations contributes to lower mean KSS, even
+with similar TST . Here, N.S.p > .05,
+∗p < .05, ∗∗p < .01, ∗∗∗p < .001.
+followed the recommended sleep more closely compared to days
+when they did not, as observed in the retrospective analysis
+(Figure 2). T o test this hypothesis, we analyzed daily agreement
+and alertness data to assess whether a positive correlation existed
+between the two (
+Figure 4, A;s e e Materials and Methods section for
+detail). T o account for the possibility that the improved alertness
+with increased agreement could be confounded by longer TST , we
+also examined the correlation between daily TST and alertness
+(
+Figure 4, A).
+The overall TST data showed an approximately normal distri-
+bution centered around an average of 6 h ( Figure 4, B, top). When
+analyzing the full dataset, both daily TST ( r = 0.343, p = 1.249e-12)
+and agreement ( r = 0.423, p = 2.2e-16) exhibited significant posi-
+tive correlations with alertness ( Figure 4, C and D,t o p ) .H o w e v e r ,
+when restricting the analysis to data within narrow TST values
+clustered around the mean ( Figure 4, B, mid and bottom), the
+correlation between TST and alertness disappeared ( r = − 0.013,
+p = .879 for mid; r = 0.140, p = .148 for bottom), while the sig-
+nificant positive correlation between agreement and alertness
+persisted (r = 0.235, p = .004 for mid; r = 0.278, p = .003 for bottom)
+(Figure 4, B–D, mid and bottom). These results indicate that, even
+with similar TST , alertness can vary depending on how closely
+sleep aligns with the recommended duration and timing.
+T o further examine this relationship, we assessed whether
+improved agreement consistently improves alertness, even after
+controlling for the effects of TST on agreement and alertness,
+using partial correlation [ 49]. Specifically , we trained linear
+regression models to quantify the relationships between TST and
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 9
+Figure 3. Participants with high adherence to SleepWake recommendations experienced improvements in alertness. (A) A clinical study to evaluate
+the effectiveness of SleepWake was conducted with 19 male shift workers (mean age = 33.47 ± 7.90) adhering to a rotating three-shift schedule
+(morning (M), evening (E), night (N), and off (O)). Participants utilized SleepWake and recorded sleep using smartwatches. (B) The study design incl uded
+two phases: A baseline (P1; pre-mid) and an intervention (P2; mid-post) phase. During P1, spanning ∼ 6 days, participants did not have access to
+SleepWake outputs, serving as a control condition. During P2, spanning, ∼ 20 days, participants could access SleepWake’s outputs. Comparisons of
+adherence and alertness across these phases were analyzed to assess the intervention’s effectiveness. (C) Daily agreement, along with recorded dai ly
+alertness, TST , and sleep quality , were averaged across P1 (left box) and the corresponding days in P2 with the same shift types (right box) to ensure
+consistency in comparison. (D) Based on the average daily agreement in P1 and P2, participants were grouped: The high adherence (HA) group ( n = 10)
+included those whose average daily agreement in P2 exceeded that in P1, while the low adherence (LA) group ( n = 9) included those whose daily
+agreement did not increase. (E) The HA group exhibited a significant daily alertness increment during P2 compared to P1, whereas the LA group
+showed a significant decline in P2 relative to P1. (F and G) In the HA group, changes in daily TST (F) and sleep quality (G) were insignificant. In contras t,
+the LA group exhibited significant reductions in both measures during P2. These results demonstrate that adherence to the recommended sleep
+schedule enhances alertness while preserving TST and sleep quality , whereas deviations from the schedule are associated with reductions in both TST
+and sleep quality . Here, N.S.p > .05,
+∗p < .05, ∗∗p < .01, ∗∗∗p < .001.
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+10 | SLEEPJ, 2025, Vol. 48, No. 11
+Figure 4. Greater agreement with SleepWake’s recommendations is associated with greater daily alertness, even with similar TST . (A) T o examine the
+daily effects of TST and agreement on alertness, their correlations were analyzed using aggregated participant data. (B–D) In the entire dataset
+(count = 405), where daily TST values followed a normal distribution (B, top), daily TST and alertness (C, top left) showed significant correlation (D , top).
+Daily agreement and alertness (C, top right) also showed a significant correlation (D , top). This indicates that greater agreement and longer TST are
+each associated with greater daily alertness. Error bars in (D) denote 95% CIs. Analysis within specific narrow daily TST ranges—5 to 6.5 h (B, middle,
+shaded region) and 6.5 to 8 h (B, bottom, shaded region)—centered around the mean daily TST , revealed no significant association between daily TST
+and alertness (C, middle and bottom left; D , middle and bottom). However, the positive correlation between daily agreement and alertness remained
+significant (C, middle and bottom right; D , middle and bottom), suggesting that adherence to SleepWake recommendations contributes to greater
+alertness, even with similar daily TST . (E and F) T o examine the relationship between daily agreement and alertness while accounting for the effects o f
+TST , their partial correlation was calculated using residuals from linear regression models between daily TST agreement and daily TST alertness. (G )A
+positive partial correlation was observed, indicating that adherence to the suggested sleep schedule enhances daily alertness, independent of TST .
+Here, N.S. p > .05,
+∗p < .05, ∗∗p < .01, ∗∗∗p < .001.
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 11
+agreement, as well as between TST and alertness ( Figure 4, E).
+T o control for the inf luence of TST , we calculated the residuals
+of these linear regression models. The correlation between the
+residuals ( Figure 4, F) represents the partial correlation between
+agreement and alertness after removing the effect of TST [50]. The
+resulting partial correlation was significantly positive ( r = 0.290,
+p = 2.834e-09) (Figure 4, G), demonstrating that greater agreement
+is associated with greater alertness even when the effect of the
+length of the TST is controlled. Notably , this positive association
+remained robust when the analysis was limited to night shift
+days and subsequent off days—periods typically marked by
+circadian disruption ( Figure S4 ). These findings suggest that
+the relationship between agreement and alertness holds even
+under conditions of circadian misalignment caused by night
+shifts.
+T aken together, adherence to SleepWake’s sleep recommenda-
+tions appears to enhance daily alertness, even when daily TST
+is similar. These findings emphasize that optimizing alertness
+requires not only adequate TST but also precise alignment of sleep
+timing with personalized sleep recommendations.
+Sleep periods should be adjusted according to previous
+TST and circadian rhythms to enhance alertness
+Through the previous analyses, we confirmed that even when
+TST is identical, closer alignment with the recommended sleep
+schedule results in greater alertness ( Figures 2 and 4). This raises
+the question: what variations in sleep history affect agreement
+and thus alertness despite similar TST? T o investigate this, we
+analyzed two distinct sleep history periods for one participant
+over 4 days, both featuring similar TST on the final day but
+differing in agreement and resulting alertness.
+For one participant ( Figure 5, A), we found that in one period
+(Figure 5, A, left), insufficient average TST over the preceding 3
+days (TSTprev =∼ 6 h) led to a longer recommended sleep period to
+maintain high alertness. Conversely , when TSTprev was sufficient
+(TSTprev =∼ 9h )( Figure 5, A, right), the recommended sleep period
+was shorter. For the longer recommended sleep period caused by
+insufficient sleep in the preceding 3 days, TST ( ∼ 6 h) on the final
+day was insufficient ( Figure 5, A, left) resulting in lower alertness.
+In contrast, the same TST ( ∼ 6 h) was sufficient for the shorter
+recommended sleep, resulting in greater alertness.
+For another participant ( Figure 5, B), TSTprev was similar across
+two histories ( ∼ 355 min), but the timing of the previous sleep
+periods differed. In one case ( Figure 5, C,l e f t ) ,t h ea v e r a g em i d -
+sleep time of the previous sleep periods ( ∼ 11:49) was signifi-
+cantly delayed compared to the midsleep time of the final day
+(∼ 2:34), resulting in a large phase difference ( ∼ 9.26 h) and low
+phase similarity (cos
+( 2π(phase difference )
+24 h
+)
+≈− 0.75) (see Materials and
+Methods section for details on midsleep and phase similarity).
+Such delayed previous sleep history caused a delayed circadian
+phase that had previously been entrained to past sleep patterns.
+Then, the recommended sleep period, adjusted to align with the
+delayed circadian rhythm, was also delayed. Consequently , even
+with a long TST ( >9 h), misalignment with the recommended
+sleep period resulted in low agreement and alertness. Conversely ,
+in the other history (
+Figure 5, B, right), although the final day’s
+TST was shorter ( <9 h), the phase of the prior sleep periods was
+better aligned (∼ 0.74). This alignment allowed the observed sleep
+period to nearly match the recommended sleep period, resulting
+in greater agreement and alertness.
+The findings from the case analyses, where greater TST prev
+and phase similarity led to greater agreement and alertness with
+similar TST level, were further examined using the daily data
+(Figure 5, C and D). When analyzing the data within narrow ranges
+of daily TST (5–6.5 h in Figure 5, C and 6.5–8 h in Figure 5, D),
+we observed a trend that increasing daily TST prev and phase
+similarity was associated with greater agreement and alertness.
+T o investigate this relationship statistically , we conducted multi-
+ple linear regression analyses, predicting agreement or alertness
+based on current TST , TST
+prev, and phase similarity ( T ables 2and
+3). All variables were significant contributors, with increases in
+each leading to improvements in agreement and alertness. This
+suggests that even after accounting for the effects of current
+TST , greater TSTprev and phase similarity still result in increased
+agreement and alertness.
+T aken together, we established a key principle for sleep
+interventions aimed at enhancing alertness: when prior TST is
+insufficient, longer sleep should be recommended (
+Figure 5, E),
+and the phase of the recommended sleep period must closely
+align with prior sleep history (Figure 5, F). These findings highlight
+the limitations of generic, one-size-fits-all sleep interventions,
+demonstrating that improving alertness requires individualized
+sleep patterns that account for both past sleep duration and
+phase. This also emphasizes the importance of mobile apps like
+SleepWake, which provide personalized daily sleep schedules by
+continuously integrating updated sleep history to optimize alert-
+ness effectively .
+Discussion
+This study provides the first clear evidence that mathematical
+model-driven sleep recommendations can enhance alertness. We
+integrated a previously developed model-based sleep recommen-
+dation framework into a mobile app for real-world application
+(
+Figure 1). A retrospective analysis of data from a previous clinical
+study involving 71 female shift workers demonstrated that pre-
+cise adherence to model-based sleep recommendations can lead
+to improved alertness ( Figure 2). In a subsequent clinical study
+with 19 male shift workers using this app, only those who more
+precisely adhered to the recommended sleep schedules experi-
+enced significant improvements in alertness without compromis-
+ing TST or sleep quality (
+Figure 3 and Figure S3). Furthermore, on
+days with greater adherence to the recommendations, alertness
+was enhanced, even when TST was similar ( Figure 4). Finally , a
+detailed analysis of cases with similar TST but differing alert-
+ness levels, alongside multiple linear regression incorporating
+the duration and phase of the previous sleep, highlighted a key
+difference of our model that leads to enhanced alertness over
+conventional one-size-fits-all approaches: the model dynamically
+recommended supplemental sleep when prior sleep was insuffi-
+cient and aligned sleep phases with individual historical patterns
+(
+Figure 5).
+In the retrospective analysis, alertness was measured using the
+KSS at the beginning and end of each work shift, thereby capturing
+momentary sleepiness levels. In contrast, the prospective study
+asked participants to evaluate their overall alertness across the
+day (see Materials and Methods section for details). This discrepancy
+in measurement scales and timing may partly explain why TST
+was not significantly associated with alertness in the retrospec-
+tive analysis (
+Figure 2) but showed a significant association with
+daily alertness ratings in the prospective study ( Figure 4). Notably ,
+despite these differences in the alertness items, we observed con-
+sistent associations between the alignment of observed sleep with
+SleepWake’s recommended sleep and both alertness measures—
+even when analyses were restricted to a narrow range of TST
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+12 | SLEEPJ, 2025, Vol. 48, No. 11
+Figure 5. Sleep periods should be adjusted based on previous TST and circadian rhythm to promote high alertness. (A) Representative sleep histories
+(shaded region) over 4 days, with similar TST on the final day , and their corresponding recommended sleep periods (hatched region) were analyzed.
+For the same participant, a sleep period (TST = 362 min) following a shorter average TST over the previous 3 days (TST prev = 351 min) failed to meet the
+suggested sleep requirement, resulting in low alertness (daily alertness = 5; left). In contrast, a sleep period (TST = 361 min) following a longer TST prev
+(TSTprev = 542 min) aligned with the suggested sleep period, leading to greater alertness (daily alertness = 7; right). (B) For another participant, a long
+sleep period (TST = 581 min) with a midsleep time (solid vertical line) that was largely misaligned with the average midsleep over the previous 3 days
+(dashed vertical line) (phase similarity =− 0.75) did not meet the suggested sleep requirement, resulting in low alertness (daily alertness = 5; left).
+Conversely , a shorter sleep period (TST= 511 min) with a midsleep time that was more closely aligned with the prior average midsleep time (phase
+similarity = 0.74) nearly satisfied the suggested sleep requirement, leading to high alertness (daily alertness = 7; right). (C and D) Scatter plots of daily
+TSTprev and phase similarity , with colors representing daily agreement (C) and alertness (D), for daily TST ranges of 5 to 6.5 h (left) and 6.5 to 8 h
+(right). Within these narrow daily TST ranges, greater TST prev and phase similarity appear to be associated with greater agreement and alertness. (E
+and F) These results demonstrate that incorporating previous sleep history is critical for improving alertness: The recommended sleep period needs to
+be lengthened when the prior TST is short, and sleep periods must be closely aligned with prior sleep phases to optimize alertness.
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 13
+Table 2. Multiple Linear Regression Analysis for Daily Agreement
+Variables β t P-values SE
+Intercept − 0.4995 − 6.509 <.0001 0.0767
+TST 0.0014 12.656 <.0001 0.0001
+TSTprev 0.0015 8.693 <.0001 0.0002
+Phase similarity 0.1603 5.639 <.0001 0.0284
+β, regression coefficient; t, t-statistics; p, p-value; SE, standard error; TST , total sleep time.
+Table 3. Multiple Linear Regression Analysis for Daily Alertness
+Variables β t P-values SE
+Intercept − 1.7120 3.714 .0002 0.4610
+TST 0.0043 6.445 <.0001 0.0007
+TSTprev 0.0032 3.139 .0018 0.0010
+Phase similarity 0.7244 4.241 <.0001 0.1708
+β, regression coefficient; t, t-statistics; p, p-value; SE, standard error; TST , total sleep time.
+(Figures 2 and 4). This suggests that the SleepWake recommen-
+dation may enhance not only immediate alertness during work
+shifts but also participants’ broader perception of daily alertness,
+reinforcing the potential benefit of personalized sleep scheduling.
+We found that recommended sleep timing aligned more closely
+with observed sleep and was associated with improved daily alert-
+ness, particularly when sleep timing remained consistent with
+prior history—a proxy for stable circadian alignment (
+Figure 5,
+B–D). This outcome stems from the model underlying the Sleep-
+Wake app, which estimates each user’s sleep threshold and sug-
+gests sleep only when the modeled homeostatic sleep pressure
+exceeds this threshold. By design, this approach encourages sleep
+during biologically favorable phases—typically near the circadian
+nadir, which closely corresponds to CBTmin—a time conducive
+to both sleep initiation and maintenance [
+51]. Further supporting
+this interpretation, we observed that days with greater alignment
+between the estimated CBTmin and the midpoint of observed
+sleep were associated with higher levels of alertness upon wak-
+ing (
+Figure S5 ;s e e Materials and Methods section for details on
+CBT min estimation). In contrast, absolute phase shifts in CBT -
+min (e.g. advances or delays) were not significantly associated
+with changes in alertness. These findings suggest that maintain-
+ing alignment with one’s circadian rhythm—rather than merely
+avoiding phase shifts—is critical for sustaining daytime alertness
+for shift workers.
+In this study , we used a modified metric (equation 1)t o
+evaluate the agreement between the recommended and observed
+sleep that extends the standard percentage overlap (equation
+2) by allowing values greater than one when the observed sleep
+duration fully encompasses the recommended sleep window . This
+modification ref lects the interpretation of the recommended
+period as a minimum threshold necessary for maintaining
+alertness, suggesting that additional sleep may provide further
+benefits and therefore should not be penalized. However, this
+approach may lead to inf lated agreement scores when the
+observed sleep duration substantially exceeds the recommen-
+dation. T o address this concern, we performed a sensitivity
+analysis using the conventional percentage overlap metric,
+which caps agreement values at one (
+Figure S6 ). The results
+remained qualitatively consistent, supporting the validity of our
+conclusions regardless of the specific adherence metric used.
+One of the assumptions used in our model simulations was
+a light intensity of 250 lux during wakefulness and 0 lux during
+sleep. While this light profile has been commonly used in previous
+studies [
+34, 44–46], it may overestimate nighttime light exposure
+during wakefulness, which is typically lower and varies depending
+on occupation and lighting environment. T o assess the sensitivity
+of our model to this assumption, we conducted an additional
+analysis using a modified light schedule in which light intensity
+was set to 40 lux between 08:00 pm and 08:00 am, ref lecting
+reduced ambient light during typical nighttime hours and aligning
+with previous modeling studies (
+Figure S7 )[ 29, 35]. The results
+under this adjusted light scheme did not result in any qualitative
+changes in the recommended sleep schedules or overall model
+behavior. These findings suggest that the core functionality and
+recommendations of SleepWake are robust to moderate varia-
+tions in light intensity assumptions.
+In the LA group of the prospective study , we observed a signifi-
+cant decline in sleep quality , suggesting that sleeping outside the
+recommended sleep window may negatively impact sleep quality
+(Figure 3). However, in the HA group, no significant improvement
+in sleep quality was observed. This may be due to the limited
+sample size, which could have reduced statistical power. Alterna-
+tively , it suggests that changes in sleep patterns alone may not be
+sufficient to effectively enhance sleep quality , underscoring the
+need for additional interventions. For instance, previous studies
+employing mathematical models not only recommended optimal
+sleep schedules but also incorporated education on lifestyle mod-
+ifications for shift workers, leading to significant improvements in
+perceived sleep quality [
+30, 31]. Integrating our sleep intervention
+framework with such strategies could potentially enhance inter-
+vention effectiveness.
+Another promising intervention that could have synergistic
+effects when combined with our approach is controlled light expo-
+sure. Light is a primary regulator of circadian timing, inf luencing
+alertness both indirectly through circadian entrainment [ 52]a n d
+directly via its acute alerting effects [ 53]. As a result, regulating
+light—its intensity , timing, or duration—serves as an effective
+tool for helping shift workers adapt to night shifts and enhance
+alertness [
+54–57]. Notably , optimizing light exposure protocols to
+enhance their effectiveness has been explored using mathemat-
+ical models that predict circadian rhythm responses to light [ 58–
+61]. Our model includes a component that simulates circadian
+adjustments based on light exposure (see Materials and Methods
+section for details), making it well-suited for integration with
+light-based interventions. Future research could investigate how
+these approaches can be combined to maximize their effective-
+ness in promoting alertness and circadian adaptation.
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+14 | SLEEPJ, 2025, Vol. 48, No. 11
+While the current research has primarily focused on alertness
+data to evaluate the effectiveness of interventions, it is also
+essential to examine other sleep-related indicators. For instance,
+assessing whether the proposed sleep timing helps individuals
+fall asleep more easily compared to their previous patterns is
+crucial, as explored in previous studies [
+30–32]. Thus, analyzing
+whether SleepWake recommendations lead to improvements in
+the insomnia severity index or reductions in sleep onset latency
+would be critical. Furthermore, mood is also well-known to be
+closely linked to sleep and circadian rhythms [
+44, 45, 62], making
+it another critical area for exploration. A compelling direction for
+future research would be to examine whether our proposed sleep
+recommendations are effective in enhancing mood. Additionally ,
+it would be valuable to determine if mood improvements require
+different sleep patterns than those optimized for improving alert-
+ness.
+Our sleep recommendations guide users to wake up at least
+1 h before their scheduled work shift, accounting for the effects
+of sleep inertia (see Materials and Methods section for details).
+However, the duration of sleep inertia can vary depending on
+prior sleep history and wake-up time, with some individuals
+experiencing little to no sleep inertia while others experience it
+f o ro v e ra nh o u r[
+47, 63]. Notably , recent research has developed
+models to predict the effects and duration of sleep inertia on
+alertness [
+64]. By incorporating insights from these models into
+our framework, we could move beyond rigid recommendations of
+waking up exactly 1 h before a shift. This would allow for more
+f lexible and potentially more effective sleep recommendations.
+The mathematical model we currently use assumes uniform
+parameters for all individuals. While interventions based on this
+model have successfully improved alertness, evidence suggests
+significant physiological differences between individuals, high-
+lighting the need for personalized model parameters to enhance
+effectiveness. For example, long sleepers and short sleepers may
+differ in the time scales of sleep pressure accumulation and
+dissipation [
+65]. Additionally , studies have shown substantial
+variability in individuals’ sensitivity to light, a key factor in regu-
+lating circadian rhythms [ 66]. Recent research has demonstrated
+that optimizing personalized parameters in a mathematical
+model can better align model-predicted sleep patterns with
+observed sleep behaviors [
+67]. Similarly , by tailoring our model,
+we could estimate personalized parameters that more accurately
+ref lect individual differences and predict changes in alertness
+based on sleep history . This work might require identifying
+the conditions under which these parameters can be reliably
+estimated.
+Despite promising findings, several limitations exist. First, the
+prospective clinical study included only 19 participants. Since
+the prospective clinical study was designed as an exploratory
+pilot to assess the feasibility and potential efficacy of the Sleep-
+Wake app, a priori sample size calculation was unfeasible. The
+decision to recruit 19 workers was driven primarily by logistical
+constraints, including recruitment feasibility and workforce avail-
+ability . Notably , a post hoc analysis of a key finding—specifically ,
+the correlation between average change in agreement with Sleep-
+Wake recommendations and average change in alertness from
+P1 to P2 (
+Figure S3 )—suggested that the study had 85 per cent
+statistical power (see Materials and Methods section for details),
+indicating that it was adequately powered to detect the observed
+effect. However, assuming a more conservative effect size in
+future studies would require a larger sample size to ensure suffi-
+cient statistical power. This suggests that additional studies with
+more participants may be necessary to replicate and validate the
+findings.
+Second, as EMTs, participants may have had rest opportuni-
+ties during nonemergency periods, potentially reducing fatigue.
+Furthermore, while participants followed a three-shift system,
+their consistent 20-day rotation pattern may have inf luenced the
+outcomes. Notably , a retrospective analysis in this study was con-
+ducted using data from 71 shift workers with different genders,
+work types, and shift schedules (see
+Figure 2 and Materials and
+Methods section for details). This analysis supports the general-
+izability and broader applicability of our findings, suggesting that
+the promising results observed in the prospective clinical study
+could extend to a wider range of occupational groups and shift
+schedules. It is also essential to explore whether this intervention
+benefits nonshift workers.
+Third, this study primarily relied on subjective measures of
+alertness and sleep quality . For more robust validation, future
+studies should incorporate objective assessments. For example,
+integrating tests such as the Psychomotor Vigilance T ask into
+the app could provide an objective measure of alertness [
+68].
+Furthermore, accurately predicting sleep stages may be essential
+for evaluating self-reported sleep quality more effectively , which
+could be enhanced by recent advancements in precise sleep–wake
+state and sleep stage prediction algorithms [
+69–73].
+Finally , due to structural constraints in our app, we could not
+determine whether the sleep records originated from wearable
+device sensors, manual input by participants, or automated sleep
+detection algorithms (e.g. time-in-bed estimates based on phone
+or watch usage patterns). As a result, all sleep entries were
+uniformly treated as observed sleep data, regardless of origin.
+This lack of source verification may have introduced variability in
+data accuracy , potentially affecting the calculation of individual
+adherence scores and their association with alertness outcomes.
+For instance, automated estimations may overestimate actual
+sleep duration, while manually entered data are susceptible to
+recall bias. Future work should focus on integrating data pipelines
+that explicitly identify the source and method of sleep detection,
+enabling more precise analyses and interpretations.
+Supplementary material
+Supplementary material is available at SLEEP online.
+Acknowledgments
+We acknowledge Life Science Editors for their editorial assistance.
+Funding
+This work was supported by the Institute for Basic Science IBS-
+R029-C3 (to JKK) and Samsung Medical Center Grant OTC1190671
+(to EYJ).
+Author contributions
+EYJ and JKK conceptualized the research. YMS and JKK developed
+the methodology . SJC and HRP collected the experimental data.
+YMS analyzed the data. YMS, HJJ, and RHW developed the mobile
+application. EYJ and JKK supervised the project. YMS and CSJ
+wrote the draft of the manuscript. All authors contributed valu-
+able feedback, refining the manuscript for intellectual content.
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 15
+Disclosure statement
+Financial disclosure: None declared.
+Non-financial disclosure : The authors declare the following com-
+peting interests: The mobile application SleepWake was devel-
+oped by the authors, and there are plans for its public release.
+Additionally , a patent has been filed related to the underlying
+technology of SleepWake. These interests could be perceived as
+potential conf licts of interest.
+Data availability
+The data underlying this article will be shared on reasonable
+request to the corresponding author.
+References
+1. Gaston KJ, Gaston S, Bennie J, Hopkins J. Benefits and costs
+of artificial nighttime lighting of the environment. Environ Rev .
+2015;23(1):14–23. https://doi.org/10.1139/er-2014-0041
+2. Dhande KK, Sharma S. Inf luence of shift work in process indus-
+try on workers’ occupational health, productivity , and fam-
+ily and social life: an ergonomic approach. Hum Factors Ergon
+Manuf Service Ind . 2011; 21(3):260–268.
+https://doi.org/10.1002/
+hfm.20231
+3. Eurofound, Wilczynska A, Cabrita J, et al. 6th European Working
+Conditions Survey – 2017 Update . Publications Office of the Euro-
+pean Union; 2017. https://doi.org/10.2806/422172
+4. Centers for Disease Control and Prevention (CDC), National
+Institute for Occupational Safety and Health (NIOSH) .
+National Health Interview Survey (NHIS 2015) program. In:
+Worker Health Charts (WHC). Unadjusted Prevalence of Work
+Organization Characteristics (NHIS 2015) Among Workers (NHIS-
+OHS). Cincinnati, OH: US Department of Health and Human
+Services, CDC, NIOSH.
+https://wwwn.cdc.gov/Niosh-whc/
+chart/ohs-workorg/work?T=OU&OU=*&V=R&chk_codes=False
+Accessed June 4, 2025.
+5. Jang TW. Working hours and the regulations for night shift
+workers. Ann Occup Environ Med . 2023; 35(1):e19. https://doi.
+org/10.35371/aoem.2023.35.e19
+6. Kubo T. Estimate of the number of night shift workers in Japan. J
+UOEH. 2014;36(4):273–276. https://doi.org/10.7888/juoeh.36.273
+7. Sulli G, Manoogian ENC, T aub PR, Panda S. T raining the cir-
+cadian clock, clocking the drugs, and drugging the clock to
+prevent, manage, and treat chronic diseases.T rends Pharmacol Sci.
+2018;39(9):812–827. https://doi.org/10.1016/j.tips.2018.07.003
+8. Park S, Zhunis A, Constantinides M, Aiello LM, Quercia D,
+Cha M. Social dimensions impact individual sleep quantity
+and quality . Sci Rep . 2023; 13(1):9681.
+https://doi.org/10.1038/
+s41598-023-36762-5
+9. Smith MR, Eastman CI. Shift work: health, performance and
+safety problems, traditional countermeasures, and innovative
+management strategies to reduce circadian misalignment. Nat
+Sci Sleep. 2012;4:111–132. https://doi.org/10.2147/NSS.S10372
+10. Boivin DB, Boudreau P. Impacts of shift work on sleep and
+circadian rhythms. Pathol Biol (Paris). 2014;62(5):292–301. https://
+doi.org/10.1016/j.patbio.2014.08.001
+11. Kecklund G, Axelsson J. Health consequences of shift work and
+insufficient sleep. BMJ. 2016;355:i5210. https://doi.org/10.1136/
+bmj.i5210
+12. Kanki M, Nath AP, Xiang R, et al. Poor sleep and shift work
+associate with increased blood pressure and inf lammation in
+UK Biobank participants. Nat Commun . 2023;14(1):7096. https://
+doi.org/10.1038/s41467-023-42758-6
+13. Cai R, Gao L, Gao C, et al. Circadian disturbances and frailty
+risk in older adults. Nat Commun . 2023; 14(1):7219. https://doi.
+org/10.1038/s41467-023-42727- z
+14. Brooks TG, Lahens NF, Grant GR, Sheline YI, FitzGerald GA,
+Skarke C. Diurnal rhythms of wrist temperature are associ-
+ated with future disease risk in the UK Biobank. Nat Commun .
+2023;14(1):5172. https://doi.org/10.1038/s41467-023-40977-5
+15. Wong IS, McLeod CB, Demers PA. Shift work trends and risk
+of work injury among Canadian workers. Scand J Work Environ
+Health. 2011;37(1):54–61. https://doi.org/10.5271/sjweh.3124
+16. Hui SK, Grandner MA. T rouble sleeping associated with
+lower work performance and greater health care costs: lon-
+gitudinal data from Kansas state employee wellness pro-
+gram. J Occup Environ Med . 2015; 57(10):1031–1038.
+https://doi.
+org/10.1097/JOM.0000000000000534
+17. Ryu J, Jung-Choi K, Choi KH, Kwon HJ, Kang C, Kim H. Associ-
+ations of shift work and its duration with work-related injury
+among electronics factory workers in South Korea. Int J Envi-
+ron Res Public Health . 2017; 14(11):1429. https://doi.org/10.3390/
+ijerph14111429
+18. Zhang Y, Murphy J, Lammers-van der Holst HM, Barger LK, Lai
+YJ, Duffy JF. Interventions to improve the sleep of nurses: a
+systematic review. Res Nurs Health . 2023; 46(5):462–484. https://
+doi.org/10.1002/nur.22337
+19. Jeon BM, Kim SH, Shin SH. Effectiveness of sleep interven-
+tions for rotating night shift workers: a systematic review and
+meta-analysis. Front Public Health . 2023; 11:1187382. https://doi.
+org/10.3389/fpubh.2023.1187382
+20. Crowther ME, Ferguson SA, Vincent GE, Reynolds AC. Non-
+pharmacological interventions to improve chronic disease risk
+factors and sleep in shift workers: a systematic review and meta-
+analysis. Clocks Sleep. 2021;3(1):132–178.
+https://doi.org/10.3390/
+clockssleep3010009
+21. Alfonsi V, Scarpelli S, Gorgoni M, Pazzaglia M, Giannini AM, de
+Gennaro L. Sleep-related problems in night shift nurses: towards
+an individualized interventional practice. Front Hum Neurosci .
+2021;15:644570. https://doi.org/10.3389/fnhum.2021.644570
+22. McKenna H, Wilkes M. Optimising sleep for night shifts. BMJ.
+2018;360:j5637. https://doi.org/10.1136/bmj.j5637
+23. Chinoy ED, Harris MP, Kim MJ, Wang W, Duffy JF. Scheduled
+evening sleep and enhanced lighting improve adaptation to
+night shift work in older adults. Occup Environ Med . 2016;73(12):
+869–876. https://doi.org/10.1136/oemed-2016-103712
+24. Isherwood CM, Chinoy ED, Murphy AS, Kim JH, Wang W, Duffy
+JF. Scheduled afternoon-evening sleep leads to better night
+shift performance in older adults. Occup Environ Med . 2020;77(3):
+179–184. https://doi.org/10.1136/oemed-2019-105916
+25. Cheng W-J, Hang L W, Kubo T, Vanttola P, Huang SC. Impact
+of sleep timing on attention, sleepiness, and sleep quality
+among real-life night shift workers with shift work disorder:
+a cross-over clinical trial. Sleep. 2022; 45(4):zsac034.
+https://doi.
+org/10.1093/sleep/zsac034
+26. Jackson ML, Banks S, Belenky G. Investigation of the effective-
+ness of a split sleep schedule in sustaining sleep and maintain-
+ing performance. Chronobiol Int . 2014; 31(10):1218–1230. https://
+doi.org/10.3109/07420528.2014.957305
+27. Oriyama S, Miyakoshi Y, Kobayashi T. Effects of two 15-min naps
+on the subjective sleepiness, fatigue and heart rate variability
+of night shift nurses. Ind Health . 2014; 52(1):25–35. https://doi.
+org/10.2486/indhealth.2013-0043
+28. Booker LA, Magee M, Rajaratnam SMW, Sletten TL, Howard
+ME. Individual vulnerability to insomnia, excessive sleepiness
+and shift work disorder amongst healthcare shift workers. A
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+16 | SLEEPJ, 2025, Vol. 48, No. 11
+systematic review. Sleep Med Rev . 2018; 41:220–233. https://doi.
+org/10.1016/j.smrv .2018.03.005
+29. Song YM, Choi SJ, Park SH, Lee SJ, Joo EY, Kim JK. A real-
+time, personalized sleep intervention using mathematical mod-
+eling and wearable devices. Sleep. 2023; 46(9):zsad179.
+https://
+doi.org/10.1093/sleep/zsad179
+30. Murray JM, Magee M, Giliberto ES, et al. Mobile app for per-
+sonalized sleep-wake management for shift workers: a user
+testing trial. Digit Health. 2023;9:20552076231165972. https://doi.
+org/10.1177/20552076231165972
+31. V a r m aP ,P o s t n o v aS ,K n o c kS ,et al. SleepSync: early testing of
+a personalised sleep-wake management smartphone applica-
+tion for improving sleep and cognitive fitness in defence shift
+workers. Clocks Sleep. 2024;6(2):267–280.
+https://doi.org/10.3390/
+clockssleep6020019
+32. Varma P, Postnova S, Phillips AJK, et al. Pilot feasibility testing
+of biomathematical model recommendations for personalising
+sleep timing in shift workers. J Sleep Res . 2025; 34(4):e14026.
+https://doi.org/10.1111/jsr.14026
+33. Vital-Lopez FG, Doty TJ, Reifman J. Optimal sleep and work
+schedules to maximize alertness. Sleep. 2021; 44(11):zsab144.
+https://doi.org/10.1093/sleep/zsab144
+34. Hong J, Choi SJ, Park SH, et al. Personalized sleep-wake
+patterns aligned with circadian rhythm relieve daytime
+sleepiness. iScience. 2021; 24(10):103129.
+https://doi.org/10.1016/
+j.isci.2021.103129
+35. Knock SA, Magee M, Stone JE, et al. Prediction of shiftworker
+alertness, sleep, and circadian phase using a model of arousal
+dynamics constrained by shift schedules and light expo-
+sure. Sleep. 2021; 44(11):zsab146. https://doi.org/10.1093/sleep/
+zsab146
+36. Postnova S, Lockley SW, Robinson PA. Prediction of cogni-
+tive performance and subjective sleepiness using a model of
+arousal dynamics. J Biol Rhythms. 2018;33(2):203–218.
+https://doi.
+org/10.1177/0748730418758454
+37. Perez-Pozuelo I, Zhai B, Palotti J, et al. The future of sleep health:
+a data-driven revolution in sleep science and medicine. NPJ Digit
+Med. 2020;3(1):42. https://doi.org/10.1038/s41746-020-0244-4
+38. Garbarino S, Bragazzi NL. Revolutionizing sleep health: the
+emergence and impact of personalized sleep medicine. J Pers
+Med. 2024;14(6):598. https://doi.org/10.3390/jpm14060598
+39. Jaworski DJ, Park EJ. Apple watch sleep and physiolog-
+ical tracking compared to clinically validated actigraphy ,
+ballistocardiography and polysomnography . Annu Int Conf
+IEEE Eng Med Biol Soc . 2023; 2023:1–4. https://doi.org/10.1109/
+EMBC40787.2023.10340725
+40. Miller DJ, Sargent C, Roach GD. A validation of six wearable
+devices for estimating sleep, heart rate and heart rate variability
+in healthy adults. Sensors (Basel) . 2022; 22(16):6317. https://doi.
+org/10.3390/s22166317
+41. Lee T, Cho Y, Cha KS, et al. Accuracy of 11 wearable, nearable,
+and airable consumer sleep trackers: prospective multicenter
+validation study. JMIR Mhealth Uhealth . 2023; 11:e50983. https://
+doi.org/10.2196/50983
+42. Kim D, Joo EY, Choi SJ. Validation of the Samsung Smartwatch
+for sleep–wake determination and sleep stage estimation. J Sleep
+Med. 2023;20(1):28–34. https://doi.org/10.13078/jsm.230004
+43. Forger DB, Jewett ME, Kronauer RE. A simpler model of the
+human circadian pacemaker. J Biol Rhythms . 1999;14(6):532–537.
+https://doi.org/10.1177/074873099129000867
+44. Song YM, Jeong J, de los Reyes AA V, et al. Causal dynamics
+of sleep, circadian rhythm, and mood symptoms in patients
+with major depression and bipolar disorder: insights from
+longitudinal wearable device data. EBioMedicine. 2024; 103:
+105094.
+https://doi.org/10.1016/j.ebiom.2024.105094
+45. Lim D, Jeong J, Song YM, et al. Accurately predicting mood
+episodes in mood disorder patients using wearable sleep and
+circadian rhythm features. NPJ Digit Med . 2024;7(1):324.
+https://
+doi.org/10.1038/s41746-024-01333- z
+46. Lim D, Choi SJ, Song YM, Park HR, Joo EY, Kim JK. Enhanced
+circadian phase tracking: a 5-h DLMO sampling protocol using
+wearable data. J Biol Rhythms . 2025; 40(3):249–261. https://doi.
+org/10.1177/07487304251317577
+47. Hilditch CJ, McHill A W. Sleep inertia: current insights. Nat Sci
+Sleep. 2019;11:155–165. https://doi.org/10.2147/NSS.S188911
+48. Kassambara A. ggpubr: ‘ggplot2’ based publication ready plots .R
+package version. 2018:2.
+49. Brown BL, Hendrix SB. Partial correlation coefficients. In: Everitt
+BS, Howell DC, eds. Encyclopedia of Statistics in Behavioral Sci-
+ence. Chichester (UK): John Wiley & Sons; 2005. https://doi.
+org/10.1002/0470013192.bsa469.
+50. Baba K, Shibata R, Sibuya M. Partial correlation and conditional
+correlation as measures of conditional independence. Aust N
+Z J Stat . 2004; 46(4):657–664. https://doi.org/10.1111/j.1467-842
+X.2004.00360.x
+51. Dijk DJ, Czeisler CA. Contribution of the circadian pacemaker
+and the sleep homeostat to sleep propensity , sleep structure,
+electroencephalographic slow waves, and sleep spindle activ-
+ity in humans. J Neurosci . 1995; 15(5):3526–3538.
+https://doi.
+org/10.1523/JNEUROSCI.15-05-03526.1995
+52. Duffy JF, Wright KP. Entrainment of the human circadian sys-
+tem by light. J Biol Rhythms . 2005; 20(4):326–338. https://doi.
+org/10.1177/0748730405277983
+53. Chellappa SL, Gordijn MCM, Cajochen C. Can light
+make us bright? Effects of light on cognition and sleep.
+Prog Brain Res . 2011; 190:119–133. https://doi.org/10.1016/
+B978-0-444-53817-8.00007-4
+54. Vetter C, Pattison PM, Houser K, et al. A review of human phys-
+iological responses to light: implications for the development
+of integrative lighting solutions. LEUKOS. 2022; 18(3):387–414.
+https://doi.org/10.1080/15502724.2021.1872383
+55. Varma P, Rahman SA. Lighting the path forward: the value
+of sleep- and circadian-informed lighting interventions
+in shift work. Sleep. 2024;47(11):zsae214. https://doi.org/10.1093/
+sleep/zsae214
+56. Czeisler CA, Johnson MP, Duffy JF, Brown EN, Ronda JM, Kro-
+nauer RE. Exposure to bright light and darkness to treat phys-
+iologic maladaptation to night work. N Engl J Med . 1990;322(18):
+1253–1259.
+https://doi.org/10.1056/NEJM199005033221801
+57. Wu C-J, Huang TY, Ou SF, Shiea JT, Lee BO. Effects of lighting
+interventions to improve sleepiness in night-shift workers: a sys-
+tematic review and meta-analysis. Healthcare. 2022; 10(8):1390.
+https://doi.org/10.3390/healthcare10081390
+58. Christensen S, Huang Y, Walch OJ, Forger DB. Optimal adjust-
+ment of the human circadian clock in the real world. PLoS Com-
+put Biol . 2020; 16(12):e1008445. https://doi.org/10.1371/journal.
+pcbi.1008445
+59. Scott H, Guyett A, Manners J, et al. Circadian-informed lighting
+improves vigilance, sleep, and subjective sleepiness during sim-
+ulated night-shift work. Sleep. 2024; 47(11):zsae173.
+https://doi.
+org/10.1093/sleep/zsae173
+60. Guyett A, Lovato N, Manners J, et al. A circadian-informed
+lighting intervention accelerates circadian adjustment to
+a night work schedule in a submarine lighting environ-
+ment. Sleep. 2024; 47(11):zsae146. https://doi.org/10.1093/sleep/
+zsae146
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
+
+
+Song et al. | 17
+61. M a y e rC ,W a l c hO ,D e m p s e yW ,et al. A circadian and app-based
+personalized lighting intervention for the reduction of cancer-
+related fatigue. Cell Rep Med. 6(3):102001. https://doi.org/10.1016/
+j.xcrm.2025.102001
+62. Lee MP, Kim DW, Fang Y, et al. The real-world association
+between digital markers of circadian disruption and mental
+health risks. NPJ Digit Med. 2024;7(1):355. https://doi.org/10.1038/
+s41746-024-01348-6
+63. Signal TL, van den Berg MJ, Mulrine HM, Gander PH. Duration of
+sleep inertia after napping during simulated night work and in
+extended operations. Chronobiol Int . 2012;29(6):769–779. https://
+doi.org/10.3109/07420528.2012.686547
+64. McCauley ME, McCauley P, Kalachev LV, et al. Biomathemat-
+ical modeling of fatigue due to sleep inertia. J Theor Biol .
+2024;590:111851. https://doi.org/10.1016/j.jtbi.2024.111851
+65. Monk TH, Buysse DJ, Welsh DK, Kennedy KS, Rose LR. A
+sleep diary and questionnaire study of naturally short sleep-
+ers. J Sleep Res . 2001; 10(3):173–179. https://doi.org/10.1046/
+j.1365-2869.2001.00254.x
+66. Phillips AJK, Vidafar P, Burns AC, et al. High sensitivity and
+interindividual variability in the response of the human circa-
+dian system to evening light. Proc Natl Acad Sci U S A . 2019;
+116(24):12019–12024.
+https://doi.org/10.1073/pnas.1901824116
+67. Skeldon AC, Rodriguez Garcia T, Cleator SF, et al. Method to
+determine whether sleep phenotypes are driven by endogenous
+circadian rhythms or environmental light by combining
+longitudinal data and personalised mathematical models. PLoS
+Comput Biol . 2023; 19(12):e1011743. https://doi.org/10.1371/
+journal.pcbi.1011743
+68. Arsintescu L, Kato KH, Cravalho PF, Feick NH, Stone LS, Flynn-
+Evans EE. Validation of a touchscreen psychomotor vigilance
+task. Accid Anal Prev . 2019;126:173–176.
+https://doi.org/10.1016/
+j.aap.2017.11.041
+69. Lee MP, Kim DW, Mayer C, Walch O, Forger DB. The
+combination of topological data analysis and mathematical
+modeling improves sleep stage prediction from consumer-
+grade wearables. J Biol Rhythms . 2024; 39(6):535–553. https://doi.
+org/10.1177/07487304241288607
+70. Yuan H, Plekhanova T, Walmsley R, et al. Self-supervised learn-
+ing of accelerometer data provides new insights for sleep and
+its association with mortality .NPJ Digit Med. 2024;7(1):86. https://
+doi.org/10.1038/s41746-024-01065-0
+71. Walch O, Huang Y, Forger D, Goldstein C. Sleep stage predic-
+tion with raw acceleration and photoplethysmography heart
+rate data derived from a consumer wearable device. Sleep.
+2019;42(12):zsz180. https://doi.org/10.1093/sleep/zsz180
+72. Stephansen JB, Olesen AN, Olsen M, et al. Neural network
+analysis of sleep stages enables efficient diagnosis of nar-
+colepsy . Nat Commun . 2018; 9(1):5229.
+https://doi.org/10.1038/
+s41467-018-07229-3
+73. Ode KL, Shi S, Katori M, et al. A jerk-based algorithm ACCEL
+for the accurate classification of sleep-wake states from arm
+acceleration. iScience. 2022;25(2):103727. https://doi.org/10.1016/
+j.isci.2021.103727
+© The Author(s) 2025. Published by Oxford University Press on behalf of Sleep Research Society . All rights reserved. For commercial re-use, please co ntact reprints@oup.com for reprints and translation rights for reprints. All other permissions can be obtained
+through our RightsLink service via the Permissions link on the article page on our site—for further information please contact journals.permission s@oup.com.
+SLEEPJ, 2025, 1–17
+https://doi.org/10.1093/sleep/zsaf160
+Original Article
+Downloaded from https://academic.oup.com/sleep/article/48/11/zsaf160/8158652 by Universite Claude Bernard Lyon 1 user on 20 February 2026
