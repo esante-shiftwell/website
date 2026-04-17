@@ -1,314 +1,211 @@
-# Formula Reference
+# 🧮 Formula Reference
 
-## Purpose
+## 🎯 Purpose
 
 This document describes the formulas currently implemented in the repository.
 
-Important:
+Important references:
 
-- the source of truth for runtime behavior is [../src/core/scoring.ts](../src/core/scoring.ts)
-- the current implementation is a proxy scoring model
-- some older research notes and draft formulas are stricter or more ambitious than the code currently shipped
-- the Excel workbook comparison lives in [xlsm-vs-formula.md](xlsm-vs-formula.md)
+| Reference | Role |
+| --- | --- |
+| [../src/core/scoring.ts](../src/core/scoring.ts) | Runtime source of truth |
+| [xlsm-vs-formula.md](xlsm-vs-formula.md) | Gap analysis between workbook logic and this document |
+| [external-link.md](external-link.md) | Scientific references and local source inventory |
 
-For open-source readers, this file should answer one question first:
+The safest reading rule is:
 
-"What does Shiftwell calculate today?"
+- this file documents what the app computes today
+- it does not claim that every formula is already fully aligned with the workbook or PDFs
 
-## Data Model
+## 🚦 Formula Status
 
-The analysis starts from a weekly list of intervals:
+| Topic | Current status |
+| --- | --- |
+| Workload factors | Partially aligned with workbook |
+| Biological and social loss | Proxy implementation |
+| Sleep regularity | Proxy implementation, not exact SRI |
+| Adaptability | Product-level composite proxy |
+| Scientific calibration | Not finalized |
 
-- `work` segments
-- `sleep` segments
+## 🧱 Data Model
 
-Each segment contains:
+The analysis starts from weekly intervals.
 
-- `dayIndex` in `0..6`
-- `start` in `HH:MM`
-- `end` in `HH:MM`
-- `kind` in `work | sleep`
+| Field | Meaning |
+| --- | --- |
+| `dayIndex` | day of week in `0..6` |
+| `start` | start time in `HH:MM` |
+| `end` | end time in `HH:MM` |
+| `kind` | `work` or `sleep` |
 
 Cross-midnight segments are split into two normalized intervals before scoring.
 
-## Preprocessing
+## ⚙️ Preprocessing
 
-### 1. Normalize intervals
+## 🕒 Interval Normalization
 
-Each segment is converted into absolute minutes over a 7-day window:
+| Item | Current implementation |
+| --- | --- |
+| Day size | `1440` minutes |
+| Week size | `10080` minutes |
+| Same-day interval | kept as one interval |
+| Cross-midnight interval | split into two intervals |
+| Zero-length interval | ignored |
 
-- `MINUTES_PER_DAY = 1440`
-- `WEEK_MINUTES = 10080`
+## 🔗 Merge Behavior
 
-If `end > start`, the interval stays on the same day.
+| Rule | Current implementation |
+| --- | --- |
+| Merge same-kind overlaps | yes |
+| Merge across positive gap | no |
+| Merge work and sleep together | no |
 
-If `end < start`, the interval is split across midnight:
+## 📏 Derived Metrics
 
-- segment A: `start -> end_of_day`
-- segment B: `start_of_next_day -> end`
+## 📋 Metric Summary
 
-Zero-length segments are ignored.
+| Metric | Current formula | Notes |
+| --- | --- | --- |
+| `totalWorkHours` | `sum(work duration) / 60` | rounded to 1 decimal |
+| `totalSleepHours` | `sum(sleep duration) / 60` | rounded to 1 decimal |
+| `avgSleepHours` | `totalSleepHours / 7` | rounded to 1 decimal |
+| `longShiftCount` | count of work segments `>= 10h` | proxy threshold |
+| `longestRecoveryHours` | max gap between consecutive work segments | not workbook-native factor in current form |
+| `shortBreaksCount` | count of gaps between work segments `< 11h` | proxy for quick returns |
+| `fullyRestedDaysCount` | count of days with sleep `>= 7h` | differs from workbook rest-day definition |
+| `nightShiftCount` | count of work segments overlapping biological window | proxy |
+| `biologicalHoursLost` | work overlap with biological windows | proxy |
+| `socialHoursLost` | work overlap with social windows | proxy |
+| `sleepRegularityProxy` | day-level onset and duration variability proxy | not exact SRI |
 
-### 2. Merge overlapping intervals
+## 🌙 Biological Window Proxy
 
-Intervals are merged when:
+| Item | Current implementation |
+| --- | --- |
+| Window | `23:00 -> 07:00` |
+| Computation | overlap between merged work segments and the biological windows |
+| Output | `biologicalHoursLost` |
+| Limitation | proxy for “optimal sleep opportunity lost”, not validated exact formula |
 
-- they are of the same kind
-- they overlap in time
+## 👥 Social Window Proxy
 
-Current implementation does not merge same-kind intervals across a positive gap.
+| Item | Current implementation |
+| --- | --- |
+| Weekdays | `18:00 -> 23:00` |
+| Weekends | `10:00 -> 23:00` |
+| Computation | overlap between merged work segments and social windows |
+| Output | `socialHoursLost` |
+| Limitation | may differ from workbook thresholds and formal social-time definition |
 
-## Derived Metrics
-
-## Work and sleep totals
-
-`totalWorkMinutes = sum(work.endAbs - work.startAbs)`
-
-`totalSleepMinutes = sum(sleep.endAbs - sleep.startAbs)`
-
-`totalWorkHours = round(totalWorkMinutes / 60, 1)`
-
-`totalSleepHours = round(totalSleepMinutes / 60, 1)`
-
-`avgSleepHours = round((totalSleepMinutes / 60) / 7, 1)`
-
-## Long shifts
-
-`longShiftCount = count(work segment duration >= 10 hours)`
-
-## Recovery and short breaks
-
-For each consecutive pair of merged work segments:
-
-`gapMin = next.startAbs - current.endAbs`
-
-Then:
-
-- `longestRecoveryHours = max(gapMin) / 60`
-- `shortBreaksCount = count(gapMin < 11 hours)`
-
-Note:
-
-- this is based on merged work segments
-- if there is only one work segment, longest recovery stays at `0`
-
-## Fully rested days
-
-Current implementation uses sleep, not no-work days.
-
-For each calendar day:
-
-`dailySleepMinutes[day] = total sleep overlapping that day`
-
-Then:
-
-`fullyRestedDaysCount = count(dailySleepMinutes >= 7 hours)`
-
-This differs from some earlier notes where a "full rest day" meant a day with no official work interval.
-
-## Biological window overlap
-
-The app uses a proxy biological night window:
-
-- every day from `23:00` to `24:00`
-- next morning from `00:00` to `07:00`
-
-The total overlap between merged work segments and those windows is:
-
-`biologicalWorkMinutes = sum(overlap(work, biologicalWindows))`
-
-Then:
-
-`biologicalHoursLost = round(biologicalWorkMinutes / 60, 1)`
-
-Night shifts are counted as:
-
-`nightShiftCount = count(work segment overlapping any biological window)`
-
-## Social window overlap
-
-The app uses a proxy social availability window:
-
-- weekdays: `18:00 -> 23:00`
-- weekends: `10:00 -> 23:00`
-
-The overlap between merged work segments and those windows is:
-
-`socialWorkMinutes = sum(overlap(work, socialWindows))`
-
-Then:
-
-`socialHoursLost = round(socialWorkMinutes / 60, 1)`
-
-## Sleep regularity proxy
+## 😴 Sleep Regularity Proxy
 
 The current repository does not implement the exact Sleep Regularity Index.
 
-Instead it uses a proxy based on day-level variability:
+| Step | Current logic |
+| --- | --- |
+| 1 | for each day with sleep, capture first sleep onset and total sleep duration |
+| 2 | compute standard deviation of daily onset |
+| 3 | compute standard deviation of daily duration |
+| 4 | normalize penalties with practical caps |
+| 5 | convert to a `0..100` proxy score |
 
-For each day with sleep:
+Current proxy formula:
 
-- `onset = first sleep minute of the day`
-- `duration = total sleep minutes in the day`
+| Component | Formula |
+| --- | --- |
+| `onsetPenalty` | `clamp(onsetStd / 180, 0, 1)` |
+| `durationPenalty` | `clamp(durationStd / 120, 0, 1)` |
+| `sleepRegularityProxy` | `round((1 - 0.6 * onsetPenalty - 0.4 * durationPenalty) * 100)` |
 
-Then compute:
+If fewer than two days contain sleep, the proxy returns `0`.
 
-- standard deviation of sleep onset
-- standard deviation of sleep duration
+## 🧠 Score Computation
 
-Penalties are normalized with practical caps:
+## 🚨 Risk Score
 
-- `onsetPenalty = clamp(onsetStd / 180, 0, 1)`
-- `durationPenalty = clamp(durationStd / 120, 0, 1)`
+The current risk score is an SLI-style proxy with eight factors.
 
-Final proxy:
+### Factor thresholds currently implemented
 
-`sleepRegularityProxy = round((1 - 0.6 * onsetPenalty - 0.4 * durationPenalty) * 100)`
+| Factor key | Low (`0`) | Medium (`1`) | High (`2`) | Notes |
+| --- | --- | --- | --- | --- |
+| `workedHours` | `< 40` | `>= 40` | `>= 48` | close to workbook |
+| `longShifts` | `< 1` | `>= 1` | `>= 3` | differs from workbook |
+| `longestRecovery` | `> 48` | `<= 48` | `<= 36` | current code factor, not workbook count-of-24h-breaks factor |
+| `shortBreaks` | `< 1` | `>= 1` | `>= 3` | differs from workbook top threshold |
+| `fullyRestedDays` | `> 3` | `<= 3` | `<= 1` | based on sleep-rich days, not no-work rest days |
+| `nightShifts` | `< 1` | `>= 1` | `>= 3` | mostly close in spirit |
+| `biologicalHoursLost` | `< 4` | `>= 4` | `>= 8` | proxy |
+| `socialHoursLost` | `< 8` | `>= 8` | `>= 13` | differs from workbook |
 
-If fewer than 2 days contain sleep, the proxy returns `0`.
+### Risk aggregation
 
-## Score Computation
+| Item | Formula |
+| --- | --- |
+| raw score | `sliRaw = sum(all 8 item scores)` |
+| range | `0..16` |
+| normalized score | `riskScore = round(clamp((sliRaw / 16) * 100, 0, 100))` |
 
-## 1. Risk score
+## 🛌 Sleep Score
 
-The current risk score is based on an SLI-style proxy with eight items.
+| Component | Formula | Notes |
+| --- | --- | --- |
+| duration target | `abs(avgSleepHours - 7.5)` | product-level proxy |
+| duration score | `clamp(100 - (durationDelta / 3) * 100, 0, 100)` | 3h away from target drives score toward 0 |
+| regularity score | `sleepRegularityProxy` | proxy |
+| final score | `clamp(durationScore * 0.55 + regularityScore * 0.45, 0, 100)` | weighted blend |
 
-Each item is bucketed into:
+## 🔄 Adaptability Score
 
-- `0` low concern
-- `1` moderate concern
-- `2` higher concern
+| Component | Formula |
+| --- | --- |
+| inverse risk | `100 - riskScore` |
+| final score | `clamp(inverseRisk * 0.65 + sleepScore * 0.35, 0, 100)` |
 
-### Item thresholds
+This score is currently a product-level composite proxy, not yet a cohort-calibrated research endpoint.
 
-`workedHours`
+## 💬 Explainability Notes By Factor
 
-- `0` if `< 40`
-- `1` if `>= 40`
-- `2` if `>= 48`
+| Factor | What it tries to represent | Current implementation quality | Main risk |
+| --- | --- | --- | --- |
+| weekly work hours | overall schedule load | fair | threshold alignment still provisional |
+| long shifts | extended-duty burden | fair | workbook thresholds differ |
+| longest recovery | longest time between work periods | weak as a matrix factor | may not belong in final burden matrix |
+| short breaks | quick returns between shifts | fair | top threshold likely too loose |
+| fully rested days | recovery opportunity | weak | currently defined with sleep, not no-work days |
+| night shifts | circadian disruption exposure | fair | biological-night proxy only |
+| biological hours lost | work encroachment into optimal sleep window | moderate | wording and formula still proxy |
+| social hours lost | work encroachment into social time | moderate | threshold mismatch with workbook |
+| sleep regularity proxy | consistency of sleep timing and duration | moderate | not exact SRI |
+| adaptability | overall work/sleep compatibility | weak-to-moderate | heuristic composite, not final research model |
 
-`longShifts`
+## 📐 Workbook Alignment Summary
 
-- `0` if `< 1`
-- `1` if `>= 1`
-- `2` if `>= 3`
+| Topic | Current relation to workbook |
+| --- | --- |
+| weekly hours | mostly aligned |
+| long shifts | threshold mismatch |
+| 24h recovery breaks | not implemented as workbook count factor |
+| quick returns | partially aligned |
+| rest days | definition mismatch |
+| night duty count | mostly aligned |
+| optimal sleep hours lost | conceptually related but not identical |
+| social hours lost | threshold mismatch |
 
-`longestRecovery`
+For the detailed matrix, see [xlsm-vs-formula.md](xlsm-vs-formula.md).
 
-- `0` if `> 48`
-- `1` if `<= 48`
-- `2` if `<= 36`
+## 📖 Source-Citation Plan
 
-`shortBreaks`
+This file should evolve toward a source-cited factor table.
 
-- `0` if `< 1`
-- `1` if `>= 1`
-- `2` if `>= 3`
+Target structure for the next iteration:
 
-`fullyRestedDays`
+| Factor | Formula | Workbook evidence | PDF/article evidence | Code status |
+| --- | --- | --- | --- | --- |
+| example | current formula | workbook sheet/cell | page/section citation | implemented/proxy/missing |
 
-- `0` if `> 3`
-- `1` if `<= 3`
-- `2` if `<= 1`
+That will make the repository much easier to review for both medical and open-source collaborators.
 
-`nightShifts`
+## ✅ Source of Truth
 
-- `0` if `< 1`
-- `1` if `>= 1`
-- `2` if `>= 3`
-
-`biologicalHoursLost`
-
-- `0` if `< 4`
-- `1` if `>= 4`
-- `2` if `>= 8`
-
-`socialHoursLost`
-
-- `0` if `< 8`
-- `1` if `>= 8`
-- `2` if `>= 13`
-
-### Raw SLI proxy
-
-`sliRaw = sum(all 8 item scores)`
-
-Range:
-
-- minimum `0`
-- maximum `16`
-
-### Risk normalization
-
-`riskScore = round(clamp((sliRaw / 16) * 100, 0, 100))`
-
-## 2. Sleep score
-
-The sleep score combines sleep duration and sleep regularity proxy.
-
-Duration target:
-
-`durationDelta = abs(avgSleepHours - 7.5)`
-
-`durationScore = clamp(100 - (durationDelta / 3) * 100, 0, 100)`
-
-Regularity component:
-
-`regularityScore = sleepRegularityProxy`
-
-Final sleep score:
-
-`sleepScore = clamp(durationScore * 0.55 + regularityScore * 0.45, 0, 100)`
-
-## 3. Adaptability score
-
-The adaptability score is currently a composite proxy.
-
-`inverseRisk = 100 - riskScore`
-
-`adaptabilityScore = clamp(inverseRisk * 0.65 + sleepScore * 0.35, 0, 100)`
-
-## Explanations Shown in the UI
-
-The app also generates short explanation strings when some conditions are met, for example:
-
-- night shifts detected
-- short recovery breaks detected
-- work overlaps biological sleep window
-- average sleep below 7 hours
-- low sleep regularity proxy
-
-These are qualitative explanations, not extra formula inputs.
-
-## Differences Between This File and Older Draft Notes
-
-Older notes may mention:
-
-- commute-expanded work intervals
-- exact biological sleep opportunity accounting
-- official shifts merged when gap < 30 minutes
-- exact SRI minute-by-minute matching
-- full rest days defined as days without work
-
-Those ideas are useful research references, but they are not fully implemented in the current app.
-
-For open-source contributors, the safe rule is:
-
-- document the code as implemented
-- keep research targets clearly separated from current runtime behavior
-
-## Research Alignment Notes
-
-The repository already points to a scientific basis, but the product code still uses proxy logic in several places.
-
-Main gaps to close in future iterations:
-
-- align thresholds with the final validated article/protocol
-- decide whether "fully rested day" should be based on sleep, no-work day, or another research definition
-- implement a stricter shift-merging rule if needed
-- replace the regularity proxy with an exact SRI implementation if the protocol requires it
-- calibrate the adaptability score against cohort data rather than a fixed heuristic composite
-
-## Source of Truth
-
-If this file and the code ever disagree, treat [../src/core/scoring.ts](../src/core/scoring.ts) as the authoritative implementation and update this document.
+If this file and the code disagree, treat [../src/core/scoring.ts](../src/core/scoring.ts) as the authoritative runtime implementation and update this document.

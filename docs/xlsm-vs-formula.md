@@ -1,6 +1,6 @@
-# XLSM vs Formula
+# 🧾 XLSM vs Formula
 
-## Purpose
+## 🎯 Purpose
 
 This document is a practical diff between:
 
@@ -9,276 +9,105 @@ This document is a practical diff between:
 
 It is meant to answer:
 
-- what the Excel workbook appears to model
-- what the Markdown documentation currently says
-- where the two do not match
-
-## Workbook Snapshot
-
-The workbook contains factor-oriented sheets for the main scoring matrix:
-
-- `1. Heures totales`
-- `2. Duree poste`
-- `3. Pauses 24h`
-- `4. Heures nocturnes`
-- `5. Jours sans travailler`
-- `6. Postes nuit`
-- `7. Pause minimal`
-- `8. Heures sociales`
-- `9. Score precedent`
-
-The summary sheet `Graphiques brut` labels the active scoring dimensions as:
-
-1. Heures travaillées
-2. # Postes longues durées
-3. # Pauses de 24h
-4. # Pauses moins de 11h
-5. # Jours de repos
-6. # Gardes de nuit
-7. h Heures sommeil optimales perdues
-8. h Heures sociales perdues
-
-This aligns with an eight-factor SLI-style model.
-
-## Thresholds Visible in the Workbook
-
-From the workbook formulas and parameter sheet:
-
-### Factor 1. Weekly hours worked
-
-Workbook logic on `Graphiques brut`:
-
-- `0` if `< 40`
-- `1` if between `40` and `48`
-- `2` if `> 48`
-
-This matches the spirit of [formula.md](formula.md).
-
-### Factor 2. Long shifts
-
-Workbook parameter sheet indicates:
-
-- shift is considered long when duration is `> 10h`
-- aggregate score uses:
-  - `0` if `< 2`
-  - `1` if `= 2`
-  - `2` if `> 2`
-
-Current [formula.md](formula.md) says:
-
-- `0` if `< 1`
-- `1` if `>= 1`
-- `2` if `>= 3`
-
-Status:
-
-- mismatch
-
-### Factor 3. Number of 24h breaks
-
-Workbook summary logic:
-
-- `0` if `> 1`
-- `1` if `= 1`
-- `2` if `< 1`
-
-Workbook parameter sheet also exposes a `>= 2`, `= 1`, `= 0` pattern.
-
-Current [formula.md](formula.md) does not describe this factor as a count of 24h pauses. It instead documents:
-
-- `longestRecoveryHours`
-
-Status:
-
-- conceptual mismatch
-
-### Factor 4. Number of pauses shorter than 11h
-
-Workbook summary logic:
-
-- `0` if `< 1`
-- `1` if `= 1`
-- `2` if `> 1`
-
-Workbook parameter sheet confirms the `11h` threshold.
-
-Current [formula.md](formula.md) says:
-
-- `0` if `< 1`
-- `1` if `>= 1`
-- `2` if `>= 3`
-
-Status:
-
-- mismatch
-
-### Factor 5. Number of rest days
-
-Workbook summary logic:
-
-- `0` if `> 1`
-- `1` if `= 1`
-- `2` if `< 1`
-
-Current [formula.md](formula.md) documents `fullyRestedDaysCount` as:
-
-- days with at least `7h` sleep
-
-This is not the same thing as:
-
-- days without work
-- rest days in a schedule-based occupational health matrix
-
-Status:
-
-- major definition mismatch
-
-### Factor 6. Night duties / night shifts
-
-Workbook summary logic:
-
-- `0` if `< 1`
-- `1` if between `1` and `2`
-- `2` if `> 2`
-
-Current [formula.md](formula.md) says:
-
-- `0` if `< 1`
-- `1` if `>= 1`
-- `2` if `>= 3`
-
-These are close in intent and differ only in wording of the middle bucket.
-
-Status:
-
-- mostly aligned
-
-### Factor 7. Optimal sleep hours lost
-
-Workbook summary logic:
-
-- `0` if `< 8`
-- `1` if `= 8`
-- `2` if `> 8`
-
-Current [formula.md](formula.md) uses:
-
-- `biologicalHoursLost`
-- computed as work overlap with a fixed `23:00 -> 07:00` window
-
-This looks directionally related, but it is not the same documented concept:
-
-- workbook wording: optimal sleep hours lost
-- app wording: biological work overlap proxy
-
-Status:
-
-- partial conceptual alignment, implementation unclear
-
-### Factor 8. Social hours lost
-
-Workbook summary logic:
-
-- `0` if `< 6`
-- `1` if between `6` and `13`
-- `2` if `> 13`
-
-Current [formula.md](formula.md) says:
-
-- `0` if `< 8`
-- `1` if `>= 8`
-- `2` if `>= 13`
-
-Status:
-
-- mismatch
-
-## Main Differences with the Current App Documentation
-
-## 1. Excel is centered on work-schedule burden factors
-
-The workbook is very clearly organized around an SLI-style occupational schedule matrix.
-
-The current app documentation adds:
-
-- sleep duration proxy
-- sleep regularity proxy
-- adaptability score
-
-Those layers are useful product additions, but they are not the same as the workbook matrix.
-
-## 2. Recovery is modeled differently
-
-The workbook appears to distinguish:
-
-- `# Pauses de 24h`
-- `# Pauses moins de 11h`
-
-Current [formula.md](formula.md) includes:
-
-- `longestRecoveryHours`
-- `shortBreaksCount`
-
-This means the app currently mixes:
-
-- one direct count-based factor from the matrix
-- one extra longest-gap metric that may not belong to the workbook scoring table
-
-## 3. Rest days are not defined the same way
-
-This is the clearest mismatch.
-
-Workbook:
-
-- rest day means a day without work
-
-Current app formula reference:
-
-- rested day means a day with at least `7h` sleep
-
-These two definitions will produce very different scores.
-
-## 4. Social-hours threshold differs
-
-Workbook points to:
-
-- low concern below `6h` lost
-
-Current app docs say:
-
-- low concern below `8h` lost
-
-This should be reconciled before claiming matrix fidelity.
-
-## 5. Long shifts and quick returns are stricter in the workbook
-
-Workbook thresholding looks closer to:
-
-- long shifts: `0 / 1 / 2+`
-- quick returns: `0 / 1 / 2+`
-
-Current app documentation is looser for the highest bucket on some factors.
-
-## What This Means for the Next Update
-
-If the workbook is the preferred source for the scoring matrix, the next implementation pass should likely:
-
-1. keep the current preprocessing and interval normalization foundations
-2. rename the factors in code to match the workbook vocabulary
-3. replace `longestRecoveryHours` as a scoring factor with `count24hBreaks` if that is the intended matrix input
-4. redefine rest days as no-work days, not sleep-rich days
-5. align thresholds for long shifts, quick returns, and social hours lost
-6. separate the SLI-style matrix from any additional product-level sleep/adaptability scores
-
-## Recommendation
+- what the workbook appears to define
+- what the Markdown formula reference currently claims
+- what should probably change next in code or documentation
+
+## 📋 Workbook Factor Map
+
+The summary sheet `Graphiques brut` exposes an eight-factor burden matrix.
+
+| Workbook factor | Workbook wording |
+| --- | --- |
+| 1 | Heures travaillées |
+| 2 | # Postes longues durées |
+| 3 | # Pauses de 24h |
+| 4 | # Pauses moins de 11h |
+| 5 | # Jours de repos |
+| 6 | # Gardes de nuit |
+| 7 | h Heures sommeil optimales perdues |
+| 8 | h Heures sociales perdues |
+
+## ⚔️ Diff Matrix
+
+| Factor | Workbook definition | `formula.md` definition | Status | Recommended action |
+| --- | --- | --- | --- | --- |
+| Weekly hours worked | schedule load by total weekly hours | `workedHours` | mostly aligned | keep, but cite workbook cells and article source |
+| Long shifts | count of shifts longer than `10h`; summary thresholds behave like `0 / 1 / 2+` | `longShiftCount` with thresholds `<1 / >=1 / >=3` | mismatch | align thresholds to workbook |
+| 24h pauses | count of 24h breaks | replaced by `longestRecoveryHours` in current formula doc | conceptual mismatch | decide whether workbook count must replace current longest-gap factor |
+| Pauses under 11h | count of quick returns under `11h` | `shortBreaksCount` with looser top bucket | mismatch | align thresholds to workbook |
+| Rest days | days without work | `fullyRestedDaysCount` based on days with `>= 7h` sleep | major mismatch | redefine factor in code and docs |
+| Night duties | count of night duties/shifts | `nightShiftCount` using biological-window overlap | mostly aligned | keep concept, improve wording and citation |
+| Optimal sleep hours lost | workbook-specific burden factor | `biologicalHoursLost` as biological-window work overlap proxy | partial mismatch | clarify whether proxy is acceptable or replace with workbook logic |
+| Social hours lost | social burden factor | `socialHoursLost` with different low threshold | mismatch | align threshold and cite source |
+
+## 📏 Threshold Matrix
+
+| Factor | Workbook threshold logic | Current `formula.md` threshold logic | Gap |
+| --- | --- | --- | --- |
+| Weekly hours | `<40 / 40-48 / >48` | `<40 / >=40 / >=48` | minor wording difference |
+| Long shifts | `<2 / =2 / >2` | `<1 / >=1 / >=3` | real mismatch |
+| 24h pauses | `>1 / =1 / <1` | not represented directly | structural mismatch |
+| Quick returns `<11h` | `<1 / =1 / >1` | `<1 / >=1 / >=3` | real mismatch |
+| Rest days | `>1 / =1 / <1` | `>3 / <=3 / <=1` on sleep-rich days | major mismatch |
+| Night duties | `<1 / 1-2 / >2` | `<1 / >=1 / >=3` | mostly close |
+| Optimal sleep hours lost | `<8 / =8 / >8` | `<4 / >=4 / >=8` on biological hours lost | conceptual and threshold mismatch |
+| Social hours lost | `<6 / 6-13 / >13` | `<8 / >=8 / >=13` | real mismatch |
+
+## 🔍 Interpretation Matrix
+
+| Topic | Workbook orientation | Current app orientation |
+| --- | --- | --- |
+| Burden matrix | occupational schedule burden | mixed burden + product proxy |
+| Recovery | count-based | partly count-based, partly longest-gap-based |
+| Rest | no-work days | sleep-duration-based recovery proxy |
+| Sleep disruption | “optimal sleep hours lost” | biological overlap proxy |
+| Output philosophy | matrix-like score | matrix-like score plus sleep and adaptability composites |
+
+## ✅ What Is Likely Safe To Keep
+
+| Area | Why it is still useful |
+| --- | --- |
+| interval normalization | sound foundation for weekly schedule analysis |
+| cross-midnight handling | needed for real shift-work schedules |
+| work/sleep separation | good domain structure |
+| local score computation | good privacy and product decision |
+| multilingual documentation | important for participant-facing and open-source collaboration |
+
+## 🔁 What Is Most Likely To Change
+
+| Priority | Change |
+| --- | --- |
+| high | replace sleep-based “rested days” with no-work rest days |
+| high | decide between `count24hBreaks` and `longestRecoveryHours` |
+| high | align thresholds for long shifts and quick returns |
+| high | clarify factor 7 using workbook and PDF/article evidence |
+| medium | align social-hours threshold |
+| medium | keep sleep/adaptability scores, but separate them from the workbook burden matrix more clearly |
+
+## 🛠️ Practical Refactor Direction
+
+| Step | Goal |
+| --- | --- |
+| 1 | keep the current normalization pipeline in [../src/core/scoring.ts](../src/core/scoring.ts) |
+| 2 | rename factor concepts to match workbook vocabulary |
+| 3 | implement workbook-native rest-day and 24h-break definitions |
+| 4 | revise thresholds to match the workbook |
+| 5 | update [formula.md](formula.md) with source-cited tables |
+| 6 | update UI explainability so factors read like medically serious, auditable statements |
+
+## 💡 Recommendation
 
 Use the workbook as the reference for the burden matrix, and use [formula.md](formula.md) for:
 
-- exact app behavior today
+- current runtime behavior
 - implementation notes
-- future extensions beyond the matrix
+- explicit disclosure of any proxy logic
 
-In practice:
+In short:
 
-- `xlsm-vs-formula.md` should drive the refactor discussion
-- `formula.md` should be updated after the code changes land
+| Document | Best use |
+| --- | --- |
+| [Fatigue Index_scoring_system_15.xlsm](Fatigue%20Index_scoring_system_15.xlsm) | reference matrix |
+| [formula.md](formula.md) | current implementation reference |
+| [xlsm-vs-formula.md](xlsm-vs-formula.md) | change-planning document |
