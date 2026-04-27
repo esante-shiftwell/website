@@ -32,7 +32,7 @@ export function RangeInput({
   onChange: (v: number) => void;
 }) {
   return (
-    <div className="row" style={{ gap: 10, alignItems: 'center' }}>
+    <div className="sw-range-control">
       <input
         type="range"
         min={min}
@@ -40,20 +40,9 @@ export function RangeInput({
         step={1}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ width: '100%' }}
       />
-      <div
-        style={{
-          minWidth: 28,
-          textAlign: 'center',
-          border: '1px solid var(--border)',
-          borderRadius: 8,
-          padding: '4px 6px',
-          fontSize: 12,
-          background: 'white',
-        }}
-      >
-        {value}
+      <div className="sw-range-value" aria-label={`Valeur ${value} sur ${max}`}>
+        {value}/{max}
       </div>
     </div>
   );

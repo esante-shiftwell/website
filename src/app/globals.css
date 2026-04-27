@@ -640,6 +640,31 @@ input[type="range"] {
   accent-color: var(--primary);
 }
 
+.sw-range-control {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 12px;
+}
+
+.sw-range-control input[type="range"] {
+  width: 100%;
+  min-width: 0;
+}
+
+.sw-range-value {
+  min-width: 46px;
+  text-align: center;
+  border: 1px solid rgba(121, 242, 234, 0.20);
+  border-radius: 999px;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 800;
+  color: #baf9f2;
+  background: rgba(121, 242, 234, 0.08);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
 input[type="checkbox"] {
   width: 15px;
   height: 15px;
