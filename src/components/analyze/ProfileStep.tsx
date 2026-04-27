@@ -56,13 +56,16 @@ export default function ProfileStep({
   canNext: boolean;
 }) {
   return (
-    <section className="card" style={{ padding: 16 }}>
-      <h2 className="section-title" style={{ fontSize: 18 }}>
-        {t.profileTitle}
-      </h2>
-      <p className="section-subtitle">{t.profileSubtitle}</p>
+    <section className="card sw-editor-shell" style={{ padding: 16 }}>
+      <div className="sw-section-intro">
+        <div className="badge secondary">{t.profileTitle}</div>
+        <h2 className="section-title sw-section-heading" style={{ fontSize: 20, marginTop: 10 }}>
+          {t.profileTitle}
+        </h2>
+        <p className="section-subtitle sw-section-story">{t.profileSubtitle}</p>
+      </div>
 
-      <div className="row" style={{ marginBottom: 12 }}>
+      <div className="sw-mode-switch row" style={{ marginBottom: 12 }}>
         <button
           type="button"
           className={`btn ${profile.mode === 'short' ? 'primary' : ''}`}
@@ -79,7 +82,7 @@ export default function ProfileStep({
         </button>
       </div>
 
-      <div className="notice" style={{ marginBottom: 12 }}>
+      <div className="notice sw-ritual-note" style={{ marginBottom: 12 }}>
         <div className="small">{profile.mode === 'short' ? t.shortModeBlock : t.longModeBlock}</div>
       </div>
 
@@ -148,78 +151,78 @@ export default function ProfileStep({
 
       {profile.mode === 'long' && (
         <div style={{ marginTop: 12 }}>
-          <div className="notice warn" style={{ marginBottom: 12 }}>
+          <div className="notice warn sw-research-note" style={{ marginBottom: 12 }}>
             <div className="small">
               <strong>{t.scoringLater}</strong> {t.longModeNotice}
             </div>
           </div>
 
           <div className="grid grid-2">
-          <Field label={`${t.fatigue} · ${t.scoringLater}`}>
-            <RangeInput
-              min={1}
-              max={5}
-              value={profile.fatigue}
-              onChange={(v) => setProfile((p) => ({ ...p, fatigue: v }))}
-            />
-          </Field>
+            <Field label={`${t.fatigue} · ${t.scoringLater}`}>
+              <RangeInput
+                min={1}
+                max={5}
+                value={profile.fatigue}
+                onChange={(v) => setProfile((p) => ({ ...p, fatigue: v }))}
+              />
+            </Field>
 
-          <Field label={`${t.predictability} · ${t.scoringLater}`}>
-            <RangeInput
-              min={1}
-              max={5}
-              value={profile.schedulePredictability}
-              onChange={(v) => setProfile((p) => ({ ...p, schedulePredictability: v }))}
-            />
-          </Field>
+            <Field label={`${t.predictability} · ${t.scoringLater}`}>
+              <RangeInput
+                min={1}
+                max={5}
+                value={profile.schedulePredictability}
+                onChange={(v) => setProfile((p) => ({ ...p, schedulePredictability: v }))}
+              />
+            </Field>
 
-          <Field label={`${t.commute} · ${t.scoringLater}`}>
-            <input
-              className="input"
-              type="number"
-              min={0}
-              max={240}
-              value={profile.commuteMinutes}
-              onChange={(e) =>
-                setProfile((p) => ({
-                  ...p,
-                  commuteMinutes: clamp(Number(e.target.value || 0), 0, 240),
-                }))
-              }
-            />
-          </Field>
+            <Field label={`${t.commute} · ${t.scoringLater}`}>
+              <input
+                className="input"
+                type="number"
+                min={0}
+                max={240}
+                value={profile.commuteMinutes}
+                onChange={(e) =>
+                  setProfile((p) => ({
+                    ...p,
+                    commuteMinutes: clamp(Number(e.target.value || 0), 0, 240),
+                  }))
+                }
+              />
+            </Field>
 
-          <Field label={`${t.naps} · ${t.scoringLater}`}>
-            <input
-              className="input"
-              type="number"
-              min={0}
-              max={21}
-              value={profile.napsPerWeek}
-              onChange={(e) =>
-                setProfile((p) => ({
-                  ...p,
-                  napsPerWeek: clamp(Number(e.target.value || 0), 0, 21),
-                }))
-              }
-            />
-          </Field>
+            <Field label={`${t.naps} · ${t.scoringLater}`}>
+              <input
+                className="input"
+                type="number"
+                min={0}
+                max={21}
+                value={profile.napsPerWeek}
+                onChange={(e) =>
+                  setProfile((p) => ({
+                    ...p,
+                    napsPerWeek: clamp(Number(e.target.value || 0), 0, 21),
+                  }))
+                }
+              />
+            </Field>
 
-          <Field label={`${t.caffeine} · ${t.scoringLater}`}>
-            <input
-              className="input"
-              type="number"
-              min={0}
-              max={20}
-              value={profile.caffeineCups}
-              onChange={(e) =>
-                setProfile((p) => ({
-                  ...p,
-                  caffeineCups: clamp(Number(e.target.value || 0), 0, 20),
-                }))
-              }
-            />
-          </Field>
+            <Field label={`${t.caffeine} · ${t.scoringLater}`}>
+              <input
+                className="input"
+                type="number"
+                min={0}
+                max={20}
+                value={profile.caffeineCups}
+                onChange={(e) =>
+                  setProfile((p) => ({
+                    ...p,
+                    caffeineCups: clamp(Number(e.target.value || 0), 0, 20),
+                  }))
+                }
+              />
+            </Field>
           </div>
         </div>
       )}

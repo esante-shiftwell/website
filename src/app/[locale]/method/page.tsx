@@ -9,75 +9,111 @@ export function generateStaticParams() {
 
 const content = {
   fr: {
+    label: 'Method',
     title: 'Methodologie',
+    line: 'Une formule lisible avant d etre parfaite.',
     subtitle:
-      'Comment Shiftwell calcule les scores (version MVP) et comment cela se relie a des references externes.',
-    sections: {
-      scoring: 'Scores (MVP v0.1)',
-      source: 'References externes',
-      mapping: 'Mapping reference externe ↔ Shiftwell',
-      limits: 'Limites actuelles',
-      roadmap: 'Roadmap methodologique',
-    },
-    scoringItems: [
-      'Score Risque (SLI proxy) : score de charge ou risque hebdomadaire derive de l agenda travail et sommeil.',
-      'Score Sommeil (proxy) : combine duree moyenne de sommeil et proxy de regularite.',
-      'Score Adaptabilite (principal) : combine risque inverse et score sommeil (proxy v0.1).',
+      'Shiftwell lit une semaine de travail et de sommeil comme une tension entre charge, recuperation, nuit biologique et regularite. La version actuelle reste un MVP traceable, aligne sur des references externes sans pretendre les reproduire a l identique.',
+    runtimeLabel: 'Runtime',
+    runtimeText:
+      'Une formule proxy explicable, reliee a des references externes et pensee pour rester audit-able a mesure que le moteur se rapproche du workbook.',
+    kpis: [
+      { label: 'Position', value: 'MVP explicable', copy: 'Un moteur proxy documente, pas une formule clinique finale.' },
+      { label: 'Reference forte', value: 'Workbook', copy: 'Les seuils et les facteurs sont compares en continu a la copie de travail.' },
+      { label: 'Ambition', value: 'Traceable', copy: 'Chaque facteur visible doit pouvoir remonter vers sa source et son statut.' },
     ],
+    scoringLabel: 'Ce que la formule lit aujourd hui',
+    scoringTitle: 'Ce que la formule lit aujourd hui',
+    scoringItems: [
+      'Le score de risque resume la charge hebdomadaire a partir des segments de travail, des shifts longs, des coupures courtes, des nuits et des pertes biologiques et sociales.',
+      'Le score sommeil combine duree moyenne et regularite proxy a partir du planning saisi, sans actigraphie ni mesure physiologique.',
+      'Le score d adaptabilite assemble risque inverse et sommeil pour une lecture produit simple, utile a l exploration mais encore non calibree sur cohorte.',
+    ],
+    sourcesLabel: 'References externes',
+    sourcesTitle: 'Comment Shiftwell se relie aux references externes',
     sourceText:
-      "Shiftwell s'appuie sur des references scientifiques externes et sur une copie locale de travail du workbook. La version MVP implemente une logique proxy pour accelerer le pilote produit, puis sera alignee plus strictement au protocole.",
+      "Shiftwell s appuie sur des references scientifiques tierces et sur une copie locale de travail du workbook pour documenter son moteur. Le projet n est ni auteur ni proprietaire de ces contenus externes : il les reference, les compare et les traduit en logique produit.",
     noticeText:
-      "Les references ci-dessous restent des oeuvres externes. Leur presence ici ne signifie ni paternite ni propriete par Shiftwell.",
-    mappingHeaders: ['Reference externe', 'Variable Shiftwell', 'Statut'],
-    backToAnalyze: "Retour a l'analyse",
+      "La page presente donc une relation de travail avec des sources externes, pas une reprise a l identique ni une revendication d authorite clinique.",
     externalArticle: 'Article externe',
     externalWorkbook: 'Workbook externe (copie locale de travail)',
+    workbookNote: 'Le detail de provenance et les localisateurs sont decrits dans la documentation du repo.',
+    backToAnalyze: "Retour a l'analyse",
+    mappingLabel: 'Mapping',
+    mappingHeaders: ['Reference externe', 'Variable Shiftwell', 'Statut'],
     mappingRows: [
       ['Heures travaillees', 'Calcule a partir des segments de travail de la semaine', 'Implemente'],
-      ['Longs shifts', 'Nombre de segments de travail longs (proxy seuil)', 'Implemente (proxy)'],
+      ['Long shifts', 'Nombre de segments de travail longs (proxy seuil)', 'Implemente (proxy)'],
       ['Recuperation', 'Plus longue fenetre de recuperation entre shifts', 'Implemente (proxy)'],
       ['Night shifts', 'Chevauchement avec fenetre biologique nuit', 'Implemente (proxy)'],
       ['Perte biologique', 'Travail dans fenetre biologique (23h-7h, proxy)', 'Implemente (proxy)'],
       ['Perte sociale', 'Travail dans fenetre sociale (proxy)', 'Implemente (proxy)'],
       ['SRI/TST', 'Proxy regularite + duree totale sommeil', 'Proxy MVP'],
     ],
-    limits: [
-      'Version actuelle = proxy v0.1 (seuils et ponderations a verrouiller avec le protocole final).',
-      "Saisie auto declaree (pas d'actigraphie).",
-      "Score d'adaptabilite non calibre sur cohorte dans la V1.",
-      'Aucune recommandation clinique en sortie (volontairement).',
-    ],
-    roadmap: [
-      'Alignement strict des seuils SLI avec le papier ou protocole',
-      "Ajout d'une reference moyenne (papier ou cohorte)",
-      "Calibration du score d'adaptabilite sur donnees de cohorte",
-      'Evolution vers un vrai calendrier visuel (drag and drop) si besoin',
+    closing: [
+      {
+        label: 'Limites actuelles',
+        title: 'Limites actuelles',
+        items: [
+          'Version actuelle = proxy v0.1, avec plusieurs seuils encore a verrouiller face au protocole final.',
+          "La saisie reste auto declaree : il n y a ni actigraphie ni capteur embarque dans le MVP.",
+          "Le score d adaptabilite n est pas encore calibre sur une cohorte de reference.",
+          'L interface explique une formule active, mais ne fournit pas encore de recommandation clinique.',
+        ],
+      },
+      {
+        label: 'Prochaines clarifications',
+        title: 'Prochaines clarifications',
+        items: [
+          'Continuer l alignement strict avec le workbook et formaliser les ecarts encore disputes.',
+          'Raffiner les facteurs biologiques et sociaux la ou le runtime reste encore proxy.',
+          'Etendre la trace pour reduire encore les fallbacks d explicabilite cote UI.',
+          'Stabiliser les points assez robustes pour accueillir des contributions open source plus sereines.',
+        ],
+      },
+      {
+        label: 'MVP',
+        title: 'Proxy, mais lisible',
+        items: [
+          'La priorite actuelle est de rendre le moteur assez net pour qu un contributeur comprenne ce qui est implemente.',
+          'Le but n est pas de sur-vendre une precision clinique, mais de documenter clairement ce qui existe deja.',
+        ],
+      },
     ],
   },
   en: {
+    label: 'Method',
     title: 'Methodology',
+    line: 'Readable first, perfect later.',
     subtitle:
-      'How Shiftwell computes scores (MVP version) and how it relates to external references.',
-    sections: {
-      scoring: 'Scores (MVP v0.1)',
-      source: 'External references',
-      mapping: 'External reference ↔ Shiftwell mapping',
-      limits: 'Current limitations',
-      roadmap: 'Method roadmap',
-    },
-    scoringItems: [
-      'Risk score (SLI proxy): weekly load or risk score derived from work and sleep schedule.',
-      'Sleep score (proxy): combines average sleep duration and regularity proxy.',
-      'Adaptability score (main): combines inverse risk and sleep score (proxy v0.1).',
+      'Shiftwell reads a work and sleep week as a tension between load, recovery, biological night and regularity. The current version is still a traceable MVP aligned with external references without claiming to reproduce them exactly.',
+    runtimeLabel: 'Runtime',
+    runtimeText:
+      'An explainable proxy formula connected to external references and designed to remain auditable as the engine moves closer to the workbook.',
+    kpis: [
+      { label: 'Position', value: 'Explainable MVP', copy: 'A documented proxy engine, not a final clinical formula.' },
+      { label: 'Primary reference', value: 'Workbook', copy: 'Thresholds and factors are continuously compared against the working copy.' },
+      { label: 'Ambition', value: 'Traceable', copy: 'Every visible factor should map back to a source and status.' },
     ],
+    scoringLabel: 'What the formula reads today',
+    scoringTitle: 'What the formula reads today',
+    scoringItems: [
+      'The risk score summarizes weekly load from work segments, long shifts, short breaks, nights, and biological and social loss proxies.',
+      'The sleep score combines average sleep duration and a regularity proxy from the entered schedule, without actigraphy or physiological measurement.',
+      'The adaptability score combines inverse risk and sleep into a simple product layer that remains useful for exploration but is not cohort-calibrated yet.',
+    ],
+    sourcesLabel: 'External references',
+    sourcesTitle: 'How Shiftwell relates to external references',
     sourceText:
-      'Shiftwell relies on third-party scientific references and on a local working copy of the workbook. The MVP currently implements proxy logic for a fast product pilot, then will be aligned more strictly with the protocol.',
+      'Shiftwell relies on third-party scientific references and on a local working copy of the workbook to document its engine. The project does not own those materials: it references them, compares them, and translates them into product logic.',
     noticeText:
-      'The references below remain external works. Showing them here does not mean authorship or ownership by Shiftwell.',
-    mappingHeaders: ['External reference item', 'Shiftwell variable', 'Status'],
-    backToAnalyze: 'Back to Analyze',
+      'This page therefore presents a working relationship with external references, not a verbatim republication and not a claim of clinical authority.',
     externalArticle: 'External article',
     externalWorkbook: 'External workbook (local working copy)',
+    workbookNote: 'Detailed provenance and locators are described in the repository documentation.',
+    backToAnalyze: 'Back to analyze',
+    mappingLabel: 'Mapping',
+    mappingHeaders: ['External reference', 'Shiftwell variable', 'Status'],
     mappingRows: [
       ['Hours worked', 'Computed from weekly work segments', 'Implemented'],
       ['Long shifts', 'Count of long work segments (proxy threshold)', 'Implemented (proxy)'],
@@ -87,43 +123,70 @@ const content = {
       ['Social loss', 'Work encroachment in social window (proxy)', 'Implemented (proxy)'],
       ['SRI/TST', 'Regularity proxy + total sleep time', 'MVP proxy'],
     ],
-    limits: [
-      'Current version = proxy v0.1 (thresholds and weights still to be aligned with the final protocol).',
-      'Self-reported input (no actigraphy).',
-      'Adaptability score not cohort-calibrated in V1.',
-      'No clinical recommendations in output (intentional).',
-    ],
-    roadmap: [
-      'Strict SLI threshold alignment with paper or protocol',
-      'Add average reference (paper or cohort baseline)',
-      'Calibrate adaptability score on cohort data',
-      'Move to a true visual calendar grid (drag and drop) if needed',
+    closing: [
+      {
+        label: 'Current limitations',
+        title: 'Current limitations',
+        items: [
+          'Current version = proxy v0.1, with several thresholds still to be locked against the final protocol.',
+          'Input is self-reported: there is no actigraphy or wearable capture in the MVP.',
+          'The adaptability score is not yet calibrated on a reference cohort.',
+          'The interface explains an active formula, but still does not provide clinical recommendations.',
+        ],
+      },
+      {
+        label: 'Next clarifications',
+        title: 'Next clarifications',
+        items: [
+          'Continue strict alignment with the workbook and formalize disputed gaps.',
+          'Refine biological and social factors where runtime still remains proxy-based.',
+          'Extend the trace to reduce remaining explainability fallbacks on the UI side.',
+          'Stabilize the parts that are robust enough to welcome calmer open-source contributions.',
+        ],
+      },
+      {
+        label: 'MVP',
+        title: 'Proxy, but readable',
+        items: [
+          'The current priority is to make the engine clear enough that contributors understand what is implemented.',
+          'The goal is not to over-claim clinical precision, but to document clearly what already exists.',
+        ],
+      },
     ],
   },
   de: {
+    label: 'Method',
     title: 'Methodik',
+    line: 'Lesbar zuerst, perfekt spater.',
     subtitle:
-      'Wie Shiftwell die Scores berechnet (MVP) und wie dies mit externen Referenzen zusammenhangt.',
-    sections: {
-      scoring: 'Scores (MVP v0.1)',
-      source: 'Externe Referenzen',
-      mapping: 'Externes Referenz-Mapping ↔ Shiftwell',
-      limits: 'Aktuelle Grenzen',
-      roadmap: 'Methodik-Roadmap',
-    },
-    scoringItems: [
-      'Risiko-Score (SLI-Proxy): wochentlicher Belastungs- oder Risikoscore aus Arbeits- und Schlafplan.',
-      'Schlaf-Score (Proxy): kombiniert mittlere Schlafdauer und Regelmassigkeits-Proxy.',
-      'Anpassungsfahigkeit (Hauptscore): kombiniert inverses Risiko und Schlaf-Score (Proxy v0.1).',
+      'Shiftwell liest eine Arbeits- und Schlafwoche als Spannung zwischen Belastung, Erholung, biologischer Nacht und Regelmassigkeit. Die aktuelle Version bleibt ein nachvollziehbares MVP, das an externen Referenzen ausgerichtet ist, ohne sie identisch nachzubilden.',
+    runtimeLabel: 'Runtime',
+    runtimeText:
+      'Eine erklarbare Proxy-Formel, die mit externen Referenzen verbunden ist und auditierbar bleiben soll, wahrend die Engine naher an das Workbook ruckt.',
+    kpis: [
+      { label: 'Position', value: 'Erklarbares MVP', copy: 'Eine dokumentierte Proxy-Engine, keine finale klinische Formel.' },
+      { label: 'Hauptreferenz', value: 'Workbook', copy: 'Schwellen und Faktoren werden laufend mit der Arbeitskopie abgeglichen.' },
+      { label: 'Ziel', value: 'Nachvollziehbar', copy: 'Jeder sichtbare Faktor soll auf Quelle und Status zuruckfuhren.' },
     ],
+    scoringLabel: 'Was die Formel heute liest',
+    scoringTitle: 'Was die Formel heute liest',
+    scoringItems: [
+      'Der Risiko-Score fasst die Wochenbelastung aus Arbeitssegmenten, langen Schichten, kurzen Pausen, Nachten sowie biologischen und sozialen Verlust-Proxys zusammen.',
+      'Der Schlaf-Score kombiniert durchschnittliche Schlafdauer und einen Regelmassigkeits-Proxy aus dem eingegebenen Plan, ohne Aktigraphie oder physiologische Messung.',
+      'Der Anpassungs-Score verbindet inverses Risiko und Schlaf zu einer einfachen Produkt-Lesart, die fur Exploration nutzlich bleibt, aber noch nicht kohortenkalibriert ist.',
+    ],
+    sourcesLabel: 'Externe Referenzen',
+    sourcesTitle: 'Wie Shiftwell mit externen Referenzen arbeitet',
     sourceText:
-      'Shiftwell nutzt wissenschaftliche Drittquellen und eine lokale Arbeitskopie des Workbooks. Im MVP wird eine Proxy-Logik verwendet; spater erfolgt die strengere Protokoll-Ausrichtung.',
+      'Shiftwell nutzt wissenschaftliche Drittquellen und eine lokale Arbeitskopie des Workbooks, um seine Engine zu dokumentieren. Das Projekt besitzt diese Materialien nicht: es referenziert sie, vergleicht sie und ubersetzt sie in Produktlogik.',
     noticeText:
-      'Die unten genannten Referenzen bleiben externe Werke. Ihre Anzeige hier bedeutet keine Urheberschaft oder Eigentumerschaft durch Shiftwell.',
-    mappingHeaders: ['Externe Referenz', 'Shiftwell-Variable', 'Status'],
-    backToAnalyze: 'Zuruck zur Analyse',
+      'Diese Seite beschreibt daher eine Arbeitsbeziehung zu externen Referenzen, keine wortliche Wiederveroffentlichung und keinen Anspruch auf klinische Autoritat.',
     externalArticle: 'Externer Artikel',
     externalWorkbook: 'Externes Workbook (lokale Arbeitskopie)',
+    workbookNote: 'Detaillierte Provenienz und Lokatoren sind in der Repository-Dokumentation beschrieben.',
+    backToAnalyze: 'Zuruck zur Analyse',
+    mappingLabel: 'Mapping',
+    mappingHeaders: ['Externe Referenz', 'Shiftwell-Variable', 'Status'],
     mappingRows: [
       ['Arbeitsstunden', 'Aus Wochen-Arbeitssegmenten berechnet', 'Implementiert'],
       ['Lange Schichten', 'Anzahl langer Arbeitssegmente (Proxy-Schwelle)', 'Implementiert (Proxy)'],
@@ -133,17 +196,35 @@ const content = {
       ['Sozialer Verlust', 'Arbeit im sozialen Zeitfenster (Proxy)', 'Implementiert (Proxy)'],
       ['SRI/TST', 'Regelmassigkeits-Proxy + Gesamtschlafzeit', 'MVP Proxy'],
     ],
-    limits: [
-      'Aktuelle Version = Proxy v0.1 (Schwellen und Gewichte noch mit dem finalen Protokoll abzugleichen).',
-      'Selbstberichtete Eingaben (keine Aktigraphie).',
-      'Anpassungs-Score in V1 nicht auf Kohorte kalibriert.',
-      'Keine klinischen Empfehlungen in der Ausgabe (absichtlich).',
-    ],
-    roadmap: [
-      'Strikte SLI-Schwellen am Paper oder Protokoll ausrichten',
-      'Referenzmittelwert (Paper oder Kohorte) hinzufugen',
-      'Anpassungs-Score auf Kohortendaten kalibrieren',
-      'Spater visuelle Kalenderansicht (Drag and Drop) falls notig',
+    closing: [
+      {
+        label: 'Aktuelle Grenzen',
+        title: 'Aktuelle Grenzen',
+        items: [
+          'Aktuelle Version = Proxy v0.1, mehrere Schwellen mussen noch gegen das finale Protokoll fixiert werden.',
+          'Die Eingabe bleibt selbstberichtet: Im MVP gibt es weder Aktigraphie noch Wearable-Erfassung.',
+          'Der Anpassungs-Score ist noch nicht auf eine Referenzkohorte kalibriert.',
+          'Die Oberflache erklart eine aktive Formel, liefert aber weiterhin keine klinischen Empfehlungen.',
+        ],
+      },
+      {
+        label: 'Nachste Klarstellungen',
+        title: 'Nachste Klarstellungen',
+        items: [
+          'Die strikte Ausrichtung mit dem Workbook fortsetzen und strittige Lucken formalisieren.',
+          'Biologische und soziale Faktoren dort verfeinern, wo Runtime noch proxy-basiert bleibt.',
+          'Die Trace erweitern, um verbleibende Explainability-Fallbacks in der UI weiter zu reduzieren.',
+          'Die ausreichend robusten Teile stabilisieren, damit Open-Source-Beitrage ruhiger andocken konnen.',
+        ],
+      },
+      {
+        label: 'MVP',
+        title: 'Proxy, aber lesbar',
+        items: [
+          'Die aktuelle Prioritat ist, die Engine so klar zu machen, dass Beitragende verstehen, was bereits implementiert ist.',
+          'Das Ziel ist nicht, klinische Prazision zu uberverkaufen, sondern sauber zu dokumentieren, was schon existiert.',
+        ],
+      },
     ],
   },
 } as const;
@@ -162,146 +243,132 @@ export default async function MethodPage({
     <main>
       <LocaleNav locale={locale} />
 
-      <section className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <span className="badge primary">Method</span>
-        <h1 className="section-title" style={{ marginTop: 12 }}>
-          {c.title}
-        </h1>
-        <p className="section-subtitle">{c.subtitle}</p>
-      </section>
-
-      <div className="grid grid-2">
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.scoring}
-          </h2>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.scoringItems.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.source}
-          </h2>
-          <p className="small muted">{c.sourceText}</p>
-
-          <div className="notice" style={{ marginTop: 10 }}>
-            <div className="small">{c.noticeText}</div>
-          </div>
-
-          <div className="grid" style={{ gap: 10, marginTop: 12 }}>
-            <div className="card soft" style={{ padding: 12 }}>
-              <div className="small muted" style={{ fontWeight: 700 }}>
-                {c.externalArticle}
+      <div className="sw-public-wide">
+        <div className="sw-public-inner">
+          <div className="sw-method-shell">
+            <section className="sw-method-hero">
+              <div className="sw-method-hero-main">
+                <span className="badge primary sw-flow-kicker">{c.label}</span>
+                <h1 className="sw-method-title">{c.title}</h1>
+                <p className="sw-method-line">{c.line}</p>
+                <p className="sw-about-lead">{c.subtitle}</p>
               </div>
-              <div className="small" style={{ marginTop: 6 }}>
-                <a
-                  href="https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2025.1679296/full"
-                  target="_blank"
-                  rel="noreferrer"
-                >
-                  Frontiers in Public Health
-                </a>
-              </div>
-            </div>
 
-            <div className="card soft" style={{ padding: 12 }}>
-              <div className="small muted" style={{ fontWeight: 700 }}>
-                {c.externalWorkbook}
-              </div>
-              <div className="small" style={{ marginTop: 6 }}>
-                See provenance-aware source mapping in the repository docs.
-              </div>
-            </div>
-          </div>
+              <aside className="sw-method-runtime">
+                <div className="sw-flow-caption">{c.runtimeLabel}</div>
+                <p className="sw-flow-copy" style={{ marginTop: 0 }}>
+                  {c.runtimeText}
+                </p>
+              </aside>
+            </section>
 
-          <div className="row" style={{ marginTop: 12 }}>
-            <Link className="btn" href={`/${locale}/analyze/`}>
-              {c.backToAnalyze}
-            </Link>
-          </div>
-        </section>
-      </div>
-
-      <section className="card" style={{ padding: 16, marginTop: 16 }}>
-        <h2 className="section-title" style={{ fontSize: 18 }}>
-          {c.sections.mapping}
-        </h2>
-
-        <div style={{ overflowX: 'auto' }}>
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: 8 }}>
-            <thead>
-              <tr>
-                {c.mappingHeaders.map((header) => (
-                  <th
-                    key={header}
-                    style={{
-                      textAlign: 'left',
-                      fontSize: 13,
-                      padding: '10px 8px',
-                      borderBottom: '1px solid var(--border)',
-                      color: 'var(--muted)',
-                    }}
-                  >
-                    {header}
-                  </th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {c.mappingRows.map((row) => (
-                <tr key={row[0]}>
-                  {row.map((cell, index) => (
-                    <td
-                      key={`${row[0]}-${index}`}
-                      style={{
-                        padding: '10px 8px',
-                        borderBottom: '1px solid var(--border)',
-                        verticalAlign: 'top',
-                        fontSize: 13,
-                      }}
-                    >
-                      {cell}
-                    </td>
-                  ))}
-                </tr>
+            <section className="sw-method-kpis sw-method-kpis-mid">
+              {c.kpis.map((item) => (
+                <article key={item.label} className="sw-kpi">
+                  <div className="sw-kpi-label">{item.label}</div>
+                  <div className="sw-kpi-value">{item.value}</div>
+                  <div className="sw-kpi-copy">{item.copy}</div>
+                </article>
               ))}
-            </tbody>
-          </table>
+            </section>
+
+            <section className="sw-method-main sw-method-main-wide">
+              <div className="sw-method-main-copy">
+                <div className="sw-flow-caption">{c.scoringLabel}</div>
+                <h2 className="sw-method-section-title">{c.scoringTitle}</h2>
+                <ul className="sw-list-clean" style={{ marginTop: 16 }}>
+                  {c.scoringItems.map((item) => (
+                    <li key={item} className="small" style={{ lineHeight: 1.8 }}>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              <aside className="sw-method-sources">
+                <div className="sw-flow-caption">{c.sourcesLabel}</div>
+                <h2 className="sw-flow-heading">{c.sourcesTitle}</h2>
+                <p className="sw-flow-copy">{c.sourceText}</p>
+                <div className="sw-band-note">
+                  <div className="small">{c.noticeText}</div>
+                </div>
+
+                <div className="sw-flow-stack" style={{ marginTop: 14 }}>
+                  <div>
+                    <div className="small muted" style={{ fontWeight: 700 }}>
+                      {c.externalArticle}
+                    </div>
+                    <div className="small" style={{ marginTop: 8 }}>
+                      <a
+                        className="sw-inline-link"
+                        href="https://www.frontiersin.org/journals/public-health/articles/10.3389/fpubh.2025.1679296/full"
+                        target="_blank"
+                        rel="noreferrer"
+                      >
+                        Frontiers in Public Health
+                      </a>
+                    </div>
+                  </div>
+
+                  <div>
+                    <div className="small muted" style={{ fontWeight: 700 }}>
+                      {c.externalWorkbook}
+                    </div>
+                    <div className="small" style={{ marginTop: 8 }}>
+                      {c.workbookNote}
+                    </div>
+                  </div>
+
+                  <div className="row">
+                    <Link className="btn" href={`/${locale}/analyze/`}>
+                      {c.backToAnalyze}
+                    </Link>
+                  </div>
+                </div>
+              </aside>
+            </section>
+
+            <section className="sw-method-mapping sw-method-mapping-mid">
+              <div className="sw-flow-caption">{c.mappingLabel}</div>
+              <div className="sw-table-scroll" style={{ marginTop: 10 }}>
+                <table className="sw-table">
+                  <thead>
+                    <tr>
+                      {c.mappingHeaders.map((header) => (
+                        <th key={header}>{header}</th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {c.mappingRows.map((row) => (
+                      <tr key={row[0]}>
+                        {row.map((cell, index) => (
+                          <td key={`${row[0]}-${index}`}>{cell}</td>
+                        ))}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </section>
+
+            <section className="sw-method-closing sw-method-closing-end">
+              {c.closing.map((block) => (
+                <article key={block.title} className="sw-method-closing-card">
+                  <div className="sw-flow-caption">{block.label}</div>
+                  <h2 className="sw-flow-heading">{block.title}</h2>
+                  <ul className="sw-list-clean" style={{ marginTop: 12 }}>
+                    {block.items.map((item) => (
+                      <li key={item} className="small" style={{ lineHeight: 1.8 }}>
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+                </article>
+              ))}
+            </section>
+          </div>
         </div>
-      </section>
-
-      <div className="grid grid-2" style={{ marginTop: 16 }}>
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.limits}
-          </h2>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.limits.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
-
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.roadmap}
-          </h2>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.roadmap.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
       </div>
     </main>
   );

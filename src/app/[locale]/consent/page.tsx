@@ -151,69 +151,70 @@ export default async function ConsentPage({
     <main>
       <LocaleNav locale={locale} />
 
-      <section className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <span className="badge warn">{NOTICE_VERSION}</span>
-        <h1 className="section-title" style={{ marginTop: 12 }}>
-          {c.title}
-        </h1>
-        <p className="section-subtitle">{c.subtitle}</p>
-      </section>
+      <div className="sw-public-wide">
+        <div className="sw-public-inner">
+          <div className="sw-info-shell">
+            <section className="sw-info-hero">
+              <div>
+                <span className="badge warn sw-flow-kicker">{NOTICE_VERSION}</span>
+                <h1 className="sw-info-title">{c.title}</h1>
+                <p className="sw-info-lead">{c.subtitle}</p>
+              </div>
 
-      <div className="grid grid-2">
-        <Section title={c.sections.controller}>
-          <p className="small muted">{c.body.controller}</p>
-        </Section>
+              <aside className="sw-info-aside">
+                <div className="sw-flow-caption">{c.sections.legal}</div>
+                <p className="sw-flow-copy" style={{ marginTop: 0 }}>
+                  {c.body.legal}
+                </p>
+              </aside>
+            </section>
 
-        <Section title={c.sections.purpose}>
-          <p className="small muted">{c.body.purpose}</p>
-        </Section>
+            <section className="sw-info-row sw-info-row-2 is-left">
+              <Section title={c.sections.controller}>
+                <p className="sw-flow-copy">{c.body.controller}</p>
+              </Section>
 
-        <Section title={c.sections.data}>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.body.data.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </Section>
+              <Section title={c.sections.purpose}>
+                <p className="sw-flow-copy">{c.body.purpose}</p>
+              </Section>
+            </section>
 
-        <Section title={c.sections.legal}>
-          <p className="small muted">{c.body.legal}</p>
-        </Section>
+            <section className="sw-info-row sw-info-row-2 is-right">
+              <Section title={c.sections.data}>
+                <ul className="sw-info-list">
+                  {c.body.data.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </Section>
 
-        <Section title={c.sections.rights}>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.body.rights.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </Section>
+              <Section title={c.sections.rights}>
+                <ul className="sw-info-list">
+                  {c.body.rights.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </Section>
+            </section>
 
-        <Section title={c.sections.withdrawal}>
-          <p className="small muted">{c.body.withdrawal}</p>
-        </Section>
+            <section className="sw-info-row sw-info-row-2 is-left">
+              <Section title={c.sections.withdrawal}>
+                <p className="sw-flow-copy">{c.body.withdrawal}</p>
+              </Section>
+
+              <Section title={c.sections.provenance}>
+                <p className="sw-flow-copy">{c.body.provenance}</p>
+              </Section>
+            </section>
+
+            <section className="sw-info-row sw-info-single is-right">
+              <Section title={c.sections.contact}>
+                <p className="sw-flow-copy">{c.body.contact}</p>
+              </Section>
+            </section>
+          </div>
+        </div>
       </div>
-
-      <section className="card" style={{ padding: 16, marginTop: 16 }}>
-        <h2 className="section-title" style={{ fontSize: 18 }}>
-          {c.sections.provenance}
-        </h2>
-        <p className="small muted" style={{ marginBottom: 0 }}>
-          {c.body.provenance}
-        </p>
-      </section>
-
-      <section className="card" style={{ padding: 16, marginTop: 16 }}>
-        <h2 className="section-title" style={{ fontSize: 18 }}>
-          {c.sections.contact}
-        </h2>
-        <p className="small muted" style={{ margin: 0 }}>
-          {c.body.contact}
-        </p>
-      </section>
     </main>
   );
 }
@@ -226,11 +227,10 @@ function Section({
   children: React.ReactNode;
 }) {
   return (
-    <section className="card" style={{ padding: 16 }}>
-      <h2 className="section-title" style={{ fontSize: 18 }}>
-        {title}
-      </h2>
+    <article className="sw-info-card">
+      <div className="sw-flow-caption">{title}</div>
+      <h2 className="sw-flow-heading">{title}</h2>
       {children}
-    </section>
+    </article>
   );
 }

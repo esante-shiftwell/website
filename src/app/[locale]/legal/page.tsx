@@ -166,34 +166,47 @@ export default async function LegalPage({
     <main>
       <LocaleNav locale={locale} />
 
-      <section className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <span className="badge primary">Legal</span>
-        <h1 className="section-title" style={{ marginTop: 12 }}>
-          {c.title}
-        </h1>
-        <p className="section-subtitle">{c.subtitle}</p>
-      </section>
+      <div className="sw-public-wide">
+        <div className="sw-public-inner">
+          <div className="sw-info-shell">
+            <section className="sw-info-hero">
+              <div>
+                <span className="badge primary sw-flow-kicker">Legal</span>
+                <h1 className="sw-info-title">{c.title}</h1>
+                <p className="sw-info-lead">{c.subtitle}</p>
+              </div>
 
-      <div className="grid grid-2">
-        <Section title={c.sections.legalNotice} items={c.legalNotice} />
-        <Section title={c.sections.privacy} items={c.privacy} />
-        <Section title={c.sections.cookies} items={c.cookies} />
-        <Section title={c.sections.dataHosting} items={c.dataHosting} />
+              <aside className="sw-info-aside">
+                <div className="sw-flow-caption">{c.sections.limitations}</div>
+                <ul className="sw-info-list">
+                  {c.limitations.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </aside>
+            </section>
+
+            <section className="sw-info-row sw-info-row-2 is-left">
+              <Section title={c.sections.legalNotice} items={c.legalNotice} />
+              <Section title={c.sections.privacy} items={c.privacy} />
+            </section>
+
+            <section className="sw-info-row sw-info-row-2 is-right">
+              <Section title={c.sections.cookies} items={c.cookies} />
+              <Section title={c.sections.dataHosting} items={c.dataHosting} />
+            </section>
+
+            <section className="sw-info-row sw-info-row-2 is-left">
+              <Section title={c.sections.provenance} items={c.provenance} />
+              <article className="sw-info-card">
+                <div className="sw-flow-caption">{c.sections.contact}</div>
+                <h2 className="sw-flow-heading">{c.sections.contact}</h2>
+                <p className="sw-flow-copy">{c.contact}</p>
+              </article>
+            </section>
+          </div>
+        </div>
       </div>
-
-      <div className="grid grid-2" style={{ marginTop: 16 }}>
-        <Section title={c.sections.limitations} items={c.limitations} />
-        <Section title={c.sections.provenance} items={c.provenance} />
-      </div>
-
-      <section className="card" style={{ padding: 16, marginTop: 16 }}>
-        <h2 className="section-title" style={{ fontSize: 18 }}>
-          {c.sections.contact}
-        </h2>
-        <p className="small muted" style={{ margin: 0 }}>
-          {c.contact}
-        </p>
-      </section>
     </main>
   );
 }
@@ -206,17 +219,14 @@ function Section({
   items: readonly string[];
 }) {
   return (
-    <section className="card" style={{ padding: 16 }}>
-      <h2 className="section-title" style={{ fontSize: 18 }}>
-        {title}
-      </h2>
-      <ul style={{ margin: 0, paddingLeft: 18 }}>
+    <article className="sw-info-card">
+      <div className="sw-flow-caption">{title}</div>
+      <h2 className="sw-flow-heading">{title}</h2>
+      <ul className="sw-info-list">
         {items.map((item) => (
-          <li key={item} className="small" style={{ marginBottom: 8 }}>
-            {item}
-          </li>
+          <li key={item}>{item}</li>
         ))}
       </ul>
-    </section>
+    </article>
   );
 }

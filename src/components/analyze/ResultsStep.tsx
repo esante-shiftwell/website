@@ -159,14 +159,14 @@ export default function ResultsStep({
   ] as const;
 
   return (
-    <section className="card" style={{ padding: 16 }}>
+    <section className="card sw-results-shell" style={{ padding: 16 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
+        <div className="sw-section-intro">
           <div className="badge secondary">{c.studyTitle}</div>
-          <h2 className="section-title" style={{ fontSize: 18, marginTop: 10 }}>
-            {c.studyTitle}
+          <h2 className="section-title sw-section-heading" style={{ fontSize: 20, marginTop: 10 }}>
+            {t.resultsTitle}
           </h2>
-          <p className="small muted" style={{ marginTop: 8 }}>
+          <p className="small muted sw-section-story" style={{ marginTop: 8 }}>
             {c.studyText}
           </p>
           <div className="row" style={{ gap: 8, marginTop: 10 }}>
@@ -230,6 +230,7 @@ export default function ResultsStep({
           ex.openWithFocus({ kind: 'score', key: 'score.adaptability', label: t.scoreAdapt })
         }
         style={{ cursor: 'pointer' }}
+        className="sw-main-score-card"
       >
         <ScoreCard
           label={t.scoreAdapt}
@@ -278,7 +279,7 @@ export default function ResultsStep({
         </div>
       </div>
 
-      <div style={{ marginTop: 14 }}>
+      <div className="sw-metric-ribbon" style={{ marginTop: 14 }}>
         <div className="small muted" style={{ fontWeight: 900, marginBottom: 8 }}>
           {c.metricsTitle}
         </div>

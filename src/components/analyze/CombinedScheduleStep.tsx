@@ -6,7 +6,6 @@ import DayMixedEditor from './calendar/DayMixedEditor';
 import WeeklyScheduleInline from './calendar/WeeklyScheduleInline';
 
 export type ScheduleUi = {
-
   title: string;
   subtitle: string;
   viewWeek: string;
@@ -29,7 +28,6 @@ export type ScheduleUi = {
   deleted: string;
   tip: string;
 
-  // Validation / confirm (multilingue)
   sleepMissingTitle: string;
   sleepMissingBody: string;
   sleepMissingContinue: string;
@@ -48,7 +46,6 @@ const MAX_NO_SLEEP_GAP_MIN = 24 * 60;
 const WEEK_MIN = 7 * 1440;
 
 function absIntervals(segments: DayPartSegment[]) {
-  // segments are day parts (never cross midnight)
   const ints = segments
     .map((s) => ({
       start: Math.max(0, Math.min(WEEK_MIN, s.day * 1440 + s.startMin)),
@@ -57,7 +54,6 @@ function absIntervals(segments: DayPartSegment[]) {
     .filter((i) => i.end > i.start)
     .sort((a, b) => a.start - b.start);
 
-  // merge overlaps
   const merged: Array<{ start: number; end: number }> = [];
   for (const i of ints) {
     const last = merged[merged.length - 1];
@@ -82,7 +78,7 @@ function sleepStats(dayLabels: readonly string[], sleepSegments: DayPartSegment[
 
   const merged = absIntervals(sleepSegments);
 
-  let longestGap = WEEK_MIN; // if no sleep at all
+  let longestGap = WEEK_MIN;
   if (merged.length > 0) {
     longestGap = Math.max(merged[0].start - 0, WEEK_MIN - merged[merged.length - 1].end);
     for (let i = 1; i < merged.length; i++) {
@@ -95,7 +91,7 @@ function sleepStats(dayLabels: readonly string[], sleepSegments: DayPartSegment[
 
 function fmtHours(min: number) {
   const h = min / 60;
-  const rounded = Math.round(h * 10) / 10; // 1 decimal
+  const rounded = Math.round(h * 10) / 10;
   return `${rounded}h`;
 }
 
@@ -149,22 +145,23 @@ export default function CombinedScheduleStep({
 
   const confirmBody =
     `${ui.sleepMissingBody}\n\n` +
-    `${ui.sleepMissingStatsDays}: ${stats.daysWithSleep}/7 (≥ ${MIN_SLEEP_DAYS})\n` +
-    `${ui.sleepMissingStatsTotal}: ${fmtHours(stats.totalMin)} (≥ ${MIN_SLEEP_HOURS}h)\n` +
+    `${ui.sleepMissingStatsDays}: ${stats.daysWithSleep}/7 (>= ${MIN_SLEEP_DAYS})\n` +
+    `${ui.sleepMissingStatsTotal}: ${fmtHours(stats.totalMin)} (>= ${MIN_SLEEP_HOURS}h)\n` +
     `${ui.sleepMissingStatsGap}: ${fmtHours(stats.longestGap)} (< 24h)\n` +
     `${ui.sleepMissingStatsMissing}: ${missingText}`;
 
   return (
-    <section className="card" style={{ padding: 16 }}>
+    <section className="card sw-editor-shell" style={{ padding: 16 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
-        <div>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
+        <div className="sw-section-intro">
+          <div className="badge secondary">{ui.title}</div>
+          <h2 className="section-title sw-section-heading" style={{ fontSize: 20, marginTop: 10 }}>
             {ui.title}
           </h2>
-          <p className="section-subtitle">{ui.subtitle}</p>
+          <p className="section-subtitle sw-section-story">{ui.subtitle}</p>
         </div>
 
-        <div className="row" style={{ gap: 8 }}>
+        <div className="row sw-mode-switch" style={{ gap: 8 }}>
           <button
             type="button"
             className={`btn ${view === 'week' ? 'primary' : 'ghost'}`}
@@ -182,7 +179,7 @@ export default function CombinedScheduleStep({
         </div>
       </div>
 
-      <div style={{ marginTop: 12 }}>
+      <div className="sw-schedule-stage" style={{ marginTop: 12 }}>
         {view === 'week' ? (
           <WeeklyScheduleInline
             ui={ui}
@@ -208,18 +205,18 @@ export default function CombinedScheduleStep({
       </div>
 
       {!canNextMin ? (
-        <div className="notice warn" style={{ marginTop: 12 }}>
+        <div className="notice warn sw-research-note" style={{ marginTop: 12 }}>
           <div className="small">{ui.required}</div>
         </div>
       ) : null}
 
       {showSoftWarn ? (
-        <div className="notice warn" style={{ marginTop: 12 }}>
+        <div className="notice warn sw-research-note" style={{ marginTop: 12 }}>
           <div className="small">
             <strong>{ui.sleepMissingTitle}</strong>
             <span className="muted">
               {' '}
-              — {stats.daysWithSleep}/7 · {fmtHours(stats.totalMin)} · max gap {fmtHours(stats.longestGap)}
+              â€” {stats.daysWithSleep}/7 Â· {fmtHours(stats.totalMin)} Â· max gap {fmtHours(stats.longestGap)}
             </span>
           </div>
         </div>

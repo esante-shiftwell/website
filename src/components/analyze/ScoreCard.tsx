@@ -48,12 +48,9 @@ export default function ScoreCard({
 
   return (
     <div
-      className="card"
+      className={`card sw-score-card ${highlight ? 'is-highlight' : ''} ${unavailable ? 'is-unavailable' : ''}`}
       style={{
         padding: 14,
-        background: highlight
-          ? 'radial-gradient(circle at 10% 15%, rgba(42,157,143,0.12), transparent 45%), white'
-          : 'white',
       }}
     >
       <div className="small muted">{label}</div>

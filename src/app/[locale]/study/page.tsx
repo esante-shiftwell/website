@@ -153,91 +153,83 @@ export default async function StudyPage({
     <main>
       <LocaleNav locale={locale} />
 
-      <section className="card" style={{ padding: 20, marginBottom: 16 }}>
-        <span className="badge secondary">Study</span>
-        <h1 className="section-title" style={{ marginTop: 12 }}>
-          {c.title}
-        </h1>
-        <p className="section-subtitle">{c.subtitle}</p>
-      </section>
+      <div className="sw-public-wide">
+        <div className="sw-public-inner">
+          <div className="sw-info-shell">
+            <section className="sw-info-hero">
+              <div>
+                <span className="badge secondary sw-flow-kicker">Study</span>
+                <h1 className="sw-info-title">{c.title}</h1>
+                <p className="sw-info-lead">{c.subtitle}</p>
+              </div>
 
-      <div className="grid grid-2">
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.purpose}
-          </h2>
-          <p className="small muted">{c.purpose}</p>
+              <aside className="sw-info-aside">
+                <div className="sw-flow-caption">{c.sections.duration}</div>
+                <ul className="sw-info-list">
+                  {c.duration.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+                <div className="sw-info-actions">
+                  <Link className="btn primary" href={`/${locale}/analyze/`}>
+                    {c.ctas.analyze}
+                  </Link>
+                  <Link className="btn ghost" href={`/${locale}/consent/`}>
+                    {c.ctas.consent}
+                  </Link>
+                </div>
+              </aside>
+            </section>
 
-          <div className="divider" />
+            <section className="sw-info-row sw-info-row-2 is-left">
+              <article className="sw-info-card">
+                <div className="sw-flow-caption">{c.sections.purpose}</div>
+                <h2 className="sw-flow-heading">{c.sections.purpose}</h2>
+                <p className="sw-flow-copy">{c.purpose}</p>
+              </article>
 
-          <h3 style={{ marginTop: 0 }}>{c.sections.who}</h3>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.who.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
+              <article className="sw-info-card">
+                <div className="sw-flow-caption">{c.sections.who}</div>
+                <h2 className="sw-flow-heading">{c.sections.who}</h2>
+                <ul className="sw-info-list">
+                  {c.who.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
+            </section>
 
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.data}
-          </h2>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.data.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-        </section>
-      </div>
+            <section className="sw-info-row sw-info-row-2 is-right">
+              <article className="sw-info-card">
+                <div className="sw-flow-caption">{c.sections.data}</div>
+                <h2 className="sw-flow-heading">{c.sections.data}</h2>
+                <ul className="sw-info-list">
+                  {c.data.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ul>
+              </article>
 
-      <div className="grid grid-2" style={{ marginTop: 16 }}>
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.process}
-          </h2>
-          <ol style={{ margin: 0, paddingLeft: 18 }}>
-            {c.process.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ol>
-        </section>
+              <article className="sw-info-card">
+                <div className="sw-flow-caption">{c.sections.process}</div>
+                <h2 className="sw-flow-heading">{c.sections.process}</h2>
+                <ol className="sw-info-list">
+                  {c.process.map((item) => (
+                    <li key={item}>{item}</li>
+                  ))}
+                </ol>
+              </article>
+            </section>
 
-        <section className="card" style={{ padding: 16 }}>
-          <h2 className="section-title" style={{ fontSize: 18 }}>
-            {c.sections.duration}
-          </h2>
-          <ul style={{ margin: 0, paddingLeft: 18 }}>
-            {c.duration.map((item) => (
-              <li key={item} className="small" style={{ marginBottom: 8 }}>
-                {item}
-              </li>
-            ))}
-          </ul>
-
-          <div className="divider" />
-
-          <h3 style={{ marginTop: 0 }}>{c.sections.provenance}</h3>
-          <p className="small muted" style={{ marginBottom: 0 }}>
-            {c.provenance}
-          </p>
-
-          <div className="divider" />
-
-          <div className="row">
-            <Link className="btn primary" href={`/${locale}/analyze/`}>
-              {c.ctas.analyze}
-            </Link>
-            <Link className="btn" href={`/${locale}/consent/`}>
-              {c.ctas.consent}
-            </Link>
+            <section className="sw-info-row sw-info-single is-left">
+              <article className="sw-info-card">
+                <div className="sw-flow-caption">{c.sections.provenance}</div>
+                <h2 className="sw-flow-heading">{c.sections.provenance}</h2>
+                <p className="sw-flow-copy">{c.provenance}</p>
+              </article>
+            </section>
           </div>
-        </section>
+        </div>
       </div>
     </main>
   );

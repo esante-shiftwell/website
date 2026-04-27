@@ -13,25 +13,37 @@ function detectLocale(pathname: string): FooterLocale | null {
 
 const footerCopy = {
   fr: {
-    note: 'Recherche · pas un avis medical',
-    localFirst: 'Local',
-    optIn: 'Opt-in',
+    note: 'Projet de recherche - pas un avis medical',
+    localFirst: 'Local-first',
+    optIn: 'Contribution opt-in',
     paper: 'Reference externe',
+    consent: 'Consentement',
+    legal: 'Legal',
+    about: 'A propos',
     lang: 'Langue',
+    signature: 'Projet open source de recherche en chronobiologie.',
   },
   en: {
-    note: 'Research · not medical advice',
-    localFirst: 'Local',
-    optIn: 'Opt-in',
+    note: 'Research project - not medical advice',
+    localFirst: 'Local-first',
+    optIn: 'Opt-in contribution',
     paper: 'External reference',
+    consent: 'Consent',
+    legal: 'Legal',
+    about: 'About',
     lang: 'Language',
+    signature: 'Open-source chronobiology research project.',
   },
   de: {
-    note: 'Forschung · keine medizinische Beratung',
-    localFirst: 'Lokal',
-    optIn: 'Opt-in',
+    note: 'Forschungsprojekt - keine medizinische Beratung',
+    localFirst: 'Local-first',
+    optIn: 'Opt-in Beitrag',
     paper: 'Externe Referenz',
+    consent: 'Einwilligung',
+    legal: 'Rechtliches',
+    about: 'Uber',
     lang: 'Sprache',
+    signature: 'Open-Source-Forschungsprojekt in Chronobiologie.',
   },
 } as const;
 
@@ -67,75 +79,63 @@ export default function AppFooter({
   const c = locale ? footerCopy[locale] : footerCopy.en;
 
   return (
-    <footer
-      style={{
-        position: 'fixed',
-        left: 0,
-        right: 0,
-        bottom: `calc(10px + env(safe-area-inset-bottom, 0px))`,
-        zIndex: 40,
-        padding: '0 12px',
-        pointerEvents: 'none',
-      }}
-    >
-      <div
-        className="card glass shadow-md"
-        style={{
-          maxWidth: 1120,
-          margin: '0 auto',
-          padding: 10,
-          pointerEvents: 'auto',
-          borderRadius: 14,
-        }}
-      >
-        <div
-          className="row"
-          style={{
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            gap: 8,
-            flexWrap: 'wrap',
-          }}
-        >
-          <div className="row" style={{ gap: 8, minWidth: 0 }}>
-            <div className="brand-name" style={{ fontSize: 13 }}>
-              Shiftwell
+    <footer className="sw-footer-wrap">
+      <div className="sw-footer-glow" aria-hidden="true" />
+      <div className="sw-footer-panel">
+        <div className="row sw-footer-main">
+          <div className="sw-footer-copy">
+            <div className="brand-name sw-footer-title">Shiftwell</div>
+            <div className="small muted sw-footer-signature">{c.signature}</div>
+            <div className="row" style={{ gap: 8, marginTop: 10 }}>
+              <span className="badge primary">{c.localFirst}</span>
+              <span className="badge secondary">{c.optIn}</span>
+              <span className="badge">{scoringVersion}</span>
             </div>
-            <span className="badge primary">{c.localFirst}</span>
-            <span className="badge secondary">{c.optIn}</span>
-            <div className="small muted" style={{ whiteSpace: 'nowrap' }}>
+            <div className="small muted" style={{ marginTop: 10 }}>
               {c.note}
             </div>
           </div>
 
-          <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-            <span className="badge">
-              <strong>{scoringVersion}</strong>
-            </span>
-            <a className="btn ghost" href={paperUrl} target="_blank" rel="noreferrer">
-              {c.paper}
-            </a>
-          </div>
+          <div className="sw-footer-side">
+            <div className="sw-footer-secondary">
+              {locale ? (
+                <>
+                  <Link className="sw-footer-link" href={`/${locale}/consent/`}>
+                    {c.consent}
+                  </Link>
+                  <Link className="sw-footer-link" href={`/${locale}/legal/`}>
+                    {c.legal}
+                  </Link>
+                  <Link className="sw-footer-link" href={`/${locale}/about/`}>
+                    {c.about}
+                  </Link>
+                </>
+              ) : null}
+              <a className="sw-footer-link" href={paperUrl} target="_blank" rel="noreferrer">
+                {c.paper}
+              </a>
+            </div>
 
-          <div className="row" style={{ gap: 6, flexWrap: 'wrap' }}>
-            {LOCALES.map((lng) => (
-              <Link
-                key={lng}
-                className={`btn ${lng === locale ? 'primary' : 'ghost'}`}
-                href={buildLocaleHref(pathname, lng)}
-                prefetch={false}
-                onClick={() => {
-                  try {
-                    localStorage.setItem('shiftwell:locale', lng);
-                  } catch {
-                    // ignore
-                  }
-                }}
-                aria-label={`${c.lang}: ${lng.toUpperCase()}`}
-              >
-                {lng.toUpperCase()}
-              </Link>
-            ))}
+            <div className="row sw-footer-actions" style={{ gap: 6, flexWrap: 'wrap' }}>
+              {LOCALES.map((lng) => (
+                <Link
+                  key={lng}
+                  className={`btn ${lng === locale ? 'primary' : 'ghost'} sw-nav-pill`}
+                  href={buildLocaleHref(pathname, lng)}
+                  prefetch={false}
+                  onClick={() => {
+                    try {
+                      localStorage.setItem('shiftwell:locale', lng);
+                    } catch {
+                      // ignore
+                    }
+                  }}
+                  aria-label={`${c.lang}: ${lng.toUpperCase()}`}
+                >
+                  {lng.toUpperCase()}
+                </Link>
+              ))}
+            </div>
           </div>
         </div>
       </div>
