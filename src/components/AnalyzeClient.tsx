@@ -36,7 +36,7 @@ function dayPartsToWeekSegments(segs: DayPartSegment[]): WeekSegment[] {
 }
 
 function copiedAlert(locale: Locale) {
-  if (locale === 'fr') return 'JSON copiÃ©';
+  if (locale === 'fr') return 'JSON copie';
   if (locale === 'de') return 'JSON kopiert';
   return 'JSON copied';
 }

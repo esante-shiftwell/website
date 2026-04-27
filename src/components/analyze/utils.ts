@@ -63,7 +63,7 @@ export function validateSegment(
   kind: SegmentKind,
 ): { ok: true } | { ok: false; message: string } {
   const duration = segmentDurationMinutes(seg);
-  if (duration <= 0) return { ok: false, message: 'DurÃ©e invalide.' };
+  if (duration <= 0) return { ok: false, message: 'Duree invalide.' };
 
   const minDuration = 15;
   const maxDuration = kind === 'work' ? 16 * 60 : 16 * 60;
@@ -124,10 +124,10 @@ export function getDerivedRows(metrics: DerivedMetrics, locale: Locale) {
           totalWorkHours: 'Heures travail (total semaine)',
           totalSleepHours: 'Heures sommeil (total semaine)',
           avgSleepHours: 'Sommeil moyen (h)',
-          sleepRegularityProxy: 'RÃ©gularitÃ© sommeil (proxy)',
+          sleepRegularityProxy: 'Regularite sommeil (proxy)',
           nightShiftCount: 'Nb shifts de nuit',
-          longShiftCount: 'Nb shifts longs (â‰¥10h)',
-          longestRecoveryHours: 'RÃ©cupÃ©ration la plus longue',
+          longShiftCount: 'Nb shifts longs (>=10h)',
+          longestRecoveryHours: 'Recuperation la plus longue',
           shortBreaksCount: 'Nb pauses <11h',
           fullyRestedDaysCount: 'Nb jours repos/sommeil',
           biologicalHoursLost: 'Heures biologiques perdues',
@@ -138,10 +138,10 @@ export function getDerivedRows(metrics: DerivedMetrics, locale: Locale) {
             totalWorkHours: 'Arbeitsstunden (Woche)',
             totalSleepHours: 'Schlafstunden (Woche)',
             avgSleepHours: 'Ø Schlaf (h)',
-            sleepRegularityProxy: 'SchlafregelmÃ¤ÃŸigkeit (Proxy)',
+            sleepRegularityProxy: 'Schlafregelmaessigkeit (Proxy)',
             nightShiftCount: 'Nachtschichten',
-            longShiftCount: 'Lange Schichten (â‰¥10h)',
-            longestRecoveryHours: 'LÃ¤ngste Erholung',
+            longShiftCount: 'Lange Schichten (>=10h)',
+            longestRecoveryHours: 'Laengste Erholung',
             shortBreaksCount: 'Pausen <11h',
             fullyRestedDaysCount: 'Ruhetage',
             biologicalHoursLost: 'Biologische Stunden verloren',
@@ -153,7 +153,7 @@ export function getDerivedRows(metrics: DerivedMetrics, locale: Locale) {
             avgSleepHours: 'Average sleep (h)',
             sleepRegularityProxy: 'Sleep regularity (proxy)',
             nightShiftCount: 'Night shifts',
-            longShiftCount: 'Long shifts (â‰¥10h)',
+            longShiftCount: 'Long shifts (>=10h)',
             longestRecoveryHours: 'Longest recovery',
             shortBreaksCount: 'Breaks <11h',
             fullyRestedDaysCount: 'Rested days',

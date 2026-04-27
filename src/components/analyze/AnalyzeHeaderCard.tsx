@@ -48,7 +48,7 @@ export default function AnalyzeHeaderCard({
 
       <div className="notice sw-progress-notice" style={{ marginTop: 12 }}>
         <div className="small">
-          <strong>{percent}%</strong> â€” {progressLabel}
+          <strong>{percent}%</strong> - {progressLabel}
         </div>
       </div>
     </section>

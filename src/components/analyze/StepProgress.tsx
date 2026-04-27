@@ -14,6 +14,8 @@ export default function StepProgress({
       <div className="row" style={{ gap: 8, flexWrap: 'wrap', marginBottom: 8 }}>
         {labels.map((label, idx) => {
           const state = idx < current ? 'done' : idx === current ? 'current' : 'todo';
+          const isDone = state === 'done';
+          const isCurrent = state === 'current';
           return (
             <div
               key={label}
@@ -23,13 +25,21 @@ export default function StepProgress({
                 gap: 8,
                 padding: '6px 10px',
                 borderRadius: 999,
-                border: '1px solid var(--border)',
+                border: `1px solid ${
+                  isCurrent
+                    ? 'rgba(121, 242, 234, 0.72)'
+                    : isDone
+                      ? 'rgba(121, 242, 234, 0.34)'
+                      : 'rgba(166, 202, 255, 0.16)'
+                }`,
                 background:
-                  state === 'done'
-                    ? 'rgba(42,157,143,0.12)'
-                    : state === 'current'
-                    ? 'rgba(30,42,68,0.08)'
-                    : 'white',
+                  isCurrent
+                    ? 'linear-gradient(135deg, rgba(121, 242, 234, 0.18), rgba(255, 79, 163, 0.10))'
+                    : isDone
+                      ? 'rgba(121, 242, 234, 0.10)'
+                      : 'rgba(255, 255, 255, 0.035)',
+                color: isCurrent || isDone ? 'var(--ink-2)' : 'rgba(207, 221, 245, 0.72)',
+                boxShadow: isCurrent ? '0 0 0 1px rgba(121, 242, 234, 0.12)' : 'none',
               }}
             >
               <div
@@ -43,18 +53,17 @@ export default function StepProgress({
                   fontWeight: 700,
                   border: '1px solid var(--border)',
                   background:
-                    state === 'done'
+                    isDone
                       ? 'var(--primary)'
-                      : state === 'current'
-                      ? 'var(--ink)'
-                      : 'white',
-                  color:
-                    state === 'done' || state === 'current' ? 'white' : 'var(--muted)',
+                      : isCurrent
+                        ? 'rgba(238, 246, 255, 0.96)'
+                        : 'rgba(255, 255, 255, 0.06)',
+                  color: isDone ? '#04111f' : isCurrent ? '#07111f' : 'rgba(207, 221, 245, 0.74)',
                 }}
               >
                 {idx + 1}
               </div>
-              <span className="small" style={{ fontWeight: state === 'current' ? 700 : 500 }}>
+              <span className="small" style={{ fontWeight: isCurrent ? 800 : 600 }}>
                 {label}
               </span>
             </div>
@@ -69,7 +78,7 @@ export default function StepProgress({
           height: 10,
           borderRadius: 999,
           border: '1px solid var(--border)',
-          background: 'white',
+          background: 'rgba(255, 255, 255, 0.08)',
           overflow: 'hidden',
         }}
       >

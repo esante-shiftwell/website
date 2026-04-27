@@ -216,7 +216,7 @@ export default function CombinedScheduleStep({
             <strong>{ui.sleepMissingTitle}</strong>
             <span className="muted">
               {' '}
-              â€” {stats.daysWithSleep}/7 Â· {fmtHours(stats.totalMin)} Â· max gap {fmtHours(stats.longestGap)}
+              - {stats.daysWithSleep}/7 | {fmtHours(stats.totalMin)} | max gap {fmtHours(stats.longestGap)}
             </span>
           </div>
         </div>
