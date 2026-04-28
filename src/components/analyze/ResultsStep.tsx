@@ -159,7 +159,7 @@ export default function ResultsStep({
   ] as const;
 
   return (
-    <section className="card sw-results-shell" style={{ padding: 16 }}>
+    <section className="card sw-results-shell sw-analyze-panel" style={{ padding: 16 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div className="sw-section-intro">
           <div className="badge secondary">{c.studyTitle}</div>
@@ -310,7 +310,7 @@ export default function ResultsStep({
 
       <ContributionBox
         locale={locale}
-        scoringVersion="proxy-v0.1"
+        scoringVersion={scoringVersion}
         noticeVersion="v0.1"
         payload={payload}
         collector={collector}

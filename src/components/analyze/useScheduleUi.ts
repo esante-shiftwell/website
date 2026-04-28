@@ -16,7 +16,7 @@ export function useScheduleUi(locale: Locale): ScheduleUi {
       return {
         title: 'Agenda hebdomadaire',
         subtitle:
-          'Vue semaine (travail + sommeil). Sélection : clic début → clic fin (pas 15 min). Over-midnight géré.',
+          'Vue semaine (travail + sommeil). Selection : clic debut -> clic fin (pas 15 min). Passage minuit gere.',
         viewWeek: 'Semaine',
         viewDay: 'Jour',
         prev: t.previous ?? 'Précédent',

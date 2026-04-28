@@ -56,7 +56,7 @@ export default function ProfileStep({
   canNext: boolean;
 }) {
   return (
-    <section className="card sw-editor-shell" style={{ padding: 16 }}>
+    <section className="card sw-editor-shell sw-analyze-panel" style={{ padding: 16 }}>
       <div className="sw-section-intro">
         <div className="badge secondary">{t.profileTitle}</div>
         <h2 className="section-title sw-section-heading" style={{ fontSize: 20, marginTop: 10 }}>
@@ -153,12 +153,12 @@ export default function ProfileStep({
         <div style={{ marginTop: 12 }}>
           <div className="notice warn sw-research-note" style={{ marginBottom: 12 }}>
             <div className="small">
-              <strong>{t.scoringLater}</strong> {t.longModeNotice}
+              <strong>{t.scoringLater}:</strong> {t.longModeNotice}
             </div>
           </div>
 
           <div className="grid grid-2">
-            <Field label={`${t.fatigue} · ${t.scoringLater}`}>
+            <Field label={t.fatigue} meta={t.scoringLater}>
               <RangeInput
                 min={1}
                 max={5}
@@ -167,7 +167,7 @@ export default function ProfileStep({
               />
             </Field>
 
-            <Field label={`${t.predictability} · ${t.scoringLater}`}>
+            <Field label={t.predictability} meta={t.scoringLater}>
               <RangeInput
                 min={1}
                 max={5}
@@ -176,7 +176,7 @@ export default function ProfileStep({
               />
             </Field>
 
-            <Field label={`${t.commute} · ${t.scoringLater}`}>
+            <Field label={t.commute} meta={t.scoringLater}>
               <input
                 className="input"
                 type="number"
@@ -192,7 +192,7 @@ export default function ProfileStep({
               />
             </Field>
 
-            <Field label={`${t.naps} · ${t.scoringLater}`}>
+            <Field label={t.naps} meta={t.scoringLater}>
               <input
                 className="input"
                 type="number"
@@ -208,7 +208,7 @@ export default function ProfileStep({
               />
             </Field>
 
-            <Field label={`${t.caffeine} · ${t.scoringLater}`}>
+            <Field label={t.caffeine} meta={t.scoringLater}>
               <input
                 className="input"
                 type="number"

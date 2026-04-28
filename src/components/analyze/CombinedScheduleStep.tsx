@@ -151,7 +151,7 @@ export default function CombinedScheduleStep({
     `${ui.sleepMissingStatsMissing}: ${missingText}`;
 
   return (
-    <section className="card sw-editor-shell" style={{ padding: 16 }}>
+    <section className="card sw-editor-shell sw-analyze-panel" style={{ padding: 16 }}>
       <div className="row" style={{ justifyContent: 'space-between', alignItems: 'flex-start' }}>
         <div className="sw-section-intro">
           <div className="badge secondary">{ui.title}</div>

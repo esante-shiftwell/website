@@ -47,9 +47,38 @@ function copyFailedAlert(locale: Locale) {
   return 'Copy failed';
 }
 
+function analyzeHeroCopy(locale: Locale) {
+  if (locale === 'fr') {
+    return {
+      title: 'Analyse locale',
+      currentStepLabel: 'Etape active',
+      helper:
+        'Renseigne ton profil, ton agenda de travail et ton sommeil. Shiftwell calcule ensuite une lecture proxy, locale et explicable.',
+      assurances: ['Calcul local', 'Version proxy', 'Pas un avis medical'],
+    };
+  }
+  if (locale === 'de') {
+    return {
+      title: 'Lokale Analyse',
+      currentStepLabel: 'Aktiver Schritt',
+      helper:
+        'Profil, Arbeitsplan und Schlaf eintragen. Shiftwell berechnet danach eine lokale, nachvollziehbare Proxy-Lesart.',
+      assurances: ['Lokale Berechnung', 'Proxy-Version', 'Keine medizinische Beratung'],
+    };
+  }
+  return {
+    title: 'Local analysis',
+    currentStepLabel: 'Current step',
+    helper:
+      'Enter your profile, work schedule and sleep. Shiftwell then computes a local, explainable proxy reading.',
+    assurances: ['Local-first', 'Proxy version', 'Not medical advice'],
+  };
+}
+
 export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
   const l: Locale = isLocale(locale) ? locale : 'en';
   const t = TEXT[l];
+  const hero = analyzeHeroCopy(l);
 
   const scheduleUi = useScheduleUi(l);
 
@@ -176,15 +205,18 @@ export default function AnalyzeClient({ locale }: AnalyzeClientProps) {
   }
 
   return (
-    <div>
+    <div className="sw-analyze-page">
       <LocaleNav locale={l} />
 
       <AnalyzeHeaderCard
         badge={t.analyze}
+        title={hero.title}
         stepTitle={stepLabels[stepIndex] ?? t.analyze}
-        helper={t.helper}
+        helper={hero.helper}
         saveVersionLabel={t.saveVersion}
         saveVersionValue={scoringVersion}
+        currentStepLabel={hero.currentStepLabel}
+        assurances={hero.assurances}
         labels={stepLabels}
         current={stepIndex}
         percent={overallPct}

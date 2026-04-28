@@ -36,7 +36,7 @@ export const TEXT = {
     scoringReady: 'Relie au scoring',
     scoringLater: 'Coming soon',
     longModeNotice:
-      'Ces champs enrichissent deja la collecte de recherche, mais ils ne sont pas encore relies au moteur de scoring v0.1.',
+      'Ces champs enrichissent deja la collecte de recherche, mais ils ne sont pas encore relies au moteur de scoring actuel.',
     select: 'Choisir...',
     ages: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'],
     sexes: [
@@ -137,7 +137,7 @@ export const TEXT = {
     scoringReady: 'Connected to scoring',
     scoringLater: 'Coming soon',
     longModeNotice:
-      'These fields already enrich the research dataset, but they are not yet connected to scoring v0.1.',
+      'These fields already enrich the research dataset, but they are not yet connected to the current scoring engine.',
     select: 'Choose...',
     ages: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'],
     sexes: [
@@ -238,7 +238,7 @@ export const TEXT = {
     scoringReady: 'Mit Scoring verbunden',
     scoringLater: 'Coming soon',
     longModeNotice:
-      'Diese Felder bereichern bereits den Forschungsdatensatz, sind aber noch nicht mit dem Scoring v0.1 verbunden.',
+      'Diese Felder bereichern bereits den Forschungsdatensatz, sind aber noch nicht mit der aktuellen Scoring-Engine verbunden.',
     select: 'Auswahlen...',
     ages: ['18-24', '25-34', '35-44', '45-54', '55-64', '65+'],
     sexes: [

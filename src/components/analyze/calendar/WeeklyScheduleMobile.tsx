@@ -107,7 +107,7 @@ function mobileUi(locale: Locale) {
       deleted: 'Segment supprimé.',
       undo: 'Annuler',
       none: 'Aucun segment ce jour.',
-      hint: 'Sur mobile : ajoute/modifie via cette fiche (overnight géré via jour+heure).',
+      hint: 'Sur mobile : ajoute/modifie via cette fiche (passage minuit via jour+heure).',
     };
   }
   if (locale === 'de') {

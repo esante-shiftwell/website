@@ -4,16 +4,21 @@ export function Field({
   label,
   children,
   required,
+  meta,
 }: {
   label: string;
   children: ReactNode;
   required?: boolean;
+  meta?: ReactNode;
 }) {
   return (
     <label style={{ display: 'grid', gap: 6 }}>
-      <span className="small" style={{ fontWeight: 600 }}>
-        {label}
-        {required ? <span style={{ color: '#b91c1c' }}> *</span> : null}
+      <span className="sw-field-label-row">
+        <span className="small" style={{ fontWeight: 700 }}>
+          {label}
+          {required ? <span className="sw-required-mark"> *</span> : null}
+        </span>
+        {meta ? <span className="sw-field-meta">{meta}</span> : null}
       </span>
       {children}
     </label>
@@ -41,7 +46,7 @@ export function RangeInput({
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
       />
-      <div className="sw-range-value" aria-label={`Valeur ${value} sur ${max}`}>
+      <div className="sw-range-value" aria-label={`${value} / ${max}`}>
         {value}/{max}
       </div>
     </div>
